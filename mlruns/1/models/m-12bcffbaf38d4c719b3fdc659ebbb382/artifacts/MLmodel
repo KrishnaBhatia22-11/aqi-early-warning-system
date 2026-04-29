@@ -1,0 +1,23 @@
+artifact_path: file:C:/Users/krish/Desktop/aqi-early-warning-system/mlruns/1/models/m-12bcffbaf38d4c719b3fdc659ebbb382/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.13.3
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+    skops_trusted_types: null
+mlflow_version: 3.11.1
+model_id: m-12bcffbaf38d4c719b3fdc659ebbb382
+model_size_bytes: 44054635
+model_uuid: m-12bcffbaf38d4c719b3fdc659ebbb382
+prompts: null
+run_id: 619710f5c6ef4f59bdecc9a2e818896e
+utc_time_created: '2026-04-29 15:41:26.429522'
