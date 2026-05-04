@@ -6,15 +6,16 @@ import plotly.graph_objects as go
 import pandas as pd
 import sys, os
 from datetime import datetime
+from groq import Groq
+from config.settings import GROQ_API_KEY
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from config.settings import CITY_COORDS
 
 st.set_page_config(
-    page_title="AQI Early Warning System",
-    page_icon="🔥",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="AQI Warning System",
+    page_icon="🌿",
+    layout="wide"
 )
 
 API_BASE = "http://127.0.0.1:8000/api/v1"
@@ -24,6 +25,7 @@ API_BASE = "http://127.0.0.1:8000/api/v1"
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 * { font-family: 'Inter', sans-serif !important; }
@@ -942,38 +944,45 @@ elif "chatbot" in page:
         }]
 
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
+        with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else "👤"):
             st.write(msg["content"])
 
     if prompt := st.chat_input("Ask about air quality..."):
         st.session_state.messages.append({"role":"user","content":prompt})
-        with st.chat_message("user"):
+        with st.chat_message("user", avatar="👤"):
             st.write(prompt)
 
         try:
-            import google.generativeai as genai
-            from config.settings import GEMINI_API_KEY
-            genai.configure(api_key=GEMINI_API_KEY)
-            model_ai = genai.GenerativeModel("gemini-1.5-flash")
+            from groq import Groq
+            from config.settings import GROQ_API_KEY
+            client = Groq(api_key=GROQ_API_KEY)
+
             ctx = """You are an expert AI assistant specialized in air quality,
             pollution science, and public health in India. You know the CPCB AQI
-            scale, Indian cities' pollution patterns, seasonal effects, and health
+            scale, Indian cities pollution patterns, seasonal effects, and health
             impacts. Be concise, helpful, and data-driven. Answer in 3-5 sentences."""
-            resp   = model_ai.generate_content(ctx + "\nUser: " + prompt)
-            answer = resp.text
+            resp = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+            {"role": "system", "content": ctx},
+            {"role": "user", "content": prompt}
+             ]
+            )
+            answer = resp.choices[0].message.content 
         except Exception as e:
+           
             fallback = {
-                "pm2.5":  "PM2.5 particles are under 2.5 micrometers — they penetrate deep into lung tissue. In Delhi winters, PM2.5 alone can push AQI above 400, driven by crop burning in Punjab, cold air trapping pollutants close to the ground, and vehicle emissions.",
-                "aqi":    "India's AQI scale runs 0-500 with 6 categories: Good (0-50), Satisfactory (51-100), Moderate (101-200), Poor (201-300), Very Poor (301-400), and Severe (401-500). It's calculated from 8 pollutants including PM2.5, PM10, NO2, CO, SO2, and O3.",
-                "delhi":  "Delhi is consistently one of the world's most polluted capitals. Winter months (October-January) see AQI regularly crossing 400 due to crop stubble burning in neighboring states, low wind speeds trapping pollutants, and high vehicle density.",
-                "mask":   "For AQI above 150, N95 or N99 masks are recommended. Regular surgical masks filter particles above 5 microns but offer minimal protection against the most dangerous PM2.5 particles. Ensure a proper face seal for effective protection.",
-                "child":  "Children are particularly vulnerable to air pollution because their lungs are still developing and they breathe more air relative to body weight. Prolonged exposure to high AQI can permanently stunt lung development and increase asthma risk.",
+        "pm2.5":  "PM2.5 particles are under 2.5 micrometers — they penetrate deep into lung tissue. In Delhi winters, PM2.5 alone can push AQI above 400, driven by crop burning in Punjab, cold air trapping pollutants close to the ground, and vehicle emissions.",
+        "aqi":    "India's AQI scale runs 0-500 with 6 categories: Good (0-50), Satisfactory (51-100), Moderate (101-200), Poor (201-300), Very Poor (301-400), and Severe (401-500). It's calculated from 8 pollutants including PM2.5, PM10, NO2, CO, SO2, and O3.",
+        "delhi":  "Delhi is consistently one of the world's most polluted capitals. Winter months (October-January) see AQI regularly crossing 400 due to crop stubble burning in neighboring states, low wind speeds trapping pollutants, and high vehicle density.",
+        "mask":   "For AQI above 150, N95 or N99 masks are recommended. Regular surgical masks filter particles above 5 microns but offer minimal protection against the most dangerous PM2.5 particles. Ensure a proper face seal for effective protection.",
+        "child":  "Children are particularly vulnerable to air pollution because their lungs are still developing and they breathe more air relative to body weight. Prolonged exposure to high AQI can permanently stunt lung development and increase asthma risk.",
             }
             key    = next((k for k in fallback if k in prompt.lower()), None)
             answer = fallback[key] if key else f"Great question about {prompt}. Based on our AQI system data, PM2.5 and CO are the primary drivers of poor air quality in Indian cities. PM2.5 alone accounts for ~47% of AQI variation according to our SHAP analysis. Would you like to know about a specific city or pollutant?"
 
         st.session_state.messages.append({"role":"assistant","content":answer})
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="🤖"):
             st.write(answer)
 
 
