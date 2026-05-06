@@ -13,7 +13,7 @@ const SUGGESTIONS = [
 function generateReply(msg, cities) {
   const lower = msg.toLowerCase();
   if (lower.includes("what is aqi") || lower.includes("explain aqi")) {
-    return "AQI (Air Quality Index) is a number from 0–500 that tells you how clean or polluted the air is. India uses 9 pollutants to compute it. 0–50 is Good, 51–100 is Satisfactory, 101–200 is Moderate, 201–300 is Poor, 301–400 is Very Poor, and 400+ is Severe.";
+    return "AQI (Air Quality Index) is a number from 0–500 that tells you how clean or polluted the air is. India uses 9 pollutants to compute it. **0–50** is Good, **51–100** is Satisfactory, **101–200** is Moderate, **201–300** is Poor, **301–400** is Very Poor, and **400+** is Severe.";
   }
   if (lower.includes("worst") || lower.includes("most polluted")) {
     if (cities.length) {
@@ -35,44 +35,53 @@ function generateReply(msg, cities) {
     return "PM2.5 are ultra-fine particles (≤2.5 micrometers) that penetrate deep into the lungs and bloodstream. Primary sources in India: vehicular emissions, crop burning, industrial pollution, and construction dust. Long-term exposure is linked to cardiovascular and respiratory disease.";
   }
   if (lower.includes("model") || lower.includes("ml") || lower.includes("accurate") || lower.includes("xgboost")) {
-    return "Our model is an XGBoost regressor trained on 9 years of CPCB data (2015–2024) with R²=0.932 and MAE=21.33 AQI units. It takes 9 pollutant readings as input and outputs a predicted AQI. SHAP values explain which pollutants drive each prediction.";
+    return "Our model is an **XGBoost regressor** trained on 9 years of CPCB data (2015–2024) with **R²=0.932** and **MAE=21.33 AQI units**. It takes 9 pollutant readings as input and outputs a predicted AQI. SHAP values explain which pollutants drive each prediction.";
   }
   if (lower.includes("300") || lower.includes("health") || lower.includes("safe")) {
-    return "AQI 300 is classified as **Very Poor**. At this level: everyone may experience health effects, not just sensitive groups. Avoid prolonged outdoor exposure. Use N95 masks outdoors. Keep windows closed. Use air purifiers indoors. Children and elderly should stay inside.";
+    return "AQI **300** is classified as **Very Poor**. At this level: everyone may experience health effects, not just sensitive groups. Avoid prolonged outdoor exposure. Use N95 masks outdoors. Keep windows closed and use air purifiers indoors. Children and elderly should stay inside.";
   }
   if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey")) {
     return "Hello! I'm AQI Bot — your air quality assistant for India. Ask me about current city conditions, health advice, pollutants, or how our ML model works.";
   }
+  if (lower.includes("clean") || lower.includes("best") || lower.includes("good air")) {
+    if (cities.length) {
+      const best = [...cities].sort((a, b) => a.aqi - b.aqi)[0];
+      return `**${best.name}** currently has the cleanest air at AQI **${best.aqi}** (${aqiCategory(best.aqi).name}).`;
+    }
+    return "Cities in South India — Chennai, Kochi, Coimbatore, Thiruvananthapuram — typically have the cleanest air in India due to sea breeze and less industrial activity.";
+  }
   const bestCity = cities.length ? [...cities].sort((a, b) => a.aqi - b.aqi)[0] : null;
   if (bestCity) {
-    return `I can answer questions about AQI, city conditions, health advice, and pollutants. For example: "${SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)]}". By the way, **${bestCity.name}** currently has the cleanest air at AQI ${bestCity.aqi}.`;
+    return `I can answer questions about AQI, city conditions, health advice, and pollutants. Try one of the suggestions below. Currently **${bestCity.name}** has the cleanest air at AQI ${bestCity.aqi}.`;
   }
-  return "I can answer questions about air quality, pollutants, health advice, and our ML model. Try one of the suggested questions, or ask me anything about India's air quality!";
+  return "I can answer questions about air quality, pollutants, health advice, and our ML model. Try one of the suggested questions below!";
 }
 
 export default function ChatbotPage({ cities }) {
   const [messages, setMessages] = useState([
-    { role: "bot", text: "Hello! I'm AQI Bot. Ask me about air quality, city conditions, health advisories, or how our model works." }
+    { role: "ai", text: "Hello! I'm AQI Bot. Ask me about air quality, city conditions, health advisories, or how our model works." }
   ]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const bottomRef = useRef(null);
+  const threadRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (threadRef.current) {
+      threadRef.current.scrollTop = threadRef.current.scrollHeight;
+    }
   }, [messages, typing]);
 
   const sendMessage = (text) => {
-    if (!text.trim()) return;
+    if (!text.trim() || typing) return;
     const userMsg = text.trim();
     setMessages(m => [...m, { role: "user", text: userMsg }]);
     setInput("");
     setTyping(true);
     setTimeout(() => {
       const reply = generateReply(userMsg, cities);
-      setMessages(m => [...m, { role: "bot", text: reply }]);
+      setMessages(m => [...m, { role: "ai", text: reply }]);
       setTyping(false);
-    }, 800 + Math.random() * 600);
+    }, 700 + Math.random() * 500);
   };
 
   const handleSubmit = (e) => {
@@ -83,35 +92,39 @@ export default function ChatbotPage({ cities }) {
   return (
     <div className="chatbot-page">
       <div className="chat-hero">
-        <div className="mono chat-eyebrow">AI ASSISTANT · POWERED BY RULE ENGINE + LIVE DATA</div>
+        <div className="mono chat-eyebrow">AI ASSISTANT · LIVE CITY DATA CONTEXT</div>
         <h1 className="display chat-title">AQI Chatbot</h1>
       </div>
 
       <div className="chat-layout">
         <div className="chat-window glass-strong">
-          <div className="chat-messages">
+          <div className="chat-thread" ref={threadRef}>
             {messages.map((m, i) => (
               <div key={i} className={`chat-msg ${m.role}`}>
-                {m.role === "bot" && <span className="chat-avatar">🤖</span>}
-                <div className="chat-bubble" dangerouslySetInnerHTML={{
-                  __html: m.text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                }} />
+                {m.role === "ai" && (
+                  <div className="chat-bubble-avatar">🤖</div>
+                )}
+                <div
+                  className="chat-bubble"
+                  dangerouslySetInnerHTML={{
+                    __html: m.text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                  }}
+                />
               </div>
             ))}
             {typing && (
-              <div className="chat-msg bot">
-                <span className="chat-avatar">🤖</span>
-                <div className="chat-bubble chat-typing">
+              <div className="chat-msg ai">
+                <div className="chat-bubble-avatar">🤖</div>
+                <div className="chat-bubble typing">
                   <span /><span /><span />
                 </div>
               </div>
             )}
-            <div ref={bottomRef} />
           </div>
 
-          <div className="chat-suggestions">
+          <div className="chat-suggested">
             {SUGGESTIONS.map(s => (
-              <button key={s} className="chat-suggestion mono" onClick={() => sendMessage(s)}>
+              <button key={s} className="chip" onClick={() => sendMessage(s)}>
                 {s}
               </button>
             ))}
@@ -134,7 +147,7 @@ export default function ChatbotPage({ cities }) {
         <div className="chat-sidebar">
           <div className="glass-strong chat-stats">
             <div className="mono panel-title" style={{ marginBottom: 12 }}>LIVE CONTEXT</div>
-            {cities.slice(0, 5).map(c => {
+            {cities.slice(0, 6).map(c => {
               const cat = aqiCategory(c.aqi);
               return (
                 <div key={c.name} className="chat-stat-row">
@@ -143,6 +156,9 @@ export default function ChatbotPage({ cities }) {
                 </div>
               );
             })}
+            {cities.length === 0 && (
+              <div className="mono" style={{ color: "var(--text-mute)", fontSize: 11 }}>Loading city data…</div>
+            )}
           </div>
         </div>
       </div>

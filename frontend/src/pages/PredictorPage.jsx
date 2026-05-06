@@ -17,34 +17,35 @@ export default function PredictorPage() {
   const [history, setHistory] = useState([]);
   const debounceRef = useRef(null);
 
+  const runPredict = useCallback(async (next) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await predictAQI(next);
+      setResult(res);
+      setHistory(h => [
+        { aqi: res.aqi, t: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), vals: next },
+        ...h.slice(0, 9),
+      ]);
+    } catch (e) {
+      setError("API unreachable — using local estimate");
+      const rough = Math.min(500, Math.round(
+        next["PM2.5"] * 0.7 + next["PM10"] * 0.3 + next["NO2"] * 0.4 + next["O3"] * 0.2
+      ));
+      setResult({ aqi: rough, category: aqiCategory(rough).name, shap_values: SHAP_STATIC });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const handleKnob = useCallback((name, value) => {
     setVals(prev => {
       const next = { ...prev, [name]: value };
       clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const res = await predictAQI(next);
-          setResult(res);
-          const cat = aqiCategory(res.aqi);
-          setHistory(h => [
-            { aqi: res.aqi, t: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), vals: next },
-            ...h.slice(0, 9),
-          ]);
-        } catch (e) {
-          setError("API unreachable — using local estimate");
-          const rough = Math.round(
-            next["PM2.5"] * 0.7 + next["PM10"] * 0.3 + next["NO2"] * 0.4 + next["O3"] * 0.2
-          );
-          setResult({ aqi: Math.min(500, rough), category: aqiCategory(rough).name, shap_values: SHAP_STATIC });
-        } finally {
-          setLoading(false);
-        }
-      }, 600);
+      debounceRef.current = setTimeout(() => runPredict(next), 600);
       return next;
     });
-  }, []);
+  }, [runPredict]);
 
   const handlePick = (h) => {
     setVals(h.vals);
@@ -53,7 +54,7 @@ export default function PredictorPage() {
 
   const aqi = result?.aqi ?? 0;
   const cat = aqiCategory(aqi);
-  const shapData = result?.shap_values ?? SHAP_STATIC;
+  const shapData = result?.shap_values?.length ? result.shap_values : SHAP_STATIC;
 
   return (
     <div className="predict-page">
@@ -67,7 +68,7 @@ export default function PredictorPage() {
         <div className="predict-knobs glass-strong">
           <div className="panel-header">
             <span className="mono panel-title">POLLUTANT INPUTS</span>
-            <span className="mono panel-meta">{loading ? "COMPUTING…" : error ? "ESTIMATED" : result ? "LIVE" : "DRAG DIALS"}</span>
+            <span className="mono panel-meta">{loading ? "COMPUTING…" : error ? "ESTIMATED" : result ? "● LIVE" : "DRAG DIALS"}</span>
           </div>
           <div className="knobs-grid">
             {POLLUTANTS.map(p => (
@@ -107,7 +108,7 @@ export default function PredictorPage() {
               <span className="mono panel-title">AI EXPLAINABILITY (SHAP)</span>
               <span className="mono panel-meta">FEATURE IMPACT</span>
             </div>
-            <ShapChart data={shapData} />
+            <ShapChart shap={shapData} predicted={aqi} />
           </div>
         </div>
       </div>

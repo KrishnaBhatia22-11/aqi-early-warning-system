@@ -10,7 +10,7 @@ const INDIA_GRID = [
   "M 250 540 L 310 560",
 ];
 
-export default function IndiaMap({ cities, selected, onSelect }) {
+export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
   const [hover, setHover] = useState(null);
 
   return (
@@ -75,7 +75,7 @@ export default function IndiaMap({ cities, selected, onSelect }) {
               style={{ cursor: "pointer" }}
               onMouseEnter={() => setHover(c)}
               onMouseLeave={() => setHover(null)}
-              onClick={() => onSelect(c)}
+              onClick={() => (onCityClick ?? onSelect)?.(c)}
             >
               <circle r={r * 3.5} fill={cat.color} opacity="0.18">
                 <animate attributeName="r" values={`${r*1.5};${r*4};${r*1.5}`} dur={`${1.6 + (i%3)*0.4}s`} repeatCount="indefinite"/>

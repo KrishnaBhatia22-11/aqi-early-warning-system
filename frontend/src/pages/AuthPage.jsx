@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 export default function AuthPage({ mode = "login", setPage }) {
-  const { login, register, error: authError } = useAuth();
+  const { login, register } = useAuth();
   const [isLogin, setIsLogin] = useState(mode === "login");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -14,11 +14,11 @@ export default function AuthPage({ mode = "login", setPage }) {
     setLoading(true);
     try {
       if (isLogin) {
-        await login(form.email, form.password);
+        login({ email: form.email, password: form.password });
       } else {
         if (!form.name.trim()) { setError("Name is required"); setLoading(false); return; }
         if (form.password.length < 6) { setError("Password must be at least 6 characters"); setLoading(false); return; }
-        await register(form.name, form.email, form.password);
+        register({ name: form.name, email: form.email, password: form.password });
       }
       setPage("map");
     } catch (err) {
@@ -64,7 +64,6 @@ export default function AuthPage({ mode = "login", setPage }) {
                 placeholder="Krishna Bhatia"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                required={!isLogin}
               />
             </div>
           )}
@@ -93,9 +92,7 @@ export default function AuthPage({ mode = "login", setPage }) {
             />
           </div>
 
-          {(error || authError) && (
-            <div className="auth-error mono">{error || authError}</div>
-          )}
+          {error && <div className="auth-error mono">{error}</div>}
 
           <button type="submit" className="btn-primary auth-submit" disabled={loading}>
             {loading ? "AUTHENTICATING…" : isLogin ? "SIGN IN →" : "CREATE ACCOUNT →"}
