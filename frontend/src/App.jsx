@@ -39,7 +39,9 @@ function AppInner() {
       if (Array.isArray(data) && data.length > 0) {
         setCities(prev =>
           prev.map(c => {
-            const live = data.find(d => d.name === c.name || d.city === c.name);
+            const live = data.find(d =>
+              (d.name ?? d.city ?? "").toLowerCase() === c.name.toLowerCase()
+            );
             return live ? { ...c, aqi: live.aqi ?? c.aqi, pollutant: live.pollutant ?? c.pollutant } : c;
           })
         );
@@ -70,10 +72,10 @@ function AppInner() {
     };
   }, [checkHealth, refreshCities]);
 
-  const handleIntroDone = () => {
+  const handleIntroDone = useCallback(() => {
     sessionStorage.setItem("intro_done", "1");
     setShowIntro(false);
-  };
+  }, []);
 
   const navigateTo = (p) => {
     setPage(VALID_PAGES.includes(p) ? p : "map");
@@ -81,8 +83,6 @@ function AppInner() {
   };
 
   const handleCitySelect = (city) => setZoomCity(city);
-
-  if (showIntro) return <CinematicIntro onDone={handleIntroDone} />;
 
   const renderPage = () => {
     switch (page) {
@@ -105,36 +105,42 @@ function AppInner() {
   const hazardousCities = cities.filter(c => c.aqi > 300);
 
   return (
-    <div className={`app-root ${a11y ? "a11y-mode" : ""}`}>
-      <EmergencyBanner nationalAvg={nationalAvg} hazardousCities={hazardousCities} />
-      <Navbar
-        page={page}
-        setPage={navigateTo}
-        apiOnline={apiOnline}
-        user={user}
-        a11y={a11y}
-        setA11y={setA11y}
-      />
-
-      <main className="main-content">
-        {renderPage()}
-      </main>
-
-      {page !== "login" && page !== "register" && (
-        <RichFooter setPage={navigateTo} />
-      )}
-
-      <StatusBar apiOnline={apiOnline} lastSync={lastSync} />
-      <HelpFAB />
-
-      {zoomCity && (
-        <CityZoomModal
-          city={zoomCity}
-          onClose={() => setZoomCity(null)}
-          onPredict={() => { setZoomCity(null); navigateTo("predict"); }}
+    <>
+      {/* Main app always rendered — intro sits on top as a fixed overlay */}
+      <div className={`app-root ${a11y ? "a11y-mode" : ""}`}>
+        <EmergencyBanner cities={cities} />
+        <Navbar
+          page={page}
+          setPage={navigateTo}
+          apiOnline={apiOnline}
+          user={user}
+          a11y={a11y}
+          setA11y={setA11y}
         />
-      )}
-    </div>
+
+        <main className="main-content">
+          {renderPage()}
+        </main>
+
+        {page !== "login" && page !== "register" && (
+          <RichFooter setPage={navigateTo} />
+        )}
+
+        <StatusBar apiOnline={apiOnline} lastSync={lastSync} />
+        <HelpFAB />
+
+        {zoomCity && (
+          <CityZoomModal
+            city={zoomCity}
+            onClose={() => setZoomCity(null)}
+            onPredict={() => { setZoomCity(null); navigateTo("predict"); }}
+          />
+        )}
+      </div>
+
+      {/* Intro overlay — removed from DOM once done */}
+      {showIntro && <CinematicIntro onDone={handleIntroDone} />}
+    </>
   );
 }
 

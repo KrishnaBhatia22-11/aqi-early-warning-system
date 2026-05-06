@@ -93,7 +93,7 @@ export default function PredictorPage() {
               <span className="mono panel-title">AQI READING</span>
               {loading && <span className="mono panel-meta" style={{ color: "#FFB300" }}>⟳ COMPUTING</span>}
             </div>
-            <Gauge aqi={aqi} idle={!result} />
+            <Gauge value={aqi} idle={!result} />
             {result && (
               <div className="predict-result-meta">
                 <div className="predict-aqi-big" style={{ color: cat.color }}>{aqi}</div>

@@ -1,22 +1,25 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { INDIA_PATH, CITIES_STATIC } from "../data/index";
 import { aqiCategory } from "../utils/aqiCategory";
 
 export default function CinematicIntro({ onDone }) {
   const [stage, setStage] = useState(0);
-  const [skipped, setSkipped] = useState(false);
+  const [fading, setFading] = useState(false);
+
+  const finish = useCallback(() => {
+    setFading(true);
+    setTimeout(onDone, 700);
+  }, [onDone]);
 
   useEffect(() => {
     const timers = [
       setTimeout(() => setStage(1), 2000),
       setTimeout(() => setStage(2), 4000),
       setTimeout(() => setStage(3), 6000),
-      setTimeout(() => onDone(), 8000),
+      setTimeout(finish,            8000),
     ];
     return () => timers.forEach(clearTimeout);
-  }, []);
-
-  const skip = () => { setSkipped(true); setTimeout(() => onDone(), 200); };
+  }, [finish]);
 
   const stars = useMemo(() => Array.from({ length: 140 }, () => ({
     x: Math.random() * 100, y: Math.random() * 100,
@@ -24,7 +27,7 @@ export default function CinematicIntro({ onDone }) {
   })), []);
 
   return (
-    <div className={`intro-stage ${skipped ? "fading" : ""} stage-${stage}`}>
+    <div className={`intro-stage ${fading ? "fading" : ""} stage-${stage}`}>
       <div className="intro-stars">
         {stars.map((s, i) => (
           <span key={i} style={{ left: s.x+"%", top: s.y+"%", width: s.s+"px", height: s.s+"px", animationDelay: s.d+"s" }} />
@@ -102,7 +105,7 @@ export default function CinematicIntro({ onDone }) {
         {stage === 3 && <div className="fade-up"><div className="mono intro-eyebrow" style={{color:"#34d27a"}}>● ALL SYSTEMS ONLINE</div><div className="display intro-title">Welcome.</div></div>}
       </div>
 
-      <button className="intro-skip mono" onClick={skip}>SKIP INTRO →</button>
+      <button className="intro-skip mono" onClick={finish}>SKIP INTRO →</button>
 
       <div className="intro-progress">
         <div className="intro-progress-bar" style={{ width: `${(stage + 1) * 25}%` }}></div>
