@@ -1,0 +1,10 @@
+.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+mlruns/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+models/*.pkl
