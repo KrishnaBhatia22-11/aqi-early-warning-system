@@ -35,7 +35,7 @@ function generateReply(msg, cities) {
     return "PM2.5 are ultra-fine particles (≤2.5 micrometers) that penetrate deep into the lungs and bloodstream. Primary sources in India: vehicular emissions, crop burning, industrial pollution, and construction dust. Long-term exposure is linked to cardiovascular and respiratory disease.";
   }
   if (lower.includes("model") || lower.includes("ml") || lower.includes("accurate") || lower.includes("xgboost")) {
-    return "Our model is an **XGBoost regressor** trained on 9 years of CPCB data (2015–2024) with **R²=0.932** and **MAE=21.33 AQI units**. It takes 9 pollutant readings as input and outputs a predicted AQI. SHAP values explain which pollutants drive each prediction.";
+    return "Our model is an **XGBoost regressor** trained on 6 years of CPCB data (2015–2020, 29,531 rows, 26 cities) with **R²=0.932** and **MAE=21.33 AQI units**. It takes 9 pollutant readings as input and outputs a predicted AQI. SHAP values explain which pollutants drive each prediction.";
   }
   if (lower.includes("300") || lower.includes("health") || lower.includes("safe")) {
     return "AQI **300** is classified as **Very Poor**. At this level: everyone may experience health effects, not just sensitive groups. Avoid prolonged outdoor exposure. Use N95 masks outdoors. Keep windows closed and use air purifiers indoors. Children and elderly should stay inside.";

@@ -9,7 +9,7 @@ export default function ThreatMatrix({ cities, onCitySelect }) {
       <div className="threat-header">
         <div>
           <span className="panel-title mono">THREAT MATRIX</span>
-          <div className="display threat-title">26 Cities Ranked</div>
+          <div className="display threat-title">{cities.length} Cities Ranked</div>
         </div>
         <span className="mono threat-meta">SORTED · DESC</span>
       </div>
