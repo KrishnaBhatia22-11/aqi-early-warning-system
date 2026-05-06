@@ -18,7 +18,7 @@ st.set_page_config(
     layout="wide"
 )
 
-API_BASE = "http://127.0.0.1:8000/api/v1"
+API_BASE = "https://aqi-api-y2qs.onrender.com/api/v1"
 
 # ─────────────────────────────────────────────
 # MASTER CSS — BLACK + ORANGE FIRE THEME
