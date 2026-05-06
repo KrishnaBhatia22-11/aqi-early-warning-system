@@ -8,9 +8,6 @@
 
 > An intelligent AQI prediction and early warning system for Indian cities, powered by XGBoost ML, SHAP Explainable AI, FastAPI, and a Groq-powered AI chatbot.
 
-**Manav Rachna International Institute of Research and Studies, Faridabad**
-B.Tech Project — Krishna Bhatia (358) · Prateek Singh (362) · Snehaal Mukherjee (350)
-
 ---
 
 ## 🚀 Live Demo
