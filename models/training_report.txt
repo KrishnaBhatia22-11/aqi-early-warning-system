@@ -1,0 +1,25 @@
+AQI XGBoost Retrain Report
+===========================
+Dataset   : data/raw/city_day_combined.csv
+Rows used : 36,274
+Features  : PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3
+
+Train / Test split : 80% / 20%
+Train rows : 29,019
+Test  rows : 7,255
+
+Hyperparameters
+---------------
+n_estimators     : 300
+learning_rate    : 0.05
+max_depth        : 6
+subsample        : 0.8
+colsample_bytree : 0.8
+
+Results
+-------
+R²   : 0.6175
+MAE  : 56.76
+RMSE : 91.37
+
+Model saved to : models\xgb_model.pkl
