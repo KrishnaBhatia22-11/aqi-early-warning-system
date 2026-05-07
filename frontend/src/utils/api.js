@@ -80,6 +80,12 @@ export async function chatWithAI(message, cities = [], history = []) {
   return res.json();
 }
 
+export async function fetchModels() {
+  const res = await fetch(`${BASE}/api/v1/models/comparison`);
+  if (!res.ok) throw new Error("Models API unavailable");
+  return res.json();
+}
+
 export async function detectAnomaly(city, currentAqi, aqiHistory = []) {
   try {
     const res = await fetch(`${BASE}/api/v1/anomaly/detect`, {

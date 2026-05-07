@@ -5,6 +5,7 @@ const links = [
   { id: "map",      label: "LIVE MAP"  },
   { id: "predict",  label: "PREDICT"   },
   { id: "forecast", label: "FORECAST"  },
+  { id: "models",   label: "MODELS"    },
   { id: "cities",   label: "CITIES"    },
   { id: "alerts",   label: "ALERTS"    },
   { id: "chat",     label: "CHATBOT"   },
