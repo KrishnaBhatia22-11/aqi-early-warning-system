@@ -2211,3 +2211,136 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 .nf-title { font-size: 40px; font-weight: 700; text-align: center; margin: 0 0 12px; position: relative; z-index: 2; }
 .nf-sub { font-size: 16px; color: var(--text-dim); text-align: center; margin-bottom: 28px; position: relative; z-index: 2; }
 .nf-actions { display: flex; gap: 12px; justify-content: center; position: relative; z-index: 2; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════════════════════
+   CITY COMPARISON PAGE
+═══════════════════════════════════════════════════════════════ */
+.cmp-page { padding-top: 48px; padding-bottom: 80px; }
+
+/* Hero */
+.cmp-hero     { padding: 0 24px 32px; max-width: 1400px; margin: 0 auto; }
+.cmp-eyebrow  { font-size: 11px; letter-spacing: 0.2em; color: var(--orange); margin-bottom: 12px; display: block; }
+.cmp-title    { font-size: clamp(36px, 5vw, 68px); font-weight: 700; margin: 0 0 14px; letter-spacing: -0.04em; }
+.cmp-subtitle { font-size: 16px; color: var(--text-dim); max-width: 560px; line-height: 1.6; margin: 0; }
+
+/* Selector section */
+.cmp-selector-section { max-width: 1400px; margin: 0 auto 40px; padding: 0 24px; }
+.cmp-selector-grid    { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; margin-bottom: 20px; }
+
+/* City cards */
+.cmp-city-card       { padding: 24px 26px; }
+.cmp-city-card-label { font-size: 10px; letter-spacing: 0.2em; color: var(--text-mute); margin-bottom: 12px; display: block; }
+.cmp-city-select     { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); font-family: "Space Grotesk", sans-serif; font-size: 22px; font-weight: 700; padding: 10px 14px; border-radius: 10px; outline: none; cursor: pointer; appearance: auto; }
+.cmp-city-select:focus { border-color: var(--orange); }
+
+/* Live badge */
+.cmp-live-badge { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.cmp-live-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; animation: pulse-red 2s ease-in-out infinite; }
+.cmp-live-text  { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
+.cmp-live-cat   { font-size: 11px; letter-spacing: 0.08em; }
+
+/* VS divider */
+.cmp-vs-wrap  { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.cmp-vs-badge { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.18); letter-spacing: 0.04em; font-family: "Space Grotesk", sans-serif; }
+.cmp-swap-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-dim); font-size: 18px; width: 42px; height: 42px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 160ms ease; }
+.cmp-swap-btn:hover { background: rgba(255,107,0,0.14); border-color: var(--orange); color: var(--orange); transform: rotate(180deg); }
+
+/* Compare button */
+@keyframes cmp-attract { 0%{box-shadow:0 0 0 0 rgba(255,107,0,0.5)} 60%{box-shadow:0 0 0 10px rgba(255,107,0,0)} 100%{box-shadow:0 0 0 0 rgba(255,107,0,0)} }
+.cmp-compare-btn { width: 100%; padding: 17px; background: linear-gradient(135deg,#FF6B00,#d35400); color: #fff; border: none; border-radius: 12px; font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.14em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: opacity 160ms ease, transform 160ms ease; animation: cmp-attract 1.4s ease 0.5s both; }
+.cmp-compare-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.cmp-compare-btn:disabled { opacity: 0.45; cursor: not-allowed; animation: none; }
+.cmp-compare-btn.loading  { opacity: 0.65; }
+.cmp-spin      { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: fc-spin 0.7s linear infinite; flex-shrink: 0; }
+.cmp-same-warn { font-size: 11px; letter-spacing: 0.08em; color: var(--text-mute); margin-top: 8px; text-align: center; }
+
+/* Skeleton / Error */
+.cmp-skel-wrap   { max-width: 1400px; margin: 0 auto; padding: 0 24px 40px; display: flex; flex-direction: column; gap: 12px; }
+.cmp-skel-row    { height: 52px; border-radius: 8px; }
+.cmp-error-wrap  { max-width: 1400px; margin: 0 auto 40px; padding: 0 24px; display: flex; align-items: center; gap: 16px; }
+.cmp-error-text  { font-size: 12px; letter-spacing: 0.1em; color: #ef3a4d; }
+.cmp-error-retry { background: transparent; border: 1px solid #ef3a4d; color: #ef3a4d; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.12em; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+
+/* Verdict Banner */
+.cmp-verdict-section { max-width: 1400px; margin: 0 auto 36px; padding: 0 24px; }
+.cmp-verdict-banner  { border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 30px 36px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.cmp-verdict-icon    { font-size: 38px; flex-shrink: 0; line-height: 1; }
+.cmp-verdict-body    { flex: 1; min-width: 0; }
+.cmp-verdict-text    { font-size: clamp(18px, 2.8vw, 30px); font-weight: 700; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.02em; font-family: "Space Grotesk", sans-serif; }
+.cmp-verdict-sub     { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; margin: 0; }
+.cmp-safer-badge     { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); color: #22c55e; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; padding: 8px 18px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+
+/* Metrics grid */
+.cmp-metrics-section { max-width: 1400px; margin: 0 auto 40px; padding: 0 24px; }
+.cmp-metrics-header  { display: grid; grid-template-columns: 1fr 150px 1fr; gap: 0; padding: 0 0 12px; border-bottom: 2px solid var(--border-faint); margin-bottom: 4px; }
+.cmp-metrics-hcity   { font-size: 22px; font-weight: 700; font-family: "Space Grotesk", sans-serif; }
+.cmp-metrics-hcity-right { text-align: right; }
+
+.cmp-metric-row  { display: grid; grid-template-columns: 1fr 150px 1fr; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--border-faint); animation: fade-up 500ms cubic-bezier(0.2,0.8,0.2,1) both; }
+.cmp-row-danger  { background: rgba(239,58,77,0.04); border-radius: 8px; padding: 13px 12px; margin: 0 -12px; }
+.cmp-metric-cell { display: flex; align-items: center; gap: 8px; }
+.cmp-cell-left   { justify-content: flex-start; }
+.cmp-cell-right  { justify-content: flex-end; flex-direction: row-reverse; }
+.cmp-metric-val  { font-size: 22px; font-weight: 700; font-family: "Space Grotesk", sans-serif; }
+.cmp-metric-lbl  { text-align: center; font-size: 9px; letter-spacing: 0.16em; color: var(--text-mute); }
+.cmp-aqi-giant   { font-size: 52px; font-weight: 700; font-family: "Space Grotesk", sans-serif; letter-spacing: -0.04em; line-height: 1; }
+.cmp-cat-pill    { font-size: 11px; font-weight: 600; padding: 5px 13px; border-radius: 999px; letter-spacing: 0.05em; white-space: nowrap; }
+.cmp-crown       { font-size: 15px; flex-shrink: 0; }
+.cmp-win         { background: rgba(34,197,94,0.07); border-radius: 7px; padding: 6px 10px; }
+.cmp-lose        { background: rgba(239,58,77,0.05); border-radius: 7px; padding: 6px 10px; }
+
+/* Section headers */
+.cmp-sec-header { max-width: 1400px; margin: 0 auto 20px; padding: 0 24px; }
+.cmp-sec-title  { font-size: clamp(20px, 2.8vw, 34px); font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+.cmp-sec-sub    { font-size: 11px; letter-spacing: 0.1em; color: var(--text-mute); margin: 0; }
+
+/* Forecast chart */
+.cmp-forecast-section { max-width: 1400px; margin: 0 auto 40px; padding: 0 24px; }
+.cmp-fc-card     { padding: 24px 28px; }
+.cmp-chart-wrap  { }
+.cmp-chart-legend { display: flex; gap: 20px; justify-content: flex-end; margin-bottom: 14px; }
+.cmp-legend-item  { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim); font-family: "JetBrains Mono", monospace; }
+.cmp-legend-line  { width: 20px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+.cmp-fc-svg       { width: 100%; height: auto; display: block; }
+
+/* Health section */
+.cmp-health-section { max-width: 1400px; margin: 0 auto 40px; padding: 0 24px; }
+.cmp-health-grid    { display: grid; grid-template-columns: 1fr 200px 1fr; gap: 20px; align-items: start; }
+.cmp-health-card    { padding: 24px; display: flex; flex-direction: column; gap: 4px; }
+.cmp-health-city    { font-size: 20px; font-weight: 700; font-family: "Space Grotesk", sans-serif; margin-bottom: 12px; }
+.cmp-hrow           { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-faint); }
+.cmp-hrow:last-of-type { border-bottom: none; }
+.cmp-hrow-icon      { font-size: 15px; flex-shrink: 0; }
+.cmp-hrow-label     { font-size: 10px; letter-spacing: 0.1em; color: var(--text-mute); flex: 1; }
+.cmp-hrow-val       { font-size: 16px; font-weight: 700; font-family: "Space Grotesk", sans-serif; }
+.cmp-risk-pill      { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 999px; text-align: center; margin-top: 10px; letter-spacing: 0.07em; }
+
+/* Savings strip */
+.cmp-diff-strip  { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.18); border-radius: 14px; padding: 20px 18px; display: flex; flex-direction: column; gap: 0; align-self: stretch; }
+.cmp-diff-header { font-size: 9px; letter-spacing: 0.18em; color: #22c55e; margin-bottom: 14px; line-height: 1.5; }
+.cmp-diff-row    { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; border-bottom: 1px solid rgba(34,197,94,0.1); }
+.cmp-diff-row:last-child { border-bottom: none; }
+.cmp-diff-val    { font-size: 26px; font-weight: 700; font-family: "Space Grotesk", sans-serif; color: #22c55e; line-height: 1; }
+.cmp-diff-lbl    { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.06em; }
+
+/* Share */
+.cmp-share-section { max-width: 1400px; margin: 0 auto 20px; padding: 0 24px; display: flex; justify-content: center; }
+.cmp-share-btn     { background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0.12em; padding: 13px 32px; border-radius: 10px; cursor: pointer; transition: all 160ms ease; }
+.cmp-share-btn:hover { background: rgba(255,107,0,0.1); border-color: var(--orange); color: var(--orange); }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .cmp-selector-grid  { grid-template-columns: 1fr; gap: 12px; }
+  .cmp-vs-wrap        { flex-direction: row; justify-content: center; gap: 16px; padding: 4px 0; }
+  .cmp-metrics-header { grid-template-columns: 1fr 90px 1fr; }
+  .cmp-metric-row     { grid-template-columns: 1fr 90px 1fr; }
+  .cmp-aqi-giant      { font-size: 34px; }
+  .cmp-metric-val     { font-size: 16px; }
+  .cmp-health-grid    { grid-template-columns: 1fr; }
+  .cmp-diff-strip     { order: -1; }
+  .cmp-verdict-banner { flex-direction: column; gap: 16px; padding: 22px 20px; }
+  .cmp-verdict-text   { font-size: 18px; }
+  .cmp-health-section, .cmp-forecast-section, .cmp-metrics-section, .cmp-verdict-section { padding: 0 16px; }
+  .cmp-hero           { padding: 0 16px 28px; }
+  .cmp-selector-section { padding: 0 16px; }
+}

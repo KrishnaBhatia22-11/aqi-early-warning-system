@@ -23,6 +23,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import ForecastPage from "./pages/ForecastPage";
 import ModelComparisonPage from "./pages/ModelComparisonPage";
 import HealthImpactPage from "./pages/HealthImpactPage";
+import CityComparisonPage from "./pages/CityComparisonPage";
 
 // ── Error Boundaries ─────────────────────────────────────────────────────────
 
@@ -85,7 +86,7 @@ class AppBoundary extends Component {
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 
-const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "alerts", "chat", "about", "login", "register", "api"];
+const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "compare", "alerts", "chat", "about", "login", "register", "api"];
 
 function AppInner() {
   const { user } = useAuth();
@@ -158,6 +159,7 @@ function AppInner() {
       case "forecast": return <ForecastPage cities={cities} />;
       case "models":   return <ModelComparisonPage />;
       case "cities":   return <DashboardPage cities={cities} initialCity={citiesInitialCity} />;
+      case "compare":  return <CityComparisonPage cities={cities} />;
       case "alerts":   return <AlertsPage cities={cities} initialCity={alertsInitialCity} />;
       case "chat":     return <ChatbotPage cities={cities} />;
       case "about":    return <AboutPage />;

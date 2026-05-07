@@ -5,8 +5,9 @@ const NAV_GROUPS = [
   {
     id: "explore", label: "EXPLORE",
     items: [
-      { id: "map",    icon: "🗺", label: "Live Map",       desc: "Real-time AQI across 26 Indian cities" },
-      { id: "cities", icon: "🏙", label: "City Dashboard", desc: "Drill into any city's pollution data"   },
+      { id: "map",     icon: "🗺",  label: "Live Map",       desc: "Real-time AQI across 26 Indian cities"    },
+      { id: "cities",  icon: "🏙",  label: "City Dashboard", desc: "Drill into any city's pollution data"    },
+      { id: "compare", icon: "🆚",  label: "Compare Cities", desc: "Side-by-side air quality comparison"     },
     ],
   },
   {

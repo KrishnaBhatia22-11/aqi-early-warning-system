@@ -110,6 +110,14 @@ export async function calculateHealthImpact(payload) {
   return res.json();
 }
 
+export async function fetchCompare(city1, city2) {
+  const res = await fetch(
+    `${BASE}/api/v1/compare?city1=${encodeURIComponent(city1)}&city2=${encodeURIComponent(city2)}`
+  );
+  if (!res.ok) throw new Error("Compare API failed");
+  return res.json();
+}
+
 export async function fetchForecast(city, baseAqi = null) {
   const body = { city };
   if (baseAqi !== null && baseAqi > 0) body.base_aqi = baseAqi;
