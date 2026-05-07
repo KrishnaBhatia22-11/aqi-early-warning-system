@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import predict, city, chat, forecast, anomaly, models, health
+from api.routes import weather, compare, history, share
 
 app = FastAPI(
     title="AI-Driven Early Warning System for Urban Air Quality Risk Zones",
@@ -24,6 +25,10 @@ app.include_router(forecast.router, prefix="/api/v1", tags=["Forecast"])
 app.include_router(anomaly.router,  prefix="/api/v1", tags=["Anomaly"])
 app.include_router(models.router,   prefix="/api/v1", tags=["Models"])
 app.include_router(health.router,   prefix="/api/v1", tags=["Health"])
+app.include_router(weather.router,  prefix="/api/v1", tags=["Weather"])
+app.include_router(compare.router,  prefix="/api/v1", tags=["Compare"])
+app.include_router(history.router,  prefix="/api/v1", tags=["History"])
+app.include_router(share.router,    prefix="/api/v1", tags=["Share"])
 
 
 @app.get("/")
