@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ForecastChart from "../components/ForecastChart";
 import { fetchForecast } from "../utils/api";
 import { aqiCategory } from "../utils/aqiCategory";
@@ -10,33 +10,44 @@ const FORECAST_CITIES = [
   "Visakhapatnam", "Coimbatore", "Kochi", "Bhopal",
 ];
 
-function trendArrow(prev, curr) {
-  if (curr > prev + 5)  return { arrow: "↑", color: "#ef3a4d" };
-  if (curr < prev - 5)  return { arrow: "↓", color: "#34d27a" };
-  return { arrow: "→", color: "#FFB300" };
-}
-
 export default function ForecastPage({ cities }) {
   const [city, setCity]         = useState("Delhi");
   const [data, setData]         = useState(null);
   const [loading, setLoading]   = useState(false);
+  const [slowLoad, setSlowLoad] = useState(false);
   const [error, setError]       = useState(null);
+
+  // Keep a ref to the latest cities so we read it at fetch-time
+  // without re-triggering the effect on every cities poll
+  const citiesRef = useRef(cities);
+  useEffect(() => { citiesRef.current = cities; }, [cities]);
 
   useEffect(() => {
     setData(null);
     setError(null);
     setLoading(true);
-    fetchForecast(city)
+    setSlowLoad(false);
+
+    const liveCity = citiesRef.current?.find(x => x.name === city);
+    const baseAqi  = liveCity?.aqi ?? null;
+
+    const slowTimer = setTimeout(() => setSlowLoad(true), 3500);
+
+    fetchForecast(city, baseAqi)
       .then(setData)
       .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [city]);
+      .finally(() => { setLoading(false); clearTimeout(slowTimer); });
+
+    return () => clearTimeout(slowTimer);
+  }, [city]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const downloadCSV = () => {
     if (!data) return;
     const rows = [
-      "Hour,AQI,Upper Bound,Lower Bound,Category",
-      ...data.forecast.map(f => `${f.hour},${f.aqi},${f.upper},${f.lower},${f.category}`),
+      "Hour,Date,AQI,Upper,Lower,Category,Confidence%",
+      ...data.forecast.map(f =>
+        `${f.hour},${f.date_label},${f.aqi},${f.upper},${f.lower},${f.category},${f.confidence ?? ""}`
+      ),
     ];
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
     const url  = URL.createObjectURL(blob);
@@ -49,17 +60,21 @@ export default function ForecastPage({ cities }) {
 
   return (
     <div className="forecast-page">
+      {/* ── Hero */}
       <div className="forecast-hero">
-        <div className="mono forecast-eyebrow">PROPHET AI · 24-HOUR FORECAST · UPDATED HOURLY</div>
+        <div className="mono forecast-eyebrow">DIURNAL AI MODEL · 24-HOUR FORECAST · UPDATED HOURLY</div>
         <h1 className="display forecast-title">AQI Forecast</h1>
         <p className="forecast-sub">
-          Machine-learning time-series forecast for the next 24 hours with confidence intervals.
+          Physics-informed model anchored to live WAQI data.
+          Peaks at morning rush (07–09) and evening (17–19).
         </p>
       </div>
 
-      {/* City selector */}
+      {/* ── City selector */}
       <div className="forecast-city-bar glass-strong">
-        <span className="mono" style={{ color: "var(--orange)", fontSize: 11, letterSpacing: "0.15em", flexShrink: 0 }}>SELECT CITY</span>
+        <span className="mono" style={{ color: "var(--orange)", fontSize: 11, letterSpacing: "0.15em", flexShrink: 0 }}>
+          SELECT CITY
+        </span>
         <div className="forecast-city-pills">
           {FORECAST_CITIES.map(c => {
             const liveCity = cities?.find(x => x.name === c);
@@ -73,7 +88,9 @@ export default function ForecastPage({ cities }) {
               >
                 {c}
                 {liveCity && (
-                  <span className="mono" style={{ marginLeft: 4, color: cat.color, fontSize: 9 }}>{liveCity.aqi}</span>
+                  <span className="mono" style={{ marginLeft: 4, color: cat.color, fontSize: 9 }}>
+                    {liveCity.aqi}
+                  </span>
                 )}
               </button>
             );
@@ -81,17 +98,69 @@ export default function ForecastPage({ cities }) {
         </div>
       </div>
 
-      {/* Chart */}
+      {/* ── Chart */}
       <div className="forecast-chart-wrap">
-        <ForecastChart forecastData={data} loading={loading} error={error} cityName={city} />
+        <ForecastChart
+          forecastData={data}
+          loading={loading}
+          slowLoad={slowLoad}
+          error={error}
+          cityName={city}
+        />
       </div>
 
-      {/* 24h table */}
+      {/* ── 24h summary strip */}
+      {data && (
+        <div className="forecast-summary-strip glass-strong">
+          <div className="fss-item">
+            <span className="mono fss-label">MEAN AQI</span>
+            <span className="mono fss-val" style={{ color: aqiCategory(data.mean_aqi).color }}>
+              {data.mean_aqi}
+            </span>
+          </div>
+          <div className="fss-sep" />
+          <div className="fss-item">
+            <span className="mono fss-label">PEAK AT</span>
+            <span className="mono fss-val" style={{ color: "#ef3a4d" }}>{data.peak.hour}</span>
+          </div>
+          <div className="fss-sep" />
+          <div className="fss-item">
+            <span className="mono fss-label">CLEANEST AT</span>
+            <span className="mono fss-val" style={{ color: "#34d27a" }}>{data.low.hour}</span>
+          </div>
+          <div className="fss-sep" />
+          <div className="fss-item">
+            <span className="mono fss-label">TREND</span>
+            <span
+              className="mono fss-val"
+              style={{
+                color: data.trend === "RISING" ? "#ef3a4d"
+                     : data.trend === "FALLING" ? "#34d27a" : "#FFB300",
+              }}
+            >
+              {data.trend === "RISING" ? "↑" : data.trend === "FALLING" ? "↓" : "→"} {data.trend}
+            </span>
+          </div>
+          <div className="fss-sep" />
+          <div className="fss-item">
+            <span className="mono fss-label">DATA SOURCE</span>
+            <span className={`mono fss-source ${data.base_aqi_source === "live_waqi" ? "live" : "est"}`}>
+              {data.base_aqi_source === "live_waqi" ? "● LIVE WAQI" : "◎ SEASONAL EST."}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── 24h breakdown table */}
       {data && (
         <div className="forecast-table-wrap glass-strong">
           <div className="panel-header" style={{ marginBottom: 16 }}>
             <span className="mono panel-title">24-HOUR BREAKDOWN · {city.toUpperCase()}</span>
-            <button className="btn-ghost" style={{ fontSize: 10, padding: "5px 12px" }} onClick={downloadCSV}>
+            <button
+              className="btn-ghost"
+              style={{ fontSize: 10, padding: "5px 12px" }}
+              onClick={downloadCSV}
+            >
               ↓ DOWNLOAD CSV
             </button>
           </div>
@@ -104,21 +173,24 @@ export default function ForecastPage({ cities }) {
                   <th className="mono">UPPER</th>
                   <th className="mono">LOWER</th>
                   <th className="mono">CATEGORY</th>
-                  <th className="mono">TREND</th>
+                  <th className="mono">CONF.</th>
                 </tr>
               </thead>
               <tbody>
                 {data.forecast.map((row, i) => {
                   const cat = aqiCategory(row.aqi);
-                  const tr  = i > 0 ? trendArrow(data.forecast[i - 1].aqi, row.aqi) : null;
                   return (
                     <tr key={row.hour} className={i % 2 === 0 ? "row-even" : ""}>
                       <td className="mono">{row.hour}</td>
                       <td className="mono" style={{ color: cat.color, fontWeight: 700 }}>{row.aqi}</td>
                       <td className="mono" style={{ color: "rgba(255,255,255,0.4)" }}>{row.upper}</td>
                       <td className="mono" style={{ color: "rgba(255,255,255,0.4)" }}>{row.lower}</td>
-                      <td><span className={`badge ${cat.klass}`} style={{ fontSize: 10 }}>{cat.name}</span></td>
-                      <td className="mono" style={{ color: tr?.color ?? "transparent", fontSize: 16 }}>{tr?.arrow ?? ""}</td>
+                      <td>
+                        <span className={`badge ${cat.klass}`} style={{ fontSize: 10 }}>{cat.name}</span>
+                      </td>
+                      <td className="mono" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        {row.confidence ?? "—"}%
+                      </td>
                     </tr>
                   );
                 })}

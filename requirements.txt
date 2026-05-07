@@ -16,5 +16,4 @@ matplotlib
 seaborn
 fastapi
 uvicorn
-prophet
 holidays

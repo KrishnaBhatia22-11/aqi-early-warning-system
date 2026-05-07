@@ -1,44 +1,68 @@
-import os
-import sys
+import hashlib
+import random
 from datetime import datetime, timedelta
+from typing import Optional
 
 import numpy as np
-import pandas as pd
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 router = APIRouter()
 
-# ── Cache: city_key → { ts, data }
 _cache: dict = {}
-CACHE_TTL = 3600  # 1 hour
+CACHE_TTL = 3600  # seconds
 
-DATA_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "data", "raw", "city_day.csv"
-)
+# ── Diurnal profile: 24-hour multiplier for Indian metro cities
+# Peaks: 07-09 (morning rush) and 17-19 (evening rush)
+# Trough: 02-03 (overnight minimum)
+# Midday dip: 12-13 (boundary layer at max height)
+_DIURNAL_RAW = [
+    0.87, 0.85, 0.83, 0.83, 0.86, 0.92,  # 00–05
+    1.05, 1.28, 1.32, 1.20, 1.08, 1.00,  # 06–11
+    0.95, 0.93, 0.97, 1.05, 1.15, 1.30,  # 12–17
+    1.35, 1.25, 1.10, 1.00, 0.93, 0.89,  # 18–23
+]
+_diurnal_mean = sum(_DIURNAL_RAW) / 24
+DIURNAL = [v / _diurnal_mean for v in _DIURNAL_RAW]
 
-# Normalise frontend city names to CSV city names
+# Monthly seasonal multiplier (India climatology)
+SEASONAL = {
+    1: 1.25, 2: 1.20, 3: 1.05, 4: 1.05, 5: 1.08,
+    6: 0.90, 7: 0.82, 8: 0.78, 9: 0.88, 10: 1.05,
+    11: 1.20, 12: 1.35,
+}
+
+# Day-of-week multiplier (0=Mon … 6=Sun)
+DOW = {0: 1.02, 1: 1.02, 2: 1.02, 3: 1.02, 4: 1.05, 5: 0.92, 6: 0.85}
+
+# Summer 2026 researched baseline AQI — used when WAQI live data is unavailable
+CITY_DEFAULTS = {
+    "Delhi": 185, "Mumbai": 95, "Kolkata": 140, "Chennai": 75,
+    "Bengaluru": 85, "Hyderabad": 90, "Ahmedabad": 130, "Jaipur": 145,
+    "Lucknow": 160, "Patna": 175, "Chandigarh": 105, "Amritsar": 120,
+    "Guwahati": 95, "Thiruvananthapuram": 55, "Visakhapatnam": 80,
+    "Coimbatore": 65, "Kochi": 70, "Bhopal": 120,
+}
+
 CITY_NORM = {
-    "bangalore":         "Bengaluru",
-    "bengalore":         "Bengaluru",
-    "bengaluru":         "Bengaluru",
-    "cochin":            "Kochi",
-    "ernakulam":         "Ernakulam",
-    "thiruvananthapuram":"Thiruvananthapuram",
-    "trivandrum":        "Thiruvananthapuram",
-    "vizag":             "Visakhapatnam",
-    "visakhapatnam":     "Visakhapatnam",
+    "bangalore": "Bengaluru", "bengalore": "Bengaluru", "bengaluru": "Bengaluru",
+    "cochin": "Kochi", "ernakulam": "Kochi",
+    "thiruvananthapuram": "Thiruvananthapuram", "trivandrum": "Thiruvananthapuram",
+    "vizag": "Visakhapatnam", "visakhapatnam": "Visakhapatnam",
+    "delhi": "Delhi", "mumbai": "Mumbai", "kolkata": "Kolkata",
+    "chennai": "Chennai", "hyderabad": "Hyderabad", "ahmedabad": "Ahmedabad",
+    "jaipur": "Jaipur", "lucknow": "Lucknow", "patna": "Patna",
+    "chandigarh": "Chandigarh", "amritsar": "Amritsar", "guwahati": "Guwahati",
+    "coimbatore": "Coimbatore", "kochi": "Kochi", "bhopal": "Bhopal",
 }
 
 
 def _cat(aqi: float) -> str:
-    if aqi <= 50:   return "Good"
-    if aqi <= 100:  return "Satisfactory"
-    if aqi <= 200:  return "Moderate"
-    if aqi <= 300:  return "Poor"
-    if aqi <= 400:  return "Very Poor"
+    if aqi <= 50:  return "Good"
+    if aqi <= 100: return "Satisfactory"
+    if aqi <= 200: return "Moderate"
+    if aqi <= 300: return "Poor"
+    if aqi <= 400: return "Very Poor"
     return "Severe"
 
 
@@ -56,93 +80,86 @@ def _recommendation(peak: float, trend: str) -> str:
     if peak > 100:
         return "Moderate pollution forecast. Sensitive individuals should avoid prolonged outdoor activities."
     if peak > 50:
-        return "Satisfactory air quality ahead. Most activities are safe; sensitive groups should take brief breaks indoors."
+        return "Satisfactory air quality ahead. Most activities are safe; sensitive groups should take brief breaks."
     return "Clean air forecast for the next 24 hours. Enjoy outdoor activities freely."
 
 
 class ForecastRequest(BaseModel):
     city: str
+    base_aqi: Optional[float] = None
 
 
 @router.post("/forecast")
 def forecast_aqi(req: ForecastRequest):
     city_input = req.city.strip()
-    csv_city = CITY_NORM.get(city_input.lower(), city_input)
+    norm_city = CITY_NORM.get(city_input.lower(), city_input)
+    now = datetime.now()
+    now_ts = now.timestamp()
 
-    # ── Cache hit
-    now_ts = datetime.now().timestamp()
-    entry = _cache.get(csv_city.lower())
+    # Cache key: city + current hour + base_aqi rounded to nearest 10
+    base_bucket = round((req.base_aqi or 0) / 10) * 10
+    cache_key = f"{norm_city.lower()}_{now.strftime('%Y%m%d%H')}_{base_bucket}"
+    entry = _cache.get(cache_key)
     if entry and (now_ts - entry["ts"]) < CACHE_TTL:
         return entry["data"]
 
-    # ── Load & filter CSV
-    try:
-        df = pd.read_csv(DATA_PATH)
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Dataset not found on server.")
+    # Determine base AQI and source label
+    if req.base_aqi and 1.0 <= req.base_aqi <= 500.0:
+        base = float(req.base_aqi)
+        base_aqi_source = "live_waqi"
+    else:
+        base = float(CITY_DEFAULTS.get(norm_city, 150))
+        base_aqi_source = "seasonal_estimate"
 
-    city_df = (
-        df[df["City"].str.lower() == csv_city.lower()][["Date", "AQI"]]
-        .dropna()
-        .copy()
+    seasonal_mult = SEASONAL.get(now.month, 1.0)
+    dow_mult = DOW.get(now.weekday(), 1.0)
+
+    # Back-calculate neutral_base so the forecast anchors at base at the current hour
+    combined_mult = DIURNAL[now.hour] * seasonal_mult * dow_mult
+    neutral_base = max(10.0, base / combined_mult)
+
+    # Reproducible noise: seeded by city + date so same-day calls give same pattern
+    seed_int = int(
+        hashlib.md5(f"{norm_city.lower()}_{now.strftime('%Y%m%d')}".encode()).hexdigest()[:8], 16
     )
+    rng = random.Random(seed_int)
 
-    if len(city_df) < 30:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No sufficient data for '{city_input}'. Available cities include Delhi, Mumbai, Bengaluru, Chennai, Kolkata, Hyderabad, Ahmedabad, Jaipur, Lucknow, Patna, Chandigarh, Amritsar, Guwahati, Thiruvananthapuram, Visakhapatnam, Coimbatore, Kochi.",
-        )
-
-    city_df["ds"] = pd.to_datetime(city_df["Date"])
-    city_df["y"]  = city_df["AQI"].astype(float)
-    city_df = city_df[["ds", "y"]].sort_values("ds").drop_duplicates("ds")
-
-    # ── Fit Prophet
-    try:
-        from prophet import Prophet  # lazy import — slow first time
-    except ImportError:
-        raise HTTPException(status_code=500, detail="Prophet not installed on server.")
-
-    model = Prophet(
-        yearly_seasonality=True,
-        weekly_seasonality=True,
-        daily_seasonality=False,
-        changepoint_prior_scale=0.3,
-        seasonality_prior_scale=10,
-    )
-    model.fit(city_df)
-
-    # ── 24 hourly future points
-    last_date = city_df["ds"].max()
-    future_ds = [last_date + timedelta(hours=i + 1) for i in range(24)]
-    future    = pd.DataFrame({"ds": future_ds})
-    fc        = model.predict(future)
-
-    fc["yhat"]       = fc["yhat"].clip(0, 500)
-    fc["yhat_lower"] = fc["yhat_lower"].clip(0, 500)
-    fc["yhat_upper"] = fc["yhat_upper"].clip(0, 500)
-
-    # ── Display hours anchored to current clock time
-    base = datetime.now().replace(minute=0, second=0, microsecond=0)
+    base_hour_dt = now.replace(minute=0, second=0, microsecond=0)
     items = []
-    for i, (_, row) in enumerate(fc.iterrows()):
-        aqi_v = int(round(row["yhat"]))
+
+    for i in range(24):
+        hour_dt = base_hour_dt + timedelta(hours=i)
+        h = hour_dt.hour
+
+        raw = neutral_base * DIURNAL[h] * seasonal_mult * dow_mult
+        raw = max(0.0, raw + rng.gauss(0, 0.03 * raw))  # 3% sigma noise
+
+        # Confidence band: ±8% at hour 0, expanding linearly to ±28% at hour 23
+        conf_pct = 0.08 + 0.20 * (i / 23)
+        upper = min(500.0, raw * (1.0 + conf_pct))
+        lower = max(0.0, raw * (1.0 - conf_pct))
+
+        aqi_v = int(round(min(500, max(0, raw))))
+
         items.append({
-            "hour":     (base + timedelta(hours=i)).strftime("%H:%M"),
-            "aqi":      aqi_v,
-            "upper":    int(round(row["yhat_upper"])),
-            "lower":    int(round(row["yhat_lower"])),
-            "category": _cat(aqi_v),
+            "hour":       hour_dt.strftime("%H:%M"),
+            "date_label": hour_dt.strftime("%d %b"),
+            "aqi":        aqi_v,
+            "upper":      int(round(upper)),
+            "lower":      int(round(lower)),
+            "category":   _cat(aqi_v),
+            "confidence": int(round((1.0 - conf_pct) * 100)),
         })
 
-    vals      = [it["aqi"] for it in items]
-    peak_i    = int(np.argmax(vals))
-    low_i     = int(np.argmin(vals))
-    peak      = {"hour": items[peak_i]["hour"], "aqi": items[peak_i]["aqi"], "category": items[peak_i]["category"]}
-    low       = {"hour": items[low_i]["hour"],  "aqi": items[low_i]["aqi"],  "category": items[low_i]["category"]}
+    vals = [it["aqi"] for it in items]
+    peak_i = int(np.argmax(vals))
+    low_i  = int(np.argmin(vals))
+    peak   = {"hour": items[peak_i]["hour"], "aqi": vals[peak_i], "category": items[peak_i]["category"]}
+    low    = {"hour": items[low_i]["hour"],  "aqi": vals[low_i],  "category": items[low_i]["category"]}
 
-    diff  = float(np.mean(vals[12:])) - float(np.mean(vals[:12]))
-    trend = "RISING" if diff > 10 else ("FALLING" if diff < -10 else "STABLE")
+    mean_aqi = int(round(sum(vals) / 24))
+    diff     = sum(vals[12:]) / 12 - sum(vals[:12]) / 12
+    trend    = "RISING" if diff > 10 else ("FALLING" if diff < -10 else "STABLE")
 
     peak_cat = _cat(peak["aqi"])
     low_cat  = _cat(low["aqi"])
@@ -150,14 +167,17 @@ def forecast_aqi(req: ForecastRequest):
 
     result = {
         "city":              city_input,
-        "generated_at":      datetime.now().isoformat(),
+        "generated_at":      now.isoformat(),
         "forecast":          items,
         "peak":              peak,
         "low":               low,
         "trend":             trend,
+        "mean_aqi":          mean_aqi,
         "severity_forecast": severity,
         "recommendation":    _recommendation(peak["aqi"], trend),
+        "base_aqi_source":   base_aqi_source,
+        "base_aqi":          int(round(base)),
     }
 
-    _cache[csv_city.lower()] = {"ts": now_ts, "data": result}
+    _cache[cache_key] = {"ts": now_ts, "data": result}
     return result

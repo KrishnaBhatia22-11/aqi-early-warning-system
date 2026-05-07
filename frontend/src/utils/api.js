@@ -80,11 +80,13 @@ export async function chatWithAI(message, cities = [], history = []) {
   return res.json();
 }
 
-export async function fetchForecast(city) {
+export async function fetchForecast(city, baseAqi = null) {
+  const body = { city };
+  if (baseAqi !== null && baseAqi > 0) body.base_aqi = baseAqi;
   const res = await fetch(`${BASE}/api/v1/forecast`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ city }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     let detail = city + " forecast unavailable";

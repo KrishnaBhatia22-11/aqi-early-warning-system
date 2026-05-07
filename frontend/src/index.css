@@ -933,13 +933,34 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 @keyframes pulse-red   { 0%,100%{box-shadow:0 0 0 0 rgba(239,58,77,0.7)}  50%{box-shadow:0 0 0 8px rgba(239,58,77,0)}}
 @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(52,210,122,0.7)} 50%{box-shadow:0 0 0 8px rgba(52,210,122,0)}}
 
+/* ── Data source badge */
+.fc-source-badge { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid transparent; font-size: 10px; letter-spacing: 0.1em; }
+.fc-source-badge.live { background: rgba(52,210,122,0.1); border-color: rgba(52,210,122,0.35); color: #34d27a; }
+.fc-source-badge.est  { background: rgba(255,179,0,0.1);  border-color: rgba(255,179,0,0.35);  color: #FFB300; }
+.fc-source-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* ── Skeleton "waking up" message */
+.fc-skel-wake { color: rgba(255,255,255,0.35); font-size: 11px; letter-spacing: 0.15em; text-align: center; margin-top: 20px; }
+
+/* ── 24h summary strip */
+.forecast-summary-strip { max-width: 1400px; margin: 0 24px 24px; padding: 16px 24px; border-radius: 12px; display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+.fss-item { display: flex; flex-direction: column; gap: 4px; padding: 0 20px; }
+.fss-label { font-size: 9px; letter-spacing: 0.18em; color: var(--text-mute); }
+.fss-val { font-size: 15px; font-weight: 700; }
+.fss-sep { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
+.fss-source.live { color: #34d27a; }
+.fss-source.est  { color: #FFB300; }
+
 @media (max-width: 768px) {
   .forecast-city-bar { flex-direction: column; align-items: flex-start; }
   .fc-stats { grid-template-columns: 1fr; }
   .fc-skel-stats { grid-template-columns: 1fr; }
   .fc-header { flex-direction: column; gap: 14px; }
-  .forecast-chart-wrap, .forecast-city-bar, .forecast-table-wrap { margin-left: 16px; margin-right: 16px; }
+  .forecast-chart-wrap, .forecast-city-bar, .forecast-table-wrap, .forecast-summary-strip { margin-left: 16px; margin-right: 16px; }
   .forecast-hero { padding-left: 16px; padding-right: 16px; }
+  .forecast-summary-strip { gap: 12px; }
+  .fss-sep { display: none; }
+  .fss-item { padding: 0; min-width: 120px; }
 }
 .mc-val { font-size: 14px; color: var(--text); }
 
