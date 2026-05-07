@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const links = [
-  { id: "map",     label: "LIVE MAP"  },
-  { id: "predict", label: "PREDICT"   },
-  { id: "cities",  label: "CITIES"    },
-  { id: "alerts",  label: "ALERTS"    },
-  { id: "chat",    label: "CHATBOT"   },
-  { id: "about",   label: "ABOUT"     },
+  { id: "map",      label: "LIVE MAP"  },
+  { id: "predict",  label: "PREDICT"   },
+  { id: "forecast", label: "FORECAST"  },
+  { id: "cities",   label: "CITIES"    },
+  { id: "alerts",   label: "ALERTS"    },
+  { id: "chat",     label: "CHATBOT"   },
+  { id: "about",    label: "ABOUT"     },
 ];
 
 export default function Navbar({ page, setPage, apiOnline }) {

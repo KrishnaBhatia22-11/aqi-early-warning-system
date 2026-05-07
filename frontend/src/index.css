@@ -870,6 +870,77 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 .model-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 20px; }
 .mc-row { display: flex; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border-faint); align-items: baseline; }
 .mc-key { font-size: 10px; letter-spacing: 0.18em; color: var(--text-mute); min-width: 140px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FORECAST PAGE
+═══════════════════════════════════════════════════════════════ */
+.forecast-page { padding-top: 48px; padding-bottom: 80px; }
+.forecast-hero { padding: 0 24px 32px; max-width: 1400px; margin: 0 auto; }
+.forecast-eyebrow { font-size: 11px; letter-spacing: 0.2em; color: var(--orange); margin-bottom: 14px; display: block; }
+.forecast-title { font-size: clamp(36px, 6vw, 72px); font-weight: 700; margin: 0 0 14px; line-height: 1; }
+.forecast-sub { font-size: 14px; color: var(--text-dim); max-width: 540px; line-height: 1.6; margin: 0; }
+
+.forecast-city-bar { max-width: 1400px; margin: 0 24px 24px; padding: 14px 20px; display: flex; align-items: center; gap: 20px; border-radius: 12px; }
+.forecast-city-pills { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+.city-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-dim); font-family: "JetBrains Mono"; font-size: 10px; letter-spacing: 0.1em; padding: 6px 12px; border-radius: 999px; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
+.city-pill:hover { background: rgba(255,107,0,0.1); border-color: rgba(255,107,0,0.5); color: var(--orange); }
+.city-pill.active { background: rgba(255,107,0,0.14); border-color: var(--orange); color: var(--orange); font-weight: 700; }
+
+.forecast-chart-wrap { max-width: 1400px; margin: 0 24px 24px; }
+.forecast-table-wrap { max-width: 1400px; margin: 0 24px; padding: 24px; border-radius: 14px; }
+.forecast-table-scroll { overflow-x: auto; }
+.forecast-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.forecast-table th { padding: 8px 12px; text-align: left; font-size: 9px; letter-spacing: 0.16em; color: var(--text-mute); border-bottom: 1px solid var(--border); }
+.forecast-table td { padding: 9px 12px; border-bottom: 1px solid var(--border-faint); }
+.forecast-table .row-even td { background: rgba(255,255,255,0.015); }
+
+/* ── ForecastChart component ── */
+.fc-wrap { padding: 24px; border-radius: 14px; }
+.fc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.fc-eyebrow { font-size: 10px; letter-spacing: 0.18em; color: var(--text-mute); margin-bottom: 6px; display: block; }
+.fc-city-name { font-size: 28px; font-weight: 700; font-family: "Space Grotesk"; margin: 0 0 4px; }
+.fc-meta { font-size: 9px; letter-spacing: 0.12em; color: var(--text-mute); }
+.fc-trend-badge { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1px solid transparent; }
+.fc-trend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.fc-svg-wrap { width: 100%; overflow: hidden; border-radius: 8px; margin-bottom: 20px; }
+.fc-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+
+.fc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 20px; }
+.fc-stat { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-faint); border-radius: 10px; }
+.fc-stat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.fc-stat-label { font-size: 9px; letter-spacing: 0.18em; color: var(--text-mute); margin-bottom: 4px; display: block; }
+.fc-stat-val { font-size: 26px; font-weight: 700; font-family: "Space Grotesk"; line-height: 1; margin-bottom: 4px; }
+.fc-stat-sub { font-size: 9px; letter-spacing: 0.12em; color: var(--text-mute); }
+
+.fc-recommendation { display: flex; align-items: flex-start; gap: 12px; padding: 16px 20px; background: rgba(255,107,0,0.06); border: 1px solid rgba(255,107,0,0.2); border-radius: 10px; }
+.fc-rec-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.fc-rec-text { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin: 0; }
+
+.fc-error { padding: 40px 32px; border-radius: 14px; text-align: center; }
+
+/* ── Skeleton shimmer ── */
+@keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
+.fc-skeleton { padding: 24px; border-radius: 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-faint); }
+.fc-skel-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.fc-skel-line { border-radius: 4px; background: linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%); background-size: 600px 100%; animation: shimmer 1.4s infinite linear; }
+.fc-skel-badge { width: 100px; height: 44px; border-radius: 10px; background: linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%); background-size: 600px 100%; animation: shimmer 1.4s infinite linear; }
+.fc-skel-chart { height: 280px; border-radius: 8px; background: linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 75%); background-size: 600px 100%; animation: shimmer 1.4s infinite linear; margin-bottom: 20px; }
+.fc-skel-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.fc-skel-stat { height: 72px; border-radius: 10px; background: linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 75%); background-size: 600px 100%; animation: shimmer 1.4s infinite linear; }
+
+/* ── Pulse animations for peak marker ── */
+@keyframes pulse-red   { 0%,100%{box-shadow:0 0 0 0 rgba(239,58,77,0.7)}  50%{box-shadow:0 0 0 8px rgba(239,58,77,0)}}
+@keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(52,210,122,0.7)} 50%{box-shadow:0 0 0 8px rgba(52,210,122,0)}}
+
+@media (max-width: 768px) {
+  .forecast-city-bar { flex-direction: column; align-items: flex-start; }
+  .fc-stats { grid-template-columns: 1fr; }
+  .fc-skel-stats { grid-template-columns: 1fr; }
+  .fc-header { flex-direction: column; gap: 14px; }
+  .forecast-chart-wrap, .forecast-city-bar, .forecast-table-wrap { margin-left: 16px; margin-right: 16px; }
+  .forecast-hero { padding-left: 16px; padding-right: 16px; }
+}
 .mc-val { font-size: 14px; color: var(--text); }
 
 /* AUTH PAGE EXTRA */

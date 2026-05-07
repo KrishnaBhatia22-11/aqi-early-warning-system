@@ -79,3 +79,17 @@ export async function chatWithAI(message, cities = [], history = []) {
   if (!res.ok) throw new Error("Chat API failed");
   return res.json();
 }
+
+export async function fetchForecast(city) {
+  const res = await fetch(`${BASE}/api/v1/forecast`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ city }),
+  });
+  if (!res.ok) {
+    let detail = city + " forecast unavailable";
+    try { detail = (await res.json()).detail ?? detail; } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}

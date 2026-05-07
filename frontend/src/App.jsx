@@ -20,6 +20,7 @@ import AboutPage from "./pages/AboutPage";
 import AuthPage from "./pages/AuthPage";
 import ApiPage from "./pages/ApiPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import ForecastPage from "./pages/ForecastPage";
 
 // ── Error Boundaries ─────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ class AppBoundary extends Component {
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 
-const VALID_PAGES = ["map", "predict", "cities", "alerts", "chat", "about", "login", "register", "api"];
+const VALID_PAGES = ["map", "predict", "forecast", "cities", "alerts", "chat", "about", "login", "register", "api"];
 
 function AppInner() {
   const { user } = useAuth();
@@ -149,6 +150,7 @@ function AppInner() {
     switch (page) {
       case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} />;
       case "predict":  return <PredictorPage />;
+      case "forecast": return <ForecastPage cities={cities} />;
       case "cities":   return <DashboardPage cities={cities} />;
       case "alerts":   return <AlertsPage cities={cities} />;
       case "chat":     return <ChatbotPage cities={cities} />;
