@@ -72,7 +72,7 @@ export default function Navbar({ page, setPage, apiOnline }) {
                 style={{ fontSize: 10, color: "var(--orange)", cursor: "pointer" }}
                 onClick={() => setPage("alerts")}
               >
-                {user.name.split(" ")[0].toUpperCase()}
+                {(user.name ?? user.email ?? "USER").split(" ")[0].toUpperCase()}
               </span>
               <button
                 className="btn-ghost"
