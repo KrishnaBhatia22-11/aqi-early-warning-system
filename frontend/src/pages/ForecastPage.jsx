@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import ForecastChart from "../components/ForecastChart";
-import { fetchForecast } from "../utils/api";
+import { fetchForecast, detectAnomaly } from "../utils/api";
 import { aqiCategory } from "../utils/aqiCategory";
+import AnomalyBanner from "../components/AnomalyBanner";
 
 const FORECAST_CITIES = [
   "Delhi", "Mumbai", "Bengaluru", "Chennai", "Kolkata",
@@ -17,10 +18,44 @@ export default function ForecastPage({ cities }) {
   const [slowLoad, setSlowLoad] = useState(false);
   const [error, setError]       = useState(null);
 
+  const [anomaly, setAnomaly]     = useState(null);
+  const aqiHistoryRef = useRef({});
+  const dismissedRef  = useRef(null);
+
   // Keep a ref to the latest cities so we read it at fetch-time
-  // without re-triggering the effect on every cities poll
+  // without re-triggering the forecast effect on every cities poll
   const citiesRef = useRef(cities);
   useEffect(() => { citiesRef.current = cities; }, [cities]);
+
+  // Reset anomaly when selected city changes
+  useEffect(() => {
+    setAnomaly(null);
+    dismissedRef.current = null;
+  }, [city]);
+
+  // Detect anomaly on every cities refresh
+  useEffect(() => {
+    const cityData = cities?.find(c => c.name === city);
+    if (!cityData?.aqi) return;
+
+    const curr = cityData.aqi;
+    const hist = aqiHistoryRef.current[city] || [];
+    if (!hist.length || hist[hist.length - 1] !== curr) {
+      aqiHistoryRef.current[city] = [...hist, curr].slice(-12);
+    }
+
+    const histForApi = (aqiHistoryRef.current[city] || []).slice(0, -1);
+    detectAnomaly(city, curr, histForApi).then(result => {
+      if (!result) return;
+      if (result.is_anomaly) {
+        const key = `${city}-${result.type}-${Math.round(result.window_mean / 10) * 10}`;
+        if (key !== dismissedRef.current) setAnomaly(result);
+      } else {
+        setAnomaly(null);
+        dismissedRef.current = null;
+      }
+    });
+  }, [cities, city]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setData(null);
@@ -97,6 +132,16 @@ export default function ForecastPage({ cities }) {
           })}
         </div>
       </div>
+
+      <AnomalyBanner
+        anomaly={anomaly}
+        onDismiss={() => {
+          if (anomaly) {
+            dismissedRef.current = `${city}-${anomaly.type}-${Math.round(anomaly.window_mean / 10) * 10}`;
+          }
+          setAnomaly(null);
+        }}
+      />
 
       {/* ── Chart */}
       <div className="forecast-chart-wrap">

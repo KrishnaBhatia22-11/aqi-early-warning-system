@@ -80,6 +80,20 @@ export async function chatWithAI(message, cities = [], history = []) {
   return res.json();
 }
 
+export async function detectAnomaly(city, currentAqi, aqiHistory = []) {
+  try {
+    const res = await fetch(`${BASE}/api/v1/anomaly/detect`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ city, current_aqi: currentAqi, aqi_history: aqiHistory }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchForecast(city, baseAqi = null) {
   const body = { city };
   if (baseAqi !== null && baseAqi > 0) body.base_aqi = baseAqi;

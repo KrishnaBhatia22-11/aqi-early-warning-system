@@ -1,7 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import SparkLine from "../components/SparkLine";
 import { aqiCategory } from "../utils/aqiCategory";
 import { TREND_7D, CALENDAR_30D, POLLUTANT_BREAKDOWN } from "../data/index";
+import AnomalyBanner from "../components/AnomalyBanner";
+import { detectAnomaly } from "../utils/api";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
@@ -85,6 +87,41 @@ function CalendarHeatmap({ data }) {
 
 export default function DashboardPage({ cities, initialCity }) {
   const [selectedCity, setSelectedCity] = useState(initialCity || "Delhi");
+  const [anomaly, setAnomaly]           = useState(null);
+  const aqiHistoryRef = useRef({});   // { cityName: number[] } — rolling 12-reading buffer
+  const dismissedRef  = useRef(null); // key of last dismissed anomaly — prevents re-flash
+
+  // Clear anomaly when city changes
+  useEffect(() => {
+    setAnomaly(null);
+    dismissedRef.current = null;
+  }, [selectedCity]);
+
+  // Detect anomaly on every cities refresh
+  useEffect(() => {
+    const cityData = cities?.find(c => c.name === selectedCity);
+    if (!cityData?.aqi) return;
+
+    const curr = cityData.aqi;
+    const hist = aqiHistoryRef.current[selectedCity] || [];
+    // Append only if value changed (API may return cached)
+    if (!hist.length || hist[hist.length - 1] !== curr) {
+      aqiHistoryRef.current[selectedCity] = [...hist, curr].slice(-12);
+    }
+
+    const histForApi = (aqiHistoryRef.current[selectedCity] || []).slice(0, -1);
+    detectAnomaly(selectedCity, curr, histForApi).then(result => {
+      if (!result) return;
+      if (result.is_anomaly) {
+        // Don't re-show an anomaly the user already dismissed for this reading
+        const key = `${selectedCity}-${result.type}-${Math.round(result.window_mean / 10) * 10}`;
+        if (key !== dismissedRef.current) setAnomaly(result);
+      } else {
+        setAnomaly(null);
+        dismissedRef.current = null; // resolved — clear dismiss lock
+      }
+    });
+  }, [cities, selectedCity]);
 
   const cityData = useMemo(() => {
     return cities.find(c => c.name === selectedCity) || cities[0] || { name: "Delhi", aqi: 187, pollutant: "PM2.5" };
@@ -108,6 +145,16 @@ export default function DashboardPage({ cities, initialCity }) {
         <div className="mono dashboard-eyebrow">CITY INTELLIGENCE DASHBOARD</div>
         <h1 className="display dashboard-title">Air Quality Analytics</h1>
       </div>
+
+      <AnomalyBanner
+        anomaly={anomaly}
+        onDismiss={() => {
+          if (anomaly) {
+            dismissedRef.current = `${selectedCity}-${anomaly.type}-${Math.round(anomaly.window_mean / 10) * 10}`;
+          }
+          setAnomaly(null);
+        }}
+      />
 
       <div className="dash-city-select-wrap">
         <div className="glass dash-city-bar">

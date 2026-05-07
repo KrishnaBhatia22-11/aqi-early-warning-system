@@ -964,6 +964,101 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 }
 .mc-val { font-size: 14px; color: var(--text); }
 
+/* ═══════════════════════════════════════════════════════════════
+   ANOMALY BANNER
+═══════════════════════════════════════════════════════════════ */
+@keyframes anomaly-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.5); opacity: 0.5; }
+}
+
+.anomaly-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1400px;
+  margin: 0 24px 20px;
+  padding: 13px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.anomaly-pulse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: anomaly-pulse 1.4s ease-in-out infinite;
+}
+
+.anomaly-icon {
+  font-size: 17px;
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.anomaly-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.anomaly-type {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
+.anomaly-msg {
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anomaly-severity-badge {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+}
+
+.anomaly-quality {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+
+.anomaly-dismiss {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.anomaly-dismiss:hover { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.7); }
+
+@media (max-width: 768px) {
+  .anomaly-banner { margin: 0 16px 16px; }
+  .anomaly-msg { white-space: normal; }
+}
+
 /* AUTH PAGE EXTRA */
 .auth-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .auth-orb { position: absolute; border-radius: 50%; filter: blur(120px); }
