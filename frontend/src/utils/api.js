@@ -100,6 +100,16 @@ export async function detectAnomaly(city, currentAqi, aqiHistory = []) {
   }
 }
 
+export async function calculateHealthImpact(payload) {
+  const res = await fetch(`${BASE}/api/v1/health/impact`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Health API failed");
+  return res.json();
+}
+
 export async function fetchForecast(city, baseAqi = null) {
   const body = { city };
   if (baseAqi !== null && baseAqi > 0) body.base_aqi = baseAqi;

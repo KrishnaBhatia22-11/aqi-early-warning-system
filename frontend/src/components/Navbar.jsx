@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 const links = [
   { id: "map",      label: "LIVE MAP"  },
   { id: "predict",  label: "PREDICT"   },
+  { id: "health",   label: "HEALTH"    },
   { id: "forecast", label: "FORECAST"  },
   { id: "models",   label: "MODELS"    },
   { id: "cities",   label: "CITIES"    },
