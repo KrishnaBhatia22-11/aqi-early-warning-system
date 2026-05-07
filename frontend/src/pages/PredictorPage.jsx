@@ -3,6 +3,7 @@ import KnobDial from "../components/KnobDial";
 import Gauge from "../components/Gauge";
 import ShapChart from "../components/ShapChart";
 import PredictionHistory from "../components/PredictionHistory";
+import HealthAdvisory from "../components/HealthAdvisory";
 import { predictAQI } from "../utils/api";
 import { aqiCategory } from "../utils/aqiCategory";
 import { POLLUTANTS, SHAP_STATIC } from "../data/index";
@@ -102,7 +103,6 @@ export default function PredictorPage() {
               <div className="predict-result-meta">
                 <div className="predict-aqi-big" style={{ color: cat.color }}>{aqi}</div>
                 <span className={`badge ${cat.klass}`}>{cat.name.toUpperCase()}</span>
-                <p className="predict-advice">{getAdvice(aqi)}</p>
               </div>
             )}
           </div>
@@ -118,15 +118,16 @@ export default function PredictorPage() {
       </div>
 
       <PredictionHistory history={history} onPick={handlePick} />
+      <HealthAdvisory key={advisoryTier(aqi)} aqi={aqi} idle={!result} />
     </div>
   );
 }
 
-function getAdvice(aqi) {
-  if (aqi <= 50)  return "Air is clean. Enjoy outdoor activities freely.";
-  if (aqi <= 100) return "Acceptable air quality. Sensitive individuals should be cautious.";
-  if (aqi <= 200) return "Moderate pollution. Children and elderly should limit outdoor time.";
-  if (aqi <= 300) return "Poor air quality. Everyone may experience health effects.";
-  if (aqi <= 400) return "Very poor. Avoid outdoor activities. Use N95 mask if going out.";
-  return "Severe hazard. Stay indoors. Emergency conditions.";
+function advisoryTier(aqi) {
+  if (aqi <= 50)  return 0;
+  if (aqi <= 100) return 1;
+  if (aqi <= 200) return 2;
+  if (aqi <= 300) return 3;
+  if (aqi <= 400) return 4;
+  return 5;
 }
