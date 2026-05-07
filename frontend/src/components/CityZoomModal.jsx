@@ -28,7 +28,7 @@ function ZpSparkline({ values, color }) {
   );
 }
 
-export default function CityZoomModal({ city, onClose, onPredict }) {
+export default function CityZoomModal({ city, onClose, onPredict, onViewReport, onSetAlert }) {
   const [phase, setPhase] = useState("zooming");
   useEffect(() => {
     const t = setTimeout(() => setPhase("loaded"), 1500);
@@ -162,8 +162,8 @@ export default function CityZoomModal({ city, onClose, onPredict }) {
         </div>
 
         <div className="zp-actions">
-          <button className="btn-primary">VIEW FULL CITY REPORT →</button>
-          <button className="btn-ghost"><span>🔔</span> SET ALERT</button>
+          <button className="btn-primary" onClick={onViewReport}>VIEW FULL CITY REPORT →</button>
+          <button className="btn-ghost" onClick={onSetAlert}><span>🔔</span> SET ALERT FOR THIS CITY</button>
           <button className="btn-ghost" onClick={onPredict}>PREDICT CUSTOM AQI →</button>
         </div>
       </div>

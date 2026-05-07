@@ -9,9 +9,9 @@ const INITIAL_ALERTS = [
 
 const CITIES = ["Delhi","Mumbai","Bangalore","Chennai","Kolkata","Hyderabad","Ahmedabad","Pune","Lucknow","Jaipur","Chandigarh","Patna"];
 
-export default function AlertsPage({ cities }) {
+export default function AlertsPage({ cities, initialCity }) {
   const [alerts, setAlerts] = useState(INITIAL_ALERTS);
-  const [form, setForm] = useState({ city: "Delhi", threshold: 200, email: "" });
+  const [form, setForm] = useState({ city: initialCity || "Delhi", threshold: 200, email: "" });
   const [saved, setSaved] = useState(false);
 
   const handleAdd = (e) => {

@@ -96,6 +96,8 @@ function AppInner() {
   const [lastSync, setLastSync] = useState(null);
   const [zoomCity, setZoomCity] = useState(null);
   const [a11y, setA11y] = useState(false);
+  const [citiesInitialCity, setCitiesInitialCity] = useState(null);
+  const [alertsInitialCity, setAlertsInitialCity] = useState(null);
 
   const refreshCities = useCallback(async () => {
     try {
@@ -151,8 +153,8 @@ function AppInner() {
       case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} />;
       case "predict":  return <PredictorPage />;
       case "forecast": return <ForecastPage cities={cities} />;
-      case "cities":   return <DashboardPage cities={cities} />;
-      case "alerts":   return <AlertsPage cities={cities} />;
+      case "cities":   return <DashboardPage cities={cities} initialCity={citiesInitialCity} />;
+      case "alerts":   return <AlertsPage cities={cities} initialCity={alertsInitialCity} />;
       case "chat":     return <ChatbotPage cities={cities} />;
       case "about":    return <AboutPage />;
       case "login":    return <AuthPage mode="login" setPage={navigateTo} />;
@@ -189,6 +191,8 @@ function AppInner() {
             city={zoomCity}
             onClose={() => setZoomCity(null)}
             onPredict={() => { setZoomCity(null); navigateTo("predict"); }}
+            onViewReport={() => { setCitiesInitialCity(zoomCity?.name ?? null); setZoomCity(null); navigateTo("cities"); }}
+            onSetAlert={() => { setAlertsInitialCity(zoomCity?.name ?? null); setZoomCity(null); navigateTo("alerts"); }}
           />
         )}
       </div>

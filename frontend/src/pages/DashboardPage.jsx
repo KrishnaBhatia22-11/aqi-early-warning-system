@@ -83,8 +83,8 @@ function CalendarHeatmap({ data }) {
   );
 }
 
-export default function DashboardPage({ cities }) {
-  const [selectedCity, setSelectedCity] = useState("Delhi");
+export default function DashboardPage({ cities, initialCity }) {
+  const [selectedCity, setSelectedCity] = useState(initialCity || "Delhi");
 
   const cityData = useMemo(() => {
     return cities.find(c => c.name === selectedCity) || cities[0] || { name: "Delhi", aqi: 187, pollutant: "PM2.5" };
