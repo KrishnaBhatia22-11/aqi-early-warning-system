@@ -4,32 +4,6 @@ import { fetchHealth, fetchCities } from "./utils/api";
 import { CITIES_STATIC } from "./data/index";
 
 import CinematicIntro from "./components/CinematicIntro";
-
-class IntroBoundary extends Component {
-  state = { crashed: false };
-  static getDerivedStateFromError() { return { crashed: true }; }
-  componentDidCatch() { this.props.onDone?.(); }
-  render() { return this.state.crashed ? null : this.props.children; }
-}
-
-class AppBoundary extends Component {
-  state = { crashed: false };
-  static getDerivedStateFromError() { return { crashed: true }; }
-  render() {
-    if (this.state.crashed) {
-      return (
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0a14", color: "#fff", fontFamily: "monospace", gap: 16 }}>
-          <div style={{ color: "#FF6B00", fontSize: 32 }}>⚠</div>
-          <div style={{ fontSize: 14, letterSpacing: "0.1em" }}>RENDER ERROR — RELOADING</div>
-          <button onClick={() => window.location.reload()} style={{ marginTop: 8, padding: "10px 24px", background: "#FF6B00", color: "#000", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "monospace", fontWeight: 700 }}>
-            RELOAD APP
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 import Navbar from "./components/Navbar";
 import StatusBar from "./components/StatusBar";
 import EmergencyBanner from "./components/EmergencyBanner";
@@ -47,11 +21,74 @@ import AuthPage from "./pages/AuthPage";
 import ApiPage from "./pages/ApiPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+// ── Error Boundaries ─────────────────────────────────────────────────────────
+
+class IntroBoundary extends Component {
+  constructor(props) { super(props); this.state = { crashed: false }; }
+  static getDerivedStateFromError() { return { crashed: true }; }
+  componentDidCatch() { this.props.onDone?.(); }
+  render() { return this.state.crashed ? null : this.props.children; }
+}
+
+class PageBoundary extends Component {
+  constructor(props) { super(props); this.state = { crashed: false, msg: "" }; }
+  static getDerivedStateFromError(e) { return { crashed: true, msg: e?.message || String(e) }; }
+  render() {
+    if (this.state.crashed) {
+      return (
+        <div style={{ padding: "60px 24px", textAlign: "center", fontFamily: "monospace" }}>
+          <div style={{ color: "#ef3a4d", fontSize: 20, marginBottom: 12 }}>⚠ PAGE ERROR</div>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, maxWidth: 480, margin: "0 auto 20px" }}>
+            {this.state.msg}
+          </div>
+          <button
+            onClick={() => this.setState({ crashed: false, msg: "" })}
+            style={{ padding: "8px 20px", background: "#FF6B00", color: "#000", border: "none", borderRadius: 4, cursor: "pointer", fontFamily: "monospace" }}
+          >
+            RETRY
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+class AppBoundary extends Component {
+  constructor(props) { super(props); this.state = { crashed: false, msg: "" }; }
+  static getDerivedStateFromError(e) { return { crashed: true, msg: e?.message || String(e) }; }
+  componentDidCatch(err, info) { console.error("[AppBoundary]", err, info?.componentStack); }
+  render() {
+    if (this.state.crashed) {
+      return (
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0a14", color: "#fff", fontFamily: "monospace", gap: 16, padding: 24, textAlign: "center" }}>
+          <div style={{ color: "#FF6B00", fontSize: 32 }}>⚠</div>
+          <div style={{ fontSize: 14, letterSpacing: "0.1em" }}>RENDER ERROR</div>
+          <div style={{ fontSize: 12, color: "#ef3a4d", maxWidth: 520, wordBreak: "break-word" }}>
+            {this.state.msg}
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: 8, padding: "10px 24px", background: "#FF6B00", color: "#000", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "monospace", fontWeight: 700 }}
+          >
+            RELOAD APP
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+
 const VALID_PAGES = ["map", "predict", "cities", "alerts", "chat", "about", "login", "register", "api"];
 
 function AppInner() {
   const { user } = useAuth();
-  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("intro_done"));
+  const [showIntro, setShowIntro] = useState(() => {
+    try { return !sessionStorage.getItem("intro_done"); } catch { return false; }
+  });
   const [page, setPage] = useState("map");
   const [cities, setCities] = useState(CITIES_STATIC);
   const [apiOnline, setApiOnline] = useState(false);
@@ -99,7 +136,7 @@ function AppInner() {
   }, [checkHealth, refreshCities]);
 
   const handleIntroDone = useCallback(() => {
-    sessionStorage.setItem("intro_done", "1");
+    try { sessionStorage.setItem("intro_done", "1"); } catch {}
     setShowIntro(false);
   }, []);
 
@@ -108,11 +145,9 @@ function AppInner() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleCitySelect = (city) => setZoomCity(city);
-
   const renderPage = () => {
     switch (page) {
-      case "map":      return <HeroMapPage cities={cities} onCitySelect={handleCitySelect} setPage={navigateTo} />;
+      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} />;
       case "predict":  return <PredictorPage />;
       case "cities":   return <DashboardPage cities={cities} />;
       case "alerts":   return <AlertsPage cities={cities} />;
@@ -125,14 +160,8 @@ function AppInner() {
     }
   };
 
-  const nationalAvg = cities.length
-    ? Math.round(cities.reduce((s, c) => s + c.aqi, 0) / cities.length)
-    : 0;
-  const hazardousCities = cities.filter(c => c.aqi > 300);
-
   return (
     <>
-      {/* Main app always rendered — intro sits on top as a fixed overlay */}
       <div className={`app-root ${a11y ? "a11y-mode" : ""}`}>
         <EmergencyBanner cities={cities} />
         <Navbar
@@ -143,18 +172,16 @@ function AppInner() {
           a11y={a11y}
           setA11y={setA11y}
         />
-
         <main className="main-content">
-          {renderPage()}
+          <PageBoundary key={page}>
+            {renderPage()}
+          </PageBoundary>
         </main>
-
         {page !== "login" && page !== "register" && (
           <RichFooter setPage={navigateTo} />
         )}
-
         <StatusBar apiOnline={apiOnline} lastSync={lastSync} />
         <HelpFAB />
-
         {zoomCity && (
           <CityZoomModal
             city={zoomCity}
@@ -164,7 +191,6 @@ function AppInner() {
         )}
       </div>
 
-      {/* Intro overlay — fixed fullscreen, removed from DOM once done */}
       {showIntro && (
         <IntroBoundary onDone={handleIntroDone}>
           <CinematicIntro onDone={handleIntroDone} />
