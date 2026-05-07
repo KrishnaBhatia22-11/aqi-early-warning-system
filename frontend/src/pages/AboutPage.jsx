@@ -1,19 +1,21 @@
 export default function AboutPage() {
   const stats = [
-    { n: "26", l: "Monitoring Stations" },
-    { n: "9", l: "Pollutants Tracked" },
+    { n: "10",    l: "Live Stations" },
+    { n: "26",    l: "Cities in ML Dataset" },
+    { n: "9",     l: "Pollutants Tracked" },
     { n: "0.932", l: "Model R² Score" },
     { n: "21.33", l: "MAE (AQI Units)" },
-    { n: "9 yrs", l: "Training Data" },
-    { n: "Free", l: "Forever" },
+    { n: "6 yrs", l: "Training Data" },
+    { n: "29,531",l: "Dataset Rows" },
+    { n: "Free",  l: "Forever" },
   ];
 
   const stack = [
-    { cat: "ML MODEL", items: ["XGBoost", "Scikit-learn", "SHAP", "MLflow"] },
-    { cat: "BACKEND", items: ["FastAPI", "Python 3.11", "Pydantic", "Uvicorn"] },
-    { cat: "FRONTEND", items: ["React 18", "Vite 5", "Tailwind CSS", "SVG Canvas"] },
-    { cat: "INFRA", items: ["Render (API)", "Vercel (Frontend)", "GitHub Actions"] },
-    { cat: "DATA", items: ["CPCB India", "2015–2024", "Open Government Data"] },
+    { cat: "ML MODEL",  items: ["XGBoost", "Scikit-learn", "SHAP", "MLflow"] },
+    { cat: "BACKEND",   items: ["FastAPI", "Python 3.11", "Pydantic", "Uvicorn"] },
+    { cat: "FRONTEND",  items: ["React 18", "Vite 5", "Tailwind CSS", "SVG Canvas"] },
+    { cat: "INFRA",     items: ["Render (API)", "Vercel (Frontend)", "GitHub Actions"] },
+    { cat: "DATA",      items: ["CPCB India", "2015–2020", "Open Government Data"] },
   ];
 
   return (
@@ -54,9 +56,9 @@ export default function AboutPage() {
             <div className="mono about-section-label">OUR APPROACH</div>
             <h2 className="about-section-title">XGBoost + CPCB data</h2>
             <p>
-              We trained an XGBoost model on 9 years of Central Pollution Control Board (CPCB) data
-              covering 9 pollutants. The model achieves R²=0.932 — meaning it explains 93.2% of AQI
-              variance. SHAP values make every prediction explainable.
+              We trained an XGBoost model on 6 years of Central Pollution Control Board (CPCB) data
+              (2015–2020) covering 9 pollutants across 26 cities (29,531 rows). The model achieves
+              R²=0.932 — explaining 93.2% of AQI variance. SHAP values make every prediction explainable.
             </p>
           </div>
           <div className="glass-strong about-story-card">
@@ -76,6 +78,21 @@ export default function AboutPage() {
             >
               VIEW ON GITHUB →
             </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="about-team-section" style={{ marginTop: 40 }}>
+        <div className="panel-header" style={{ marginBottom: 24 }}>
+          <span className="mono panel-title">THE TEAM</span>
+        </div>
+        <div className="team-grid" style={{ maxWidth: 320 }}>
+          <div className="team-card">
+            <div className="team-avatar">KB</div>
+            <div className="team-name">Krishna Bhatia</div>
+            <div className="mono team-role">FULL STACK ML ENGINEER</div>
+            <div className="mono team-role" style={{ marginTop: 4 }}>Manav Rachna International Institute</div>
+            <div className="mono team-role">Faridabad, India</div>
           </div>
         </div>
       </section>
@@ -102,7 +119,10 @@ export default function AboutPage() {
           <h2 className="about-section-title">Model Card</h2>
           <div className="model-card-grid">
             <div className="mc-row"><span className="mono mc-key">ALGORITHM</span><span className="mc-val">XGBoost Regressor</span></div>
-            <div className="mc-row"><span className="mono mc-key">TRAINING DATA</span><span className="mc-val">CPCB, 2015–2024</span></div>
+            <div className="mc-row"><span className="mono mc-key">TRAINING DATA</span><span className="mc-val">CPCB, 2015–2020</span></div>
+            <div className="mc-row"><span className="mono mc-key">DATASET ROWS</span><span className="mc-val">29,531</span></div>
+            <div className="mc-row"><span className="mono mc-key">ML CITIES</span><span className="mc-val">26</span></div>
+            <div className="mc-row"><span className="mono mc-key">LIVE STATIONS</span><span className="mc-val">10</span></div>
             <div className="mc-row"><span className="mono mc-key">FEATURES</span><span className="mc-val">PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3</span></div>
             <div className="mc-row"><span className="mono mc-key">TARGET</span><span className="mc-val">AQI (continuous, 0–500)</span></div>
             <div className="mc-row"><span className="mono mc-key">R² SCORE</span><span className="mc-val" style={{ color: "#34d27a" }}>0.932</span></div>

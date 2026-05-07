@@ -1,9 +1,35 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Component } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { fetchHealth, fetchCities } from "./utils/api";
 import { CITIES_STATIC } from "./data/index";
 
 import CinematicIntro from "./components/CinematicIntro";
+
+class IntroBoundary extends Component {
+  state = { crashed: false };
+  static getDerivedStateFromError() { return { crashed: true }; }
+  componentDidCatch() { this.props.onDone?.(); }
+  render() { return this.state.crashed ? null : this.props.children; }
+}
+
+class AppBoundary extends Component {
+  state = { crashed: false };
+  static getDerivedStateFromError() { return { crashed: true }; }
+  render() {
+    if (this.state.crashed) {
+      return (
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0a14", color: "#fff", fontFamily: "monospace", gap: 16 }}>
+          <div style={{ color: "#FF6B00", fontSize: 32 }}>⚠</div>
+          <div style={{ fontSize: 14, letterSpacing: "0.1em" }}>RENDER ERROR — RELOADING</div>
+          <button onClick={() => window.location.reload()} style={{ marginTop: 8, padding: "10px 24px", background: "#FF6B00", color: "#000", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "monospace", fontWeight: 700 }}>
+            RELOAD APP
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import Navbar from "./components/Navbar";
 import StatusBar from "./components/StatusBar";
 import EmergencyBanner from "./components/EmergencyBanner";
@@ -138,16 +164,22 @@ function AppInner() {
         )}
       </div>
 
-      {/* Intro overlay — removed from DOM once done */}
-      {showIntro && <CinematicIntro onDone={handleIntroDone} />}
+      {/* Intro overlay — fixed fullscreen, removed from DOM once done */}
+      {showIntro && (
+        <IntroBoundary onDone={handleIntroDone}>
+          <CinematicIntro onDone={handleIntroDone} />
+        </IntroBoundary>
+      )}
     </>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppInner />
-    </AuthProvider>
+    <AppBoundary>
+      <AuthProvider>
+        <AppInner />
+      </AuthProvider>
+    </AppBoundary>
   );
 }

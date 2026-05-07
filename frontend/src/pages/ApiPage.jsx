@@ -11,7 +11,7 @@ const ENDPOINTS = [
   {
     method: "GET",
     path: "/cities",
-    desc: "Fetch live AQI readings for all 26 monitored Indian cities.",
+    desc: "Fetch live AQI readings for all 10 monitored Indian cities.",
     response: `[{ "name": "Delhi", "aqi": 287, "category": "Poor", "pollutant": "PM2.5" }, ...]`,
   },
   {

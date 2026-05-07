@@ -15,6 +15,7 @@ export default function PredictorPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [shapKey, setShapKey] = useState(0);
   const debounceRef = useRef(null);
 
   const runPredict = useCallback(async (next) => {
@@ -23,6 +24,7 @@ export default function PredictorPage() {
     try {
       const res = await predictAQI(next);
       setResult(res);
+      setShapKey(k => k + 1);
       setHistory(h => [
         { aqi: res.aqi, t: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), vals: next },
         ...h.slice(0, 9),
@@ -108,7 +110,7 @@ export default function PredictorPage() {
               <span className="mono panel-title">AI EXPLAINABILITY (SHAP)</span>
               <span className="mono panel-meta">FEATURE IMPACT</span>
             </div>
-            <ShapChart shap={shapData} predicted={aqi} />
+            <ShapChart key={shapKey} shap={shapData} predicted={aqi} />
           </div>
         </div>
       </div>
