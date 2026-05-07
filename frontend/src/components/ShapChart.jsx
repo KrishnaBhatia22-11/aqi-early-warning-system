@@ -1,6 +1,6 @@
-export default function ShapChart({ shap, predicted }) {
+export default function ShapChart({ shap, predicted, idle }) {
   const sorted = [...shap].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
-  const max = Math.max(...sorted.map(s => Math.abs(s.value)));
+  const max = Math.max(...sorted.map(s => Math.abs(s.value)), 1);
 
   return (
     <div className="shap-chart">
@@ -30,7 +30,9 @@ export default function ShapChart({ shap, predicted }) {
       <div className="shap-base mono">
         <span>BASE VALUE: 89.2</span>
         <span>→</span>
-        <span style={{ color: "var(--orange)" }}>PREDICTED: {predicted}</span>
+        <span style={{ color: idle ? "var(--text-mute)" : "var(--orange)" }}>
+          {idle ? "AWAITING PREDICTION…" : `PREDICTED: ${predicted}`}
+        </span>
       </div>
     </div>
   );

@@ -65,3 +65,17 @@ export async function predictAQI(values) {
 
   return { aqi: Math.round(aqi), category, shap_values: shapValues };
 }
+
+export async function chatWithAI(message, cities = [], history = []) {
+  const res = await fetch(`${BASE}/api/v1/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      cities: cities.map(c => ({ name: c.name, aqi: c.aqi, pollutant: c.pollutant ?? null })),
+      history,
+    }),
+  });
+  if (!res.ok) throw new Error("Chat API failed");
+  return res.json();
+}

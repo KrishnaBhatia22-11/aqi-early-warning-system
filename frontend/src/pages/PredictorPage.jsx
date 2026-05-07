@@ -24,7 +24,6 @@ export default function PredictorPage() {
     try {
       const res = await predictAQI(next);
       setResult(res);
-      setShapKey(k => k + 1);
       setHistory(h => [
         { aqi: res.aqi, t: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), vals: next },
         ...h.slice(0, 9),
@@ -36,6 +35,7 @@ export default function PredictorPage() {
       ));
       setResult({ aqi: rough, category: aqiCategory(rough).name, shap_values: SHAP_STATIC });
     } finally {
+      setShapKey(k => k + 1);
       setLoading(false);
     }
   }, []);
@@ -112,7 +112,7 @@ export default function PredictorPage() {
               <span className="mono panel-title">AI EXPLAINABILITY (SHAP)</span>
               <span className="mono panel-meta">FEATURE IMPACT</span>
             </div>
-            <ShapChart key={shapKey} shap={shapData} predicted={aqi} />
+            <ShapChart key={shapKey} shap={shapData} predicted={aqi} idle={!result} />
           </div>
         </div>
       </div>

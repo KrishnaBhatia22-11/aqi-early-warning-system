@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import predict, city
+from api.routes import predict, city, chat
 
 app = FastAPI(
     title="AI-Driven Early Warning System for Urban Air Quality Risk Zones",
@@ -19,6 +19,7 @@ app.add_middleware(
 # Register routes
 app.include_router(predict.router, prefix="/api/v1", tags=["Prediction"])
 app.include_router(city.router,    prefix="/api/v1", tags=["City Data"])
+app.include_router(chat.router,    prefix="/api/v1", tags=["Chatbot"])
 
 
 @app.get("/")

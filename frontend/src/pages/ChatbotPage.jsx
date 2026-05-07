@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { aqiCategory } from "../utils/aqiCategory";
+import { chatWithAI } from "../utils/api";
 
 const SUGGESTIONS = [
   "What is AQI?",
@@ -10,7 +11,7 @@ const SUGGESTIONS = [
   "What does AQI 300 mean for my health?",
 ];
 
-function generateReply(msg, cities) {
+function localReply(msg, cities) {
   const lower = msg.toLowerCase();
   if (lower.includes("what is aqi") || lower.includes("explain aqi")) {
     return "AQI (Air Quality Index) is a number from 0–500 that tells you how clean or polluted the air is. India uses 9 pollutants to compute it. **0–50** is Good, **51–100** is Satisfactory, **101–200** is Moderate, **201–300** is Poor, **301–400** is Very Poor, and **400+** is Severe.";
@@ -59,7 +60,7 @@ function generateReply(msg, cities) {
 
 export default function ChatbotPage({ cities }) {
   const [messages, setMessages] = useState([
-    { role: "ai", text: "Hello! I'm AQI Bot. Ask me about air quality, city conditions, health advisories, or how our model works." }
+    { role: "ai", text: "Hello! I'm AQI Bot. Ask me about air quality, city conditions, health advisories, or how our model works.", source: "local" }
   ]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -71,18 +72,29 @@ export default function ChatbotPage({ cities }) {
     }
   }, [messages, typing]);
 
-  const sendMessage = (text) => {
+  const sendMessage = useCallback(async (text) => {
     if (!text.trim() || typing) return;
     const userMsg = text.trim();
+
     setMessages(m => [...m, { role: "user", text: userMsg }]);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      const reply = generateReply(userMsg, cities);
-      setMessages(m => [...m, { role: "ai", text: reply }]);
+
+    try {
+      const historySlice = messages.slice(-6).map(m => ({
+        role: m.role === "ai" ? "assistant" : "user",
+        content: m.text,
+      }));
+      const data = await chatWithAI(userMsg, cities, historySlice);
+      if (data.source === "error") throw new Error(data.reply);
+      setMessages(m => [...m, { role: "ai", text: data.reply, source: "groq" }]);
+    } catch {
+      const reply = localReply(userMsg, cities);
+      setMessages(m => [...m, { role: "ai", text: reply, source: "local" }]);
+    } finally {
       setTyping(false);
-    }, 700 + Math.random() * 500);
-  };
+    }
+  }, [typing, messages, cities]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -92,7 +104,7 @@ export default function ChatbotPage({ cities }) {
   return (
     <div className="chatbot-page">
       <div className="chat-hero">
-        <div className="mono chat-eyebrow">AI ASSISTANT · LIVE CITY DATA CONTEXT</div>
+        <div className="mono chat-eyebrow">AI ASSISTANT · GROQ LLaMA · LIVE CITY DATA CONTEXT</div>
         <h1 className="display chat-title">AQI Chatbot</h1>
       </div>
 
@@ -104,12 +116,19 @@ export default function ChatbotPage({ cities }) {
                 {m.role === "ai" && (
                   <div className="chat-bubble-avatar">🤖</div>
                 )}
-                <div
-                  className="chat-bubble"
-                  dangerouslySetInnerHTML={{
-                    __html: m.text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                  }}
-                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: m.role === "ai" ? "flex-start" : "flex-end" }}>
+                  <div
+                    className="chat-bubble"
+                    dangerouslySetInnerHTML={{
+                      __html: m.text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                    }}
+                  />
+                  {m.role === "ai" && m.source && (
+                    <span className="mono" style={{ fontSize: 9, color: m.source === "groq" ? "#34d27a" : "rgba(255,255,255,0.25)", letterSpacing: "0.1em" }}>
+                      {m.source === "groq" ? "● GROQ AI" : "● LOCAL"}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
             {typing && (
