@@ -41,12 +41,23 @@ export async function predictAQI(values) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error("Prediction failed");
+  if (!res.ok) {
+    let detail = "";
+    try { detail = (await res.json()).detail ?? ""; } catch {}
+    throw new Error(`Prediction failed (${res.status})${detail ? ": " + detail : ""}`);
+  }
+
   const data = await res.json();
 
-  // Normalize: API returns predicted_aqi / top_factors, frontend expects aqi / shap_values
-  const aqi = data.predicted_aqi ?? data.aqi ?? 0;
+  // API returns predicted_aqi / top_factors — throw if missing so caller uses local estimate
+  if (data.predicted_aqi == null && data.aqi == null) {
+    throw new Error("API returned unexpected response: " + JSON.stringify(data).slice(0, 120));
+  }
+
+  const aqi = data.predicted_aqi ?? data.aqi;
   const category = data.aqi_category ?? data.category ?? "Unknown";
+
+  // top_factors[].impact is the SHAP contribution (positive = raises AQI, negative = lowers)
   const shapValues = (data.top_factors ?? []).map(f => ({
     feature: f.feature,
     value: f.impact ?? f.value ?? 0,

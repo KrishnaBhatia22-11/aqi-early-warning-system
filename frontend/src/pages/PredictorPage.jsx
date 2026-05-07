@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import KnobDial from "../components/KnobDial";
 import Gauge from "../components/Gauge";
 import ShapChart from "../components/ShapChart";
@@ -39,6 +39,8 @@ export default function PredictorPage() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => { runPredict(DEFAULTS); }, [runPredict]);
 
   const handleKnob = useCallback((name, value) => {
     setVals(prev => {
