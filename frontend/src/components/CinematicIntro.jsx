@@ -101,7 +101,7 @@ export default function CinematicIntro({ onDone }) {
       <div className="intro-text">
         {stage === 0 && <div className="fade-up"><div className="mono intro-eyebrow">EARTH OBSERVATION · GEO-AQI · 2026</div><div className="display intro-title">Calibrating sensors…</div></div>}
         {stage === 1 && <div className="fade-up"><div className="mono intro-eyebrow" style={{color:"#FF6B00"}}>TARGETING SUBCONTINENT · 22.59°N 79.96°E</div><div className="display intro-title">Locating India.</div></div>}
-        {stage === 2 && <div className="fade-up"><div className="mono intro-eyebrow" style={{color:"#FF6B00"}}>ESTABLISHING UPLINK · 10 LIVE STATIONS</div><div className="display intro-title">Reading the air.</div></div>}
+        {stage === 2 && <div className="fade-up"><div className="mono intro-eyebrow" style={{color:"#FF6B00"}}>ESTABLISHING UPLINK · 26 STATIONS</div><div className="display intro-title">Reading the air.</div></div>}
         {stage === 3 && <div className="fade-up"><div className="mono intro-eyebrow" style={{color:"#34d27a"}}>● ALL SYSTEMS ONLINE</div><div className="display intro-title">Welcome.</div></div>}
       </div>
 

@@ -129,7 +129,7 @@ export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
       <div className="map-meta mono">
         <div>LAT 8°N → 36°N</div>
         <div>LON 68°E → 97°E</div>
-        <div style={{ color: "var(--orange)" }}>● 10 LIVE STATIONS</div>
+        <div style={{ color: "var(--orange)" }}>● 26 STATIONS</div>
       </div>
     </div>
   );

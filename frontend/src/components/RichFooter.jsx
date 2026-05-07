@@ -33,7 +33,7 @@ export default function RichFooter({ setPage }) {
         </div>
       </div>
       <div className="rfb-bottom">
-        <span>MODEL: XGBOOST R²=0.932 · DATA: CPCB 2015–2020 · MAE 21.33</span>
+        <span>MODEL: XGBOOST R²=0.932 · DATA: CPCB 2015–2024 · MAE 21.33</span>
         <span>BUILT WITH ❤ IN FARIDABAD, INDIA · OPEN SOURCE · MIT LICENSE</span>
       </div>
     </footer>

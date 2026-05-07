@@ -14,8 +14,8 @@ export default function StatusBar({ apiOnline }) {
         {apiOnline ? `LAST SYNC: ${t}s AGO` : "API OFFLINE"}
       </span>
       <span className="sb-item">XGBOOST R²=0.932</span>
-      <span className="sb-item">10 LIVE STATIONS</span>
-      <span className="sb-item">DATA: 2015–2020</span>
+      <span className="sb-item">26 STATIONS</span>
+      <span className="sb-item">DATA: 2015–2024</span>
       <span className="sb-item">BUILD v2.1</span>
       <span className="sb-item" style={{ marginLeft: "auto", color: apiOnline ? "#FF6B00" : "#ef3a4d" }}>
         {apiOnline ? "● UPLINK STABLE" : "● UPLINK DOWN"}
