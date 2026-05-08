@@ -125,24 +125,6 @@ export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
         })}
       </MapContainer>
 
-      <div className="map-legend glass">
-        <div className="legend-title">AQI SEVERITY</div>
-        {[
-          { c: "#34d27a", l: "Good",         r: "0–50"    },
-          { c: "#f5d142", l: "Satisfactory", r: "51–100"  },
-          { c: "#FFB300", l: "Moderate",     r: "101–200" },
-          { c: "#FF6B00", l: "Poor",         r: "201–300" },
-          { c: "#ef3a4d", l: "Severe",       r: "301–400" },
-          { c: "#c2002a", l: "Hazardous",    r: "400+"    },
-        ].map(s => (
-          <div key={s.l} className="legend-row">
-            <span className="legend-dot" style={{ background: s.c, boxShadow: `0 0 10px ${s.c}` }} />
-            <span className="legend-l">{s.l}</span>
-            <span className="legend-r">{s.r}</span>
-          </div>
-        ))}
-      </div>
-
       <div className="map-corners">
         <span className="c tl" /><span className="c tr" />
         <span className="c bl" /><span className="c br" />

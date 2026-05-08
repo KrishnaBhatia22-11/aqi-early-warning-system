@@ -665,7 +665,8 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
 }
 .city-pulse-ring {
   position: absolute;
-  inset: 0;
+  width: 20px !important;
+  height: 20px !important;
   border-radius: 50%;
   border: 2px solid;
   animation: city-pulse 2s ease-out infinite;
@@ -682,8 +683,8 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
   cursor: pointer;
 }
 @keyframes city-pulse {
-  0%   { transform: scale(0.6); opacity: 0.9; }
-  100% { transform: scale(2.8); opacity: 0; }
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2); opacity: 0; }
 }
 
 /* ── City tooltip ── */
