@@ -140,6 +140,32 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
             <div style={{ display: mapVisible ? "block" : "none" }}>
               <IndiaMap cities={cities} onCityClick={handleCityClick} />
             </div>
+            <div className="aqi-legend-strip">
+              <span className="legend-item">
+                <span className="legend-dot" style={{background:'#22c55e'}}></span>
+                Good <span className="legend-range">0–50</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot" style={{background:'#84cc16'}}></span>
+                Satisfactory <span className="legend-range">51–100</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot" style={{background:'#eab308'}}></span>
+                Moderate <span className="legend-range">101–200</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot" style={{background:'#f97316'}}></span>
+                Poor <span className="legend-range">201–300</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot" style={{background:'#ef4444'}}></span>
+                Severe <span className="legend-range">301–400</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot" style={{background:'#7c3aed'}}></span>
+                Hazardous <span className="legend-range">400+</span>
+              </span>
+            </div>
           </div>
 
           <div className="map-right">
