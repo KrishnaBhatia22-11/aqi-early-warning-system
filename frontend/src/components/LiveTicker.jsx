@@ -6,8 +6,7 @@ export default function LiveTicker({ cities }) {
   return (
     <div style={{ position: "relative", width: "100%", display: "block" }}>
       <div className="ticker-wrap">
-        <div className="ticker-label mono">LIVE FEED</div>
-        <div className="ticker-track">
+<div className="ticker-track">
           {items.map((c, i) => {
             const cat = aqiCategory(c.aqi);
             return (
