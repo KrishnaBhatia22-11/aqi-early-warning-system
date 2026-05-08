@@ -1,120 +1,142 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip } from "react-leaflet";
+import L from "leaflet";
 import { aqiCategory } from "../utils/aqiCategory";
-import { INDIA_PATH } from "../data/index";
 
-const INDIA_GRID = [
-  "M 220 180 L 320 220 L 420 200",
-  "M 200 280 L 320 300 L 440 280",
-  "M 200 360 L 300 380 L 410 370",
-  "M 220 450 L 310 460",
-  "M 250 540 L 310 560",
-];
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({ iconRetinaUrl: null, iconUrl: null, shadowUrl: null });
+
+const CITY_COORDS = {
+  "Delhi":              [28.6139, 77.2090],
+  "Mumbai":             [19.0760, 72.8777],
+  "Bengaluru":          [12.9716, 77.5946],
+  "Chennai":            [13.0827, 80.2707],
+  "Kolkata":            [22.5726, 88.3639],
+  "Hyderabad":          [17.3850, 78.4867],
+  "Ahmedabad":          [23.0225, 72.5714],
+  "Jaipur":             [26.9124, 75.7873],
+  "Lucknow":            [26.8467, 80.9462],
+  "Kanpur":             [26.4499, 80.3319],
+  "Patna":              [25.5941, 85.1376],
+  "Bhopal":             [23.2599, 77.4126],
+  "Pune":               [18.5204, 73.8567],
+  "Nagpur":             [21.1458, 79.0882],
+  "Surat":              [21.1702, 72.8311],
+  "Visakhapatnam":      [17.6868, 83.2185],
+  "Coimbatore":         [11.0168, 76.9558],
+  "Kochi":              [ 9.9312, 76.2673],
+  "Indore":             [22.7196, 75.8577],
+  "Chandigarh":         [30.7333, 76.7794],
+  "Amritsar":           [31.6340, 74.8723],
+  "Guwahati":           [26.1445, 91.7362],
+  "Bhubaneswar":        [20.2961, 85.8245],
+  "Thiruvananthapuram": [ 8.5241, 76.9366],
+  "Varanasi":           [25.3176, 82.9739],
+  "Ranchi":             [23.3441, 85.3096],
+};
+
+const GEOJSON_URL =
+  "https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson";
+
+function makeCityIcon(color) {
+  return L.divIcon({
+    className: "city-marker-icon",
+    html: `<div class="city-marker-wrap">
+      <div class="city-pulse-ring" style="border-color:${color}"></div>
+      <div class="city-dot" style="background:${color};box-shadow:0 0 8px ${color}88"></div>
+    </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    tooltipAnchor: [0, -14],
+  });
+}
+
+const GEO_STYLE = {
+  fillColor: "#0a1628",
+  fillOpacity: 1,
+  color: "#22c55e",
+  weight: 0.8,
+  opacity: 0.25,
+};
+
+function onEachFeature(_, layer) {
+  layer.on({
+    mouseover: e => e.target.setStyle({ fillColor: "#0f2040", color: "#22c55e", opacity: 0.5, weight: 1.2 }),
+    mouseout:  e => e.target.setStyle(GEO_STYLE),
+  });
+}
 
 export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
-  const [hover, setHover] = useState(null);
+  const [geoData, setGeoData] = useState(null);
+
+  useEffect(() => {
+    fetch(GEOJSON_URL).then(r => r.json()).then(setGeoData).catch(() => {});
+  }, []);
 
   return (
     <div className="india-map-wrap">
-      <svg viewBox="0 0 600 720" preserveAspectRatio="xMidYMid meet" className="india-map">
-        <defs>
-          <radialGradient id="mapGlow" cx="0.5" cy="0.4" r="0.7">
-            <stop offset="0%"   stopColor="rgba(255,107,0,0.18)" />
-            <stop offset="60%"  stopColor="rgba(255,107,0,0.04)" />
-            <stop offset="100%" stopColor="rgba(255,107,0,0)"    />
-          </radialGradient>
-          <filter id="dotGlow" x="-200%" y="-200%" width="500%" height="500%">
-            <feGaussianBlur stdDeviation="6" />
-          </filter>
-          <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
-            <path d="M 24 0 L 0 0 0 24" fill="none" stroke="rgba(255,107,0,0.04)" strokeWidth="1"/>
-          </pattern>
-          <linearGradient id="landFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="rgba(255,255,255,0.04)" />
-            <stop offset="100%" stopColor="rgba(255,107,0,0.06)"   />
-          </linearGradient>
-        </defs>
-
-        <rect width="600" height="720" fill="url(#grid)" />
-        <rect width="600" height="720" fill="url(#mapGlow)" />
-
-        <g stroke="rgba(255,107,0,0.10)" strokeWidth="1" strokeDasharray="2 6">
-          <line x1="0" y1="360" x2="600" y2="360" />
-          <line x1="300" y1="0"  x2="300" y2="720" />
-        </g>
-
-        <path
-          d={INDIA_PATH}
-          fill="url(#landFill)"
-          stroke="rgba(255,107,0,0.45)"
-          strokeWidth="1.2"
-          style={{ filter: "drop-shadow(0 0 24px rgba(255,107,0,0.18))" }}
+      <MapContainer
+        center={[22.5, 82.0]}
+        zoom={5}
+        zoomSnap={0.5}
+        scrollWheelZoom={false}
+        style={{ width: "100%", height: "100%" }}
+        className="leaflet-dark-map"
+      >
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          maxZoom={19}
         />
 
-        <g stroke="rgba(255,107,0,0.10)" strokeWidth="0.8" fill="none">
-          {INDIA_GRID.map((d, i) => <path key={i} d={d} />)}
-        </g>
+        {geoData && (
+          <GeoJSON
+            key="india"
+            data={geoData}
+            style={GEO_STYLE}
+            onEachFeature={onEachFeature}
+          />
+        )}
 
-        <g fontFamily="JetBrains Mono, monospace" fontSize="9" fill="rgba(255,107,0,0.4)">
-          <text x="14" y="18">28°N</text>
-          <text x="14" y="370">20°N</text>
-          <text x="14" y="700">8°N</text>
-          <text x="568" y="710">92°E</text>
-          <text x="280" y="710">78°E</text>
-          <text x="100" y="710">68°E</text>
-        </g>
-
-        {cities.map((c, i) => {
-          const cat = aqiCategory(c.aqi);
-          const isSel = selected?.name === c.name;
-          const isHov = hover?.name === c.name;
-          const r = isSel ? 8 : isHov ? 7 : 5;
+        {cities.map(city => {
+          const coords = CITY_COORDS[city.name];
+          if (!coords) return null;
+          const cat = aqiCategory(city.aqi);
           return (
-            <g
-              key={c.name}
-              transform={`translate(${c.x},${c.y})`}
-              style={{ cursor: "pointer" }}
-              onMouseEnter={() => setHover(c)}
-              onMouseLeave={() => setHover(null)}
-              onClick={() => (onCityClick ?? onSelect)?.(c)}
+            <Marker
+              key={city.name}
+              position={coords}
+              icon={makeCityIcon(cat.color)}
+              eventHandlers={{ click: () => (onCityClick ?? onSelect)?.(city) }}
             >
-              <circle r={r * 3.5} fill={cat.color} opacity="0.18">
-                <animate attributeName="r" values={`${r*1.5};${r*4};${r*1.5}`} dur={`${1.6 + (i%3)*0.4}s`} repeatCount="indefinite"/>
-                <animate attributeName="opacity" values="0.35;0;0.35" dur={`${1.6 + (i%3)*0.4}s`} repeatCount="indefinite"/>
-              </circle>
-              <circle r={r*2} fill={cat.color} opacity="0.35" filter="url(#dotGlow)" />
-              <circle r={r} fill={cat.color} stroke="#0a0a0a" strokeWidth="1.5" />
-              {isSel && (
-                <circle r={r + 6} fill="none" stroke={cat.color} strokeWidth="1.2" opacity="0.8">
-                  <animate attributeName="r" values={`${r+4};${r+10};${r+4}`} dur="2s" repeatCount="indefinite"/>
-                </circle>
-              )}
-            </g>
+              <Tooltip
+                direction="top"
+                offset={[0, -14]}
+                opacity={1}
+                className="city-tooltip"
+              >
+                <div className="ct-name mono">{city.name.toUpperCase()}</div>
+                <div className="ct-aqi" style={{ color: cat.color }}>{city.aqi}</div>
+                <div className="ct-cat" style={{ color: cat.color }}>{cat.name.toUpperCase()}</div>
+                <div className="ct-cta mono">Click to explore →</div>
+              </Tooltip>
+            </Marker>
           );
         })}
-
-        {hover && (
-          <g transform={`translate(${hover.x + 12},${hover.y - 12})`} pointerEvents="none">
-            <rect x="0" y="-14" width={hover.name.length * 7 + 50} height="22" rx="6" fill="rgba(15,12,10,0.95)" stroke="rgba(255,107,0,0.5)" strokeWidth="1"/>
-            <text x="8" y="1" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#f3f1ee">
-              {hover.name.toUpperCase()}
-              <tspan fill={aqiCategory(hover.aqi).color} dx="8">{hover.aqi}</tspan>
-            </text>
-          </g>
-        )}
-      </svg>
+      </MapContainer>
 
       <div className="map-legend glass">
         <div className="legend-title">AQI SEVERITY</div>
         {[
-          { c:"#34d27a", l:"Good",         r:"0–50"    },
-          { c:"#f5d142", l:"Satisfactory", r:"51–100"  },
-          { c:"#FFB300", l:"Moderate",     r:"101–200" },
-          { c:"#FF6B00", l:"Poor",         r:"201–300" },
-          { c:"#ef3a4d", l:"Severe",       r:"301–400" },
-          { c:"#c2002a", l:"Hazardous",    r:"400+"    },
+          { c: "#34d27a", l: "Good",         r: "0–50"    },
+          { c: "#f5d142", l: "Satisfactory", r: "51–100"  },
+          { c: "#FFB300", l: "Moderate",     r: "101–200" },
+          { c: "#FF6B00", l: "Poor",         r: "201–300" },
+          { c: "#ef3a4d", l: "Severe",       r: "301–400" },
+          { c: "#c2002a", l: "Hazardous",    r: "400+"    },
         ].map(s => (
           <div key={s.l} className="legend-row">
-            <span className="legend-dot" style={{ background: s.c, boxShadow: `0 0 10px ${s.c}` }}></span>
+            <span className="legend-dot" style={{ background: s.c, boxShadow: `0 0 10px ${s.c}` }} />
             <span className="legend-l">{s.l}</span>
             <span className="legend-r">{s.r}</span>
           </div>
@@ -122,14 +144,8 @@ export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
       </div>
 
       <div className="map-corners">
-        <span className="c tl"></span><span className="c tr"></span>
-        <span className="c bl"></span><span className="c br"></span>
-      </div>
-
-      <div className="map-meta mono">
-        <div>LAT 8°N → 36°N</div>
-        <div>LON 68°E → 97°E</div>
-        <div style={{ color: "var(--orange)" }}>● 10 LIVE STATIONS</div>
+        <span className="c tl" /><span className="c tr" />
+        <span className="c bl" /><span className="c br" />
       </div>
     </div>
   );
