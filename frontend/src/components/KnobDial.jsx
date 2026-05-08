@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 
-export default function KnobDial({ label, min, max, unit, color = "#FF6B00", value, onChange }) {
+export default function KnobDial({ label, min, max, unit, color = "#FF6B00", value, onChange, step = 1 }) {
   const dragging = useRef(false);
   const ref = useRef(null);
   const startA = -135, endA = 135;
@@ -18,7 +18,6 @@ export default function KnobDial({ label, min, max, unit, color = "#FF6B00", val
     a = Math.max(startA, Math.min(endA, a));
     const newPct = (a - startA) / range;
     const v = min + newPct * (max - min);
-    const step = unit === "mg/m³" ? 0.1 : 1;
     onChange(Math.round(v / step) * step);
   };
 
@@ -41,13 +40,18 @@ export default function KnobDial({ label, min, max, unit, color = "#FF6B00", val
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onUp);
     };
-  }, [min, max, unit]);
+  }, [min, max, step]);
 
   const onWheel = (e) => {
     e.preventDefault();
-    const step = unit === "mg/m³" ? 0.1 : (max - min) / 100;
+    const wheelStep = unit === "mg/m³" ? 0.1 : (max - min) / 100;
     const dir = e.deltaY > 0 ? -1 : 1;
-    onChange(Math.max(min, Math.min(max, value + dir * step * 5)));
+    onChange(Math.max(min, Math.min(max, value + dir * wheelStep * 5)));
+  };
+
+  const handleNumberInput = (e) => {
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v)) onChange(Math.max(min, Math.min(max, v)));
   };
 
   const r = 44;
@@ -100,6 +104,17 @@ export default function KnobDial({ label, min, max, unit, color = "#FF6B00", val
         <span className="display knob-val">{Number(value).toFixed(unit === "mg/m³" ? 2 : 0)}</span>
         <span className="mono knob-unit">{unit}</span>
       </div>
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={handleNumberInput}
+        onMouseDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
+        className="knob-number-input"
+      />
     </div>
   );
 }

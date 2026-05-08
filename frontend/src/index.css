@@ -804,6 +804,11 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
 .knob-name { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
 .knob-val { font-size: 18px; color: var(--orange); font-weight: 600; line-height: 1; text-shadow: 0 0 12px rgba(255,107,0,0.5); }
 .knob-unit { font-size: 9px; color: var(--text-mute); letter-spacing: 0.06em; }
+.knob-number-input { width: 72px; background: #0a0f1e; border: 1px solid #22c55e30; border-radius: 6px; color: #fff; font-size: 12px; font-family: 'JetBrains Mono', monospace; text-align: center; padding: 4px 6px; margin-top: 4px; outline: none; }
+.knob-number-input:focus { border-color: #22c55e; box-shadow: 0 0 0 2px #22c55e20; }
+.knob-number-input::-webkit-outer-spin-button,
+.knob-number-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.knob-number-input[type=number] { -moz-appearance: textfield; }
 .predict-button-row { display: flex; gap: 12px; margin-top: 8px; align-items: center; }
 .gauge-wrap { display: flex; justify-content: center; margin-top: 8px; }
 .gauge-svg { width: 100%; max-width: 360px; }

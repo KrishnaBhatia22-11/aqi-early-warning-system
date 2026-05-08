@@ -83,6 +83,7 @@ export default function PredictorPage() {
                 unit={p.unit}
                 min={p.min}
                 max={p.max}
+                step={p.unit === "mg/m³" ? 0.01 : 0.1}
                 value={vals[p.name] ?? p.default}
                 color={p.color}
                 onChange={v => handleKnob(p.name, v)}
