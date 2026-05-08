@@ -604,7 +604,7 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
 /* ══════════════════════════════════════
    TICKER
 ══════════════════════════════════════ */
-.ticker-wrap { position: relative; z-index: 10; margin-top: 0; margin-bottom: 32px; height: 48px; width: 100%; display: flex; align-items: center; background: rgba(255,107,0,0.04); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; border-radius: 0; }
+.ticker-wrap { position: relative; z-index: 20 !important; margin-top: 0; margin-bottom: 32px; height: 48px; width: 100%; display: flex; align-items: center; background: rgba(255,107,0,0.04); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; border-radius: 0; }
 .ticker-label { flex-shrink: 0; background: rgba(255,107,0,0.15); color: var(--orange); font-size: 10px; letter-spacing: 0.2em; padding: 0 16px; height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border); }
 .ticker-track { display: flex; gap: 32px; white-space: nowrap; animation: ticker-scroll 90s linear infinite; padding-left: 32px; }
 .ticker-item { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; }
@@ -1051,7 +1051,7 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 .dh-cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
 /* Stat bar lives in its own row — extracted from hero section to avoid overflow:hidden clipping */
 .dh-stat-row { max-width: 1400px; margin: 0 auto; padding: 32px 24px 0; width: 100%; border-top: 1px solid var(--border-faint); margin-bottom: 60px; position: relative; z-index: 5; }
-.dh-stat-strip { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
+.dh-stat-strip { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; position: relative; z-index: 5 !important; }
 .dh-stat { display: flex; flex-direction: column; gap: 6px; }
 .dh-stat-num { font-size: 48px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
 .dh-stat-label { font-size: 10px; letter-spacing: 0.18em; color: var(--text-mute); }
