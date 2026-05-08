@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import { aqiCategory } from "../utils/aqiCategory";
 
@@ -35,8 +35,13 @@ const CITY_COORDS = {
   "Ranchi":             [23.3441, 85.3096],
 };
 
-const GEOJSON_URL =
-  "https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson";
+// Fallback chain — first working URL is used
+const GEOJSON_URLS = [
+  "https://raw.githubusercontent.com/Subhash9325/GeoJson-Data-of-Indian-States/master/Indian_States",
+  "https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson",
+];
+
+const MAX_BOUNDS = [[6.0, 68.0], [38.0, 98.0]];
 
 function makeCityIcon(color) {
   return L.divIcon({
@@ -66,23 +71,45 @@ function onEachFeature(_, layer) {
   });
 }
 
+function MapController() {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([22.5, 80.0], 5);
+    map.setMaxBounds(MAX_BOUNDS);
+  }, [map]);
+  return null;
+}
+
 export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
   const [geoData, setGeoData] = useState(null);
 
   useEffect(() => {
-    fetch(GEOJSON_URL).then(r => r.json()).then(setGeoData).catch(() => {});
+    const tryUrls = async () => {
+      for (const url of GEOJSON_URLS) {
+        try {
+          const r = await fetch(url);
+          if (!r.ok) continue;
+          const data = await r.json();
+          if (data?.type || data?.features?.length) { setGeoData(data); return; }
+        } catch {}
+      }
+    };
+    tryUrls();
   }, []);
 
   return (
     <div className="india-map-wrap">
       <MapContainer
-        center={[22.5, 82.0]}
+        center={[22.5, 80.0]}
         zoom={5}
-        zoomSnap={0.5}
+        zoomSnap={0.1}
         scrollWheelZoom={false}
+        maxBounds={MAX_BOUNDS}
+        maxBoundsViscosity={0.8}
         style={{ width: "100%", height: "100%" }}
         className="leaflet-dark-map"
       >
+        <MapController />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
