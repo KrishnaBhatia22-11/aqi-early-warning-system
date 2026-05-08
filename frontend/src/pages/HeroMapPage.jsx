@@ -62,6 +62,10 @@ export default function HeroMapPage({ cities, onCitySelect, setPage }) {
           </div>
         </div>
 
+      </section>
+
+      {/* ── Cities stat bar — own row, never shares with ticker ── */}
+      <div className="dh-stat-row">
         <div className="dh-stat-strip">
           <div className="dh-stat">
             <span className="display dh-stat-num" style={{ color: cat.color }}>
@@ -94,8 +98,9 @@ export default function HeroMapPage({ cities, onCitySelect, setPage }) {
             <span className="mono dh-stat-label">CITIES IN ML DATASET</span>
           </div>
         </div>
-      </section>
+      </div>
 
+      {/* ── Live ticker — own row below, clear separation ── */}
       <LiveTicker cities={cities} />
 
       <section className="map-section">
