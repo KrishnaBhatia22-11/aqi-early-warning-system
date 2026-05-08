@@ -4,7 +4,7 @@ export default function LiveTicker({ cities }) {
   if (!cities?.length) return null;
   const items = [...cities, ...cities];
   return (
-    <div style={{ display: "block", position: "relative", width: "100%" }}>
+    <div style={{ position: "relative", width: "100%", display: "block" }}>
       <div className="ticker-wrap">
         <div className="ticker-label mono">LIVE FEED</div>
         <div className="ticker-track">

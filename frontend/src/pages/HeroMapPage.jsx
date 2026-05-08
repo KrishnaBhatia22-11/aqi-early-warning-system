@@ -64,9 +64,16 @@ export default function HeroMapPage({ cities, onCitySelect, setPage }) {
 
       </section>
 
-      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-        {/* ── Cities stat bar — own row ── */}
-        <div className="dh-stat-row" style={{ marginBottom: "60px" }}>
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "0" }}>
+
+        {/* CITIES STRIP — row 1 */}
+        <div style={{
+          width: "100%",
+          overflow: "hidden",
+          background: "#0a0f1e",
+          borderTop: "1px solid #22c55e20",
+          padding: "28px 24px 24px",
+        }}>
           <div className="dh-stat-strip">
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: cat.color }}>
@@ -101,10 +108,16 @@ export default function HeroMapPage({ cities, onCitySelect, setPage }) {
           </div>
         </div>
 
-        {/* ── Live ticker — own row, strictly below ── */}
-        <div className="ticker-row" style={{ width: "100%" }}>
+        {/* LIVE TICKER — row 2, completely separate */}
+        <div style={{
+          width: "100%",
+          overflow: "hidden",
+          background: "#060d1a",
+          borderTop: "1px solid #ffffff10",
+        }}>
           <LiveTicker cities={cities} />
         </div>
+
       </div>
 
       <section className="map-section">
