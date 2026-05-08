@@ -153,7 +153,7 @@ function AppInner() {
 
   const renderPage = () => {
     switch (page) {
-      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} />;
+      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} zoomCity={zoomCity} />;
       case "predict":  return <PredictorPage />;
       case "health":   return <HealthImpactPage cities={cities} />;
       case "forecast": return <ForecastPage cities={cities} />;

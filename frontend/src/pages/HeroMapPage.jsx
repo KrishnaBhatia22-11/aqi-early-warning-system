@@ -19,9 +19,10 @@ const SPARKLINES = {
   chennai: [65,  70,  60,  75,  68,  72,  66 ],
 };
 
-export default function HeroMapPage({ cities, onCitySelect, setPage }) {
+export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity }) {
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroFade, setHeroFade] = useState(true);
+  const [mapVisible, setMapVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -33,6 +34,15 @@ export default function HeroMapPage({ cities, onCitySelect, setPage }) {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!zoomCity) setMapVisible(true);
+  }, [zoomCity]);
+
+  const handleCityClick = (city) => {
+    setMapVisible(false);
+    onCitySelect(city);
+  };
 
   const nationalAvg = cities.length
     ? Math.round(cities.reduce((s, c) => s + c.aqi, 0) / cities.length)
@@ -127,7 +137,9 @@ export default function HeroMapPage({ cities, onCitySelect, setPage }) {
               <span className="mono panel-title">LIVE AIR QUALITY MAP</span>
               <span className="mono panel-meta" style={{ color: "#34d27a" }}>● LIVE</span>
             </div>
-            <IndiaMap cities={cities} onCityClick={onCitySelect} />
+            <div style={{ display: mapVisible ? "block" : "none" }}>
+              <IndiaMap cities={cities} onCityClick={handleCityClick} />
+            </div>
           </div>
 
           <div className="map-right">
