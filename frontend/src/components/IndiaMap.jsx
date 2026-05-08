@@ -37,11 +37,12 @@ const CITY_COORDS = {
 
 // Fallback chain — first working URL is used
 const GEOJSON_URLS = [
+  "https://raw.githubusercontent.com/datameet/maps/master/Country/india-composite.geojson",
   "https://raw.githubusercontent.com/Subhash9325/GeoJson-Data-of-Indian-States/master/Indian_States",
   "https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson",
 ];
 
-const MAX_BOUNDS = [[6.0, 68.0], [38.0, 98.0]];
+const MAX_BOUNDS = [[6.0, 66.0], [40.0, 100.0]];
 
 function makeCityIcon(color) {
   return L.divIcon({
@@ -74,7 +75,7 @@ function onEachFeature(_, layer) {
 function MapController() {
   const map = useMap();
   useEffect(() => {
-    map.setView([22.5, 80.0], 5);
+    map.setView([22.5, 80.0], 4.8);
     map.setMaxBounds(MAX_BOUNDS);
   }, [map]);
   return null;
@@ -101,7 +102,7 @@ export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
     <div className="india-map-wrap">
       <MapContainer
         center={[22.5, 80.0]}
-        zoom={5}
+        zoom={4.8}
         zoomSnap={0.1}
         scrollWheelZoom={false}
         maxBounds={MAX_BOUNDS}
