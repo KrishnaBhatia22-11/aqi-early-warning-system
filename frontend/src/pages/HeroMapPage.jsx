@@ -51,6 +51,14 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
   const cleanCities = cities.filter(c => c.aqi <= 100).length;
   const cat = aqiCategory(nationalAvg);
 
+  const worstCity    = cities.length ? cities.reduce((a, b) => a.aqi > b.aqi ? a : b) : null;
+  const cleanestCity = cities.length ? cities.reduce((a, b) => a.aqi < b.aqi ? a : b) : null;
+  const worstCat     = worstCity    ? aqiCategory(worstCity.aqi)    : { color: "#ef3a4d", name: "Severe" };
+  const cleanCat     = cleanestCity ? aqiCategory(cleanestCity.aqi) : { color: "#34d27a", name: "Good"   };
+  const aboveSafe    = cities.filter(c => c.aqi > 100).length;
+  const _d           = new Date();
+  const todayLabel   = `${String(_d.getDate()).padStart(2, "0")} ${_d.toLocaleString("en-US", { month: "short" }).toUpperCase()} ${_d.getFullYear()}`;
+
   return (
     <div className="hero-map-page">
       <section className="dynamic-hero">
@@ -192,6 +200,69 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
           </div>
         </div>
       </section>
+
+      {/* ── SECTION 1: Impact Statement ── */}
+      <section className="impact-section">
+        <div className="impact-inner">
+          <div className="impact-grid">
+            <div className="impact-stat">
+              <div className="impact-num">1.4 Billion</div>
+              <div className="impact-label">People in India breathing<br />polluted air daily</div>
+              <div className="impact-source">Source: WHO 2024</div>
+            </div>
+            <div className="impact-divider" />
+            <div className="impact-stat">
+              <div className="impact-num">7 of 10</div>
+              <div className="impact-label">World's most polluted<br />cities are in India</div>
+              <div className="impact-source">Source: IQAir 2024</div>
+            </div>
+            <div className="impact-divider" />
+            <div className="impact-stat">
+              <div className="impact-num">₹1.5 Lakh Cr</div>
+              <div className="impact-label">Annual economic cost<br />of air pollution in India</div>
+              <div className="impact-source">Source: World Bank</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 2: National Snapshot ── */}
+      {cities.length > 0 && (
+        <section className="snapshot-section">
+          <div className="snapshot-inner">
+            <div className="mono snapshot-date">TODAY ACROSS INDIA — {todayLabel}</div>
+            <div className="snapshot-pills">
+              <div className="snapshot-pill">
+                <span className="snap-dot" style={{ background: worstCat.color }} />
+                <span className="snap-label">Worst City</span>
+                <span className="snap-val" style={{ color: worstCat.color }}>{worstCity.name} {worstCity.aqi}</span>
+                <span className="snap-cat" style={{ color: worstCat.color }}>— {worstCat.name}</span>
+              </div>
+              <div className="snapshot-pill">
+                <span className="snap-dot" style={{ background: cleanCat.color }} />
+                <span className="snap-label">Cleanest City</span>
+                <span className="snap-val" style={{ color: cleanCat.color }}>{cleanestCity.name} {cleanestCity.aqi}</span>
+                <span className="snap-cat" style={{ color: cleanCat.color }}>— {cleanCat.name}</span>
+              </div>
+              <div className="snapshot-pill">
+                <span className="snap-dot" style={{ background: cat.color }} />
+                <span className="snap-label">National Average</span>
+                <span className="snap-val" style={{ color: cat.color }}>{nationalAvg}</span>
+                <span className="snap-cat" style={{ color: cat.color }}>— {cat.name}</span>
+              </div>
+              <div className="snapshot-pill">
+                <span className="snap-dot" style={{ background: "#f97316" }} />
+                <span className="snap-label">Above Safe Limit</span>
+                <span className="snap-val" style={{ color: "#f97316" }}>{aboveSafe} of {cities.length}</span>
+                <span className="snap-cat">cities</span>
+              </div>
+            </div>
+            <div className="snapshot-context mono">
+              CPCB safe limit is AQI 100. Today, {aboveSafe} {aboveSafe === 1 ? "city is" : "cities are"} above it.
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

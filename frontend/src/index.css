@@ -731,6 +731,29 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
 .aqi-legend-strip { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; padding: 12px 16px; background: #0a0f1e; border: 1px solid #22c55e15; border-radius: 0 0 12px 12px; margin-top: -4px; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8; font-weight: 500; }
 .legend-range { color: #475569; font-size: 11px; }
+
+/* ── Impact Section ── */
+.impact-section { background: #060d1a; border-top: 1px solid rgba(255,107,0,0.10); border-bottom: 1px solid rgba(255,107,0,0.10); padding: 56px 24px; }
+.impact-inner { max-width: 960px; margin: 0 auto; }
+.impact-grid { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; }
+.impact-stat { text-align: center; padding: 0 32px; }
+.impact-num { font-family: 'Space Grotesk', sans-serif; font-size: 40px; font-weight: 700; line-height: 1; margin-bottom: 14px; background: linear-gradient(135deg, #FF6B00 0%, #ef3a4d 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.impact-label { font-size: 15px; color: rgba(255,255,255,0.82); line-height: 1.55; margin-bottom: 10px; }
+.impact-source { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.28); letter-spacing: 0.09em; }
+.impact-divider { width: 1px; height: 88px; background: rgba(255,255,255,0.07); }
+
+/* ── National Snapshot Section ── */
+.snapshot-section { background: #080e1c; border-top: 1px solid rgba(255,255,255,0.05); padding: 36px 24px; }
+.snapshot-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; align-items: center; }
+.snapshot-date { font-size: 11px; letter-spacing: 0.20em; color: rgba(255,255,255,0.30); }
+.snapshot-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.snapshot-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 999px; padding: 10px 20px; }
+.snap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.snap-label { color: rgba(255,255,255,0.38); font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; }
+.snap-val { font-weight: 700; font-family: 'Space Grotesk', sans-serif; font-size: 15px; }
+.snap-cat { color: rgba(255,255,255,0.38); font-size: 12px; }
+.snapshot-context { font-size: 11px; color: rgba(255,255,255,0.28); letter-spacing: 0.11em; text-align: center; }
+
 .map-meta { position: absolute; bottom: 16px; right: 20px; font-size: 10px; letter-spacing: 0.12em; color: var(--text-mute); text-align: right; line-height: 1.7; z-index: 4; }
 .map-corners .c { position: absolute; width: 16px; height: 16px; border: 1px solid var(--orange); }
 .map-corners .tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
