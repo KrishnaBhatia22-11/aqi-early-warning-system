@@ -64,44 +64,48 @@ export default function HeroMapPage({ cities, onCitySelect, setPage }) {
 
       </section>
 
-      {/* ── Cities stat bar — own row, never shares with ticker ── */}
-      <div className="dh-stat-row">
-        <div className="dh-stat-strip">
-          <div className="dh-stat">
-            <span className="display dh-stat-num" style={{ color: cat.color }}>
-              <CountUp to={nationalAvg} duration={1200} />
-            </span>
-            <span className="mono dh-stat-label">NATIONAL AVG AQI</span>
-          </div>
-          <div className="dh-stat">
-            <span className="display dh-stat-num" style={{ color: "#ef3a4d" }}>
-              <CountUp to={hazardousCities} duration={800} />
-            </span>
-            <span className="mono dh-stat-label">HAZARDOUS CITIES</span>
-          </div>
-          <div className="dh-stat">
-            <span className="display dh-stat-num" style={{ color: "#34d27a" }}>
-              <CountUp to={cleanCities} duration={800} />
-            </span>
-            <span className="mono dh-stat-label">CLEAN AIR CITIES</span>
-          </div>
-          <div className="dh-stat">
-            <span className="display dh-stat-num" style={{ color: "#FFB300" }}>
-              <CountUp to={cities.length || 10} duration={600} />
-            </span>
-            <span className="mono dh-stat-label">LIVE STATIONS</span>
-          </div>
-          <div className="dh-stat">
-            <span className="display dh-stat-num" style={{ color: "#3498db" }}>
-              <CountUp to={26} duration={600} />
-            </span>
-            <span className="mono dh-stat-label">CITIES IN ML DATASET</span>
+      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+        {/* ── Cities stat bar — own row ── */}
+        <div className="dh-stat-row" style={{ marginBottom: "60px" }}>
+          <div className="dh-stat-strip">
+            <div className="dh-stat">
+              <span className="display dh-stat-num" style={{ color: cat.color }}>
+                <CountUp to={nationalAvg} duration={1200} />
+              </span>
+              <span className="mono dh-stat-label">NATIONAL AVG AQI</span>
+            </div>
+            <div className="dh-stat">
+              <span className="display dh-stat-num" style={{ color: "#ef3a4d" }}>
+                <CountUp to={hazardousCities} duration={800} />
+              </span>
+              <span className="mono dh-stat-label">HAZARDOUS CITIES</span>
+            </div>
+            <div className="dh-stat">
+              <span className="display dh-stat-num" style={{ color: "#34d27a" }}>
+                <CountUp to={cleanCities} duration={800} />
+              </span>
+              <span className="mono dh-stat-label">CLEAN AIR CITIES</span>
+            </div>
+            <div className="dh-stat">
+              <span className="display dh-stat-num" style={{ color: "#FFB300" }}>
+                <CountUp to={cities.length || 10} duration={600} />
+              </span>
+              <span className="mono dh-stat-label">LIVE STATIONS</span>
+            </div>
+            <div className="dh-stat">
+              <span className="display dh-stat-num" style={{ color: "#3498db" }}>
+                <CountUp to={26} duration={600} />
+              </span>
+              <span className="mono dh-stat-label">CITIES IN ML DATASET</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Live ticker — own row below, clear separation ── */}
-      <LiveTicker cities={cities} />
+        {/* ── Live ticker — own row, strictly below ── */}
+        <div className="ticker-row" style={{ width: "100%" }}>
+          <LiveTicker cities={cities} />
+        </div>
+      </div>
 
       <section className="map-section">
         <div className="map-section-inner">
