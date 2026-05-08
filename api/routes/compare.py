@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -70,28 +71,48 @@ def _resolve(city: str) -> dict:
 
 
 @router.get("/compare")
-def compare_cities(city1: str = "Delhi", city2: str = "Mumbai"):
+def compare_cities(
+    city1: str = "Delhi",
+    city2: str = "Mumbai",
+    aqi1: Optional[float] = None,
+    aqi2: Optional[float] = None,
+):
     city1 = city1.strip().title()
     city2 = city2.strip().title()
 
     if city1.lower() == city2.lower():
         raise HTTPException(400, detail="city1 and city2 must be different cities")
 
+    # If caller passes both AQI values already on-screen, skip WAQI fetch entirely
+    _provided = aqi1 is not None and aqi2 is not None
     cache_key = f"{city1.lower()}:{city2.lower()}"
     now = time.time()
-    if cache_key in _cache:
-        ts, data = _cache[cache_key]
-        if now - ts < _CACHE_TTL:
-            return data
 
-    d1 = _resolve(city1)
-    d2 = _resolve(city2)
+    if _provided:
+        d1 = {
+            "name": city1, "aqi": int(aqi1), "category": _cat(int(aqi1)),
+            "dominant_pollutant": _DOMINANT.get(city1, "PM2.5"),
+            "population": _POPULATIONS.get(city1, 0), "source": "provided",
+        }
+        d2 = {
+            "name": city2, "aqi": int(aqi2), "category": _cat(int(aqi2)),
+            "dominant_pollutant": _DOMINANT.get(city2, "PM2.5"),
+            "population": _POPULATIONS.get(city2, 0), "source": "provided",
+        }
+    else:
+        if cache_key in _cache:
+            ts, data = _cache[cache_key]
+            if now - ts < _CACHE_TTL:
+                return data
 
-    aqi1, aqi2 = d1["aqi"], d2["aqi"]
-    diff = abs(aqi1 - aqi2)
+        d1 = _resolve(city1)
+        d2 = _resolve(city2)
+
+    v1, v2 = d1["aqi"], d2["aqi"]
+    diff = abs(v1 - v2)
 
     # Insight — always from worse city's perspective
-    worse, better = (d1, d2) if aqi1 >= aqi2 else (d2, d1)
+    worse, better = (d1, d2) if v1 >= v2 else (d2, d1)
     pct_worse = round((worse["aqi"] - better["aqi"]) / max(better["aqi"], 1) * 100)
 
     if pct_worse < 5:
@@ -118,5 +139,6 @@ def compare_cities(city1: str = "Delhi", city2: str = "Mumbai"):
         "cigarette_difference": cigarette_difference,
     }
 
-    _cache[cache_key] = (now, result)
+    if not _provided:
+        _cache[cache_key] = (now, result)
     return result

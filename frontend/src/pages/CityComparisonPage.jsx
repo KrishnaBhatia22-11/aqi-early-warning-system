@@ -39,6 +39,52 @@ function healthCalc(aqi, hours = 2) {
   };
 }
 
+function CityDropdown({ value, onChange, cities }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey  = e => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown",   onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  return (
+    <div className="cmp-dd-wrap" ref={ref}>
+      <button
+        type="button"
+        className={`cmp-dd-trigger${open ? " open" : ""}`}
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="cmp-dd-value">{value}</span>
+        <span className="cmp-dd-arrow" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="cmp-dd-panel" role="listbox">
+          {cities.map(c => (
+            <button
+              key={c}
+              type="button"
+              role="option"
+              aria-selected={c === value}
+              className={`cmp-dd-option${c === value ? " selected" : ""}`}
+              onClick={() => { onChange(c); setOpen(false); }}
+            >
+              <span>{c}</span>
+              {c === value && <span className="cmp-dd-check" aria-hidden="true">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CountUp({ value, decimals = 0, suffix = "" }) {
   const [cur, setCur] = useState(0);
   useEffect(() => {
@@ -179,14 +225,17 @@ export default function CityComparisonPage({ cities = [] }) {
     ? [...new Set([...cities.map(c => c.name), ...ALL_CITIES])]
     : ALL_CITIES;
 
-  const doFetch = useCallback(async (c1, c2) => {
+  const doFetch = useCallback(async (c1, c2, passedAqi1 = null, passedAqi2 = null) => {
     if (c1 === c2) return;
     setLoading(true);
     setError(null);
     try {
+      let url = `${BASE}/api/v1/compare?city1=${encodeURIComponent(c1)}&city2=${encodeURIComponent(c2)}`;
+      if (passedAqi1 != null && passedAqi2 != null) {
+        url += `&aqi1=${passedAqi1}&aqi2=${passedAqi2}`;
+      }
       const [compare, fc1, fc2] = await Promise.all([
-        fetch(`${BASE}/api/v1/compare?city1=${encodeURIComponent(c1)}&city2=${encodeURIComponent(c2)}`)
-          .then(r => { if (!r.ok) throw new Error("Compare API failed"); return r.json(); }),
+        fetch(url).then(r => { if (!r.ok) throw new Error("Compare API failed"); return r.json(); }),
         fetchForecast(c1).catch(() => null),
         fetchForecast(c2).catch(() => null),
       ]);
@@ -202,15 +251,21 @@ export default function CityComparisonPage({ cities = [] }) {
     }
   }, []);
 
-  // Auto-compare on mount
+  // Auto-compare on mount (no AQI to pass yet)
   useEffect(() => { doFetch("Delhi", "Mumbai"); }, [doFetch]);
 
-  const handleCompare = () => doFetch(city1, city2);
+  const handleCompare = () => {
+    const liveAqi1 = getLiveAqi(city1);
+    const liveAqi2 = getLiveAqi(city2);
+    doFetch(city1, city2, liveAqi1, liveAqi2);
+  };
 
   const handleSwap = () => {
+    const newC1Aqi = getLiveAqi(city2);
+    const newC2Aqi = getLiveAqi(city1);
     setCity1(city2);
     setCity2(city1);
-    doFetch(city2, city1);
+    doFetch(city2, city1, newC1Aqi, newC2Aqi);
   };
 
   // Scroll into view after results load
@@ -350,13 +405,7 @@ export default function CityComparisonPage({ cities = [] }) {
           {/* City 1 card */}
           <div className="cmp-city-card glass-strong">
             <span className="mono cmp-city-card-label">CITY 1</span>
-            <select
-              className="cmp-city-select"
-              value={city1}
-              onChange={e => setCity1(e.target.value)}
-            >
-              {cityList.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <CityDropdown value={city1} onChange={setCity1} cities={cityList} />
             {(() => {
               const aqi = getLiveAqi(city1);
               if (!aqi) return null;
@@ -382,13 +431,7 @@ export default function CityComparisonPage({ cities = [] }) {
           {/* City 2 card */}
           <div className="cmp-city-card glass-strong">
             <span className="mono cmp-city-card-label">CITY 2</span>
-            <select
-              className="cmp-city-select"
-              value={city2}
-              onChange={e => setCity2(e.target.value)}
-            >
-              {cityList.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <CityDropdown value={city2} onChange={setCity2} cities={cityList} />
             {(() => {
               const aqi = getLiveAqi(city2);
               if (!aqi) return null;
