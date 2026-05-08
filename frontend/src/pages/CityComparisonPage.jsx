@@ -218,12 +218,25 @@ export default function CityComparisonPage({ cities = [] }) {
   const [data,  setData]    = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]   = useState(null);
+  const [liveAqi1, setLiveAqi1] = useState(null);
+  const [liveAqi2, setLiveAqi2] = useState(null);
   const verdictRef  = useRef(null);
   const shareCardRef = useRef(null);
 
   const cityList = cities.length > 0
     ? [...new Set([...cities.map(c => c.name), ...ALL_CITIES])]
     : ALL_CITIES;
+
+  // Sync live AQI state from the cities prop — these are the values shown in the badges
+  useEffect(() => {
+    const aqi = cities.find(c => c.name?.toLowerCase() === city1.toLowerCase())?.aqi ?? null;
+    if (aqi != null) setLiveAqi1(aqi);
+  }, [city1, cities]);
+
+  useEffect(() => {
+    const aqi = cities.find(c => c.name?.toLowerCase() === city2.toLowerCase())?.aqi ?? null;
+    if (aqi != null) setLiveAqi2(aqi);
+  }, [city2, cities]);
 
   const doFetch = useCallback(async (c1, c2, passedAqi1 = null, passedAqi2 = null) => {
     if (c1 === c2) return;
@@ -254,18 +267,14 @@ export default function CityComparisonPage({ cities = [] }) {
   // Auto-compare on mount (no AQI to pass yet)
   useEffect(() => { doFetch("Delhi", "Mumbai"); }, [doFetch]);
 
-  const handleCompare = () => {
-    const liveAqi1 = getLiveAqi(city1);
-    const liveAqi2 = getLiveAqi(city2);
-    doFetch(city1, city2, liveAqi1, liveAqi2);
-  };
+  // liveAqi1/liveAqi2 are already in state — use them directly
+  const handleCompare = () => doFetch(city1, city2, liveAqi1, liveAqi2);
 
   const handleSwap = () => {
-    const newC1Aqi = getLiveAqi(city2);
-    const newC2Aqi = getLiveAqi(city1);
     setCity1(city2);
     setCity2(city1);
-    doFetch(city2, city1, newC1Aqi, newC2Aqi);
+    // capture before state updates take effect
+    doFetch(city2, city1, liveAqi2, liveAqi1);
   };
 
   // Scroll into view after results load
@@ -328,17 +337,6 @@ export default function CityComparisonPage({ cities = [] }) {
   const betterCity = worseIsCity1 ? c2d : c1d;
   const hWorse  = worseIsCity1 ? h1 : h2;
   const hBetter = worseIsCity1 ? h2 : h1;
-
-  // Live AQI badge helper
-  const getLiveAqi = (name) => {
-    const fromProp = cities.find(c => c.name?.toLowerCase() === name.toLowerCase())?.aqi ?? null;
-    const fromData = data?.compare?.city1?.name?.toLowerCase() === name.toLowerCase()
-      ? data.compare.city1.aqi
-      : data?.compare?.city2?.name?.toLowerCase() === name.toLowerCase()
-      ? data.compare.city2.aqi
-      : null;
-    return fromData ?? fromProp;
-  };
 
   const METRIC_ROWS = m1 && m2 ? [
     {
@@ -406,14 +404,12 @@ export default function CityComparisonPage({ cities = [] }) {
           <div className="cmp-city-card glass-strong">
             <span className="mono cmp-city-card-label">CITY 1</span>
             <CityDropdown value={city1} onChange={setCity1} cities={cityList} />
-            {(() => {
-              const aqi = getLiveAqi(city1);
-              if (!aqi) return null;
-              const cat = catFromAqi(aqi);
+            {liveAqi1 != null && (() => {
+              const cat = catFromAqi(liveAqi1);
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {aqi}</span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi1}</span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
                 </div>
               );
@@ -432,14 +428,12 @@ export default function CityComparisonPage({ cities = [] }) {
           <div className="cmp-city-card glass-strong">
             <span className="mono cmp-city-card-label">CITY 2</span>
             <CityDropdown value={city2} onChange={setCity2} cities={cityList} />
-            {(() => {
-              const aqi = getLiveAqi(city2);
-              if (!aqi) return null;
-              const cat = catFromAqi(aqi);
+            {liveAqi2 != null && (() => {
+              const cat = catFromAqi(liveAqi2);
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {aqi}</span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi2}</span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
                 </div>
               );
