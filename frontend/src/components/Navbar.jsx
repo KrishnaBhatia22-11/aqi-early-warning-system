@@ -8,6 +8,7 @@ const NAV_GROUPS = [
       { id: "map",     icon: "🗺",  label: "Live Map",       desc: "Real-time AQI across 26 Indian cities"    },
       { id: "cities",  icon: "🏙",  label: "City Dashboard", desc: "Drill into any city's pollution data"    },
       { id: "compare", icon: "🆚",  label: "Compare Cities", desc: "Side-by-side air quality comparison"     },
+      { id: "history", icon: "📅",  label: "AQI History",    desc: "Real historical data from WAQI — last 7 days" },
     ],
   },
   {

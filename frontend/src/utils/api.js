@@ -118,6 +118,16 @@ export async function fetchCompare(city1, city2) {
   return res.json();
 }
 
+export async function fetchHistory(city) {
+  const res = await fetch(`${BASE}/api/v1/history/${encodeURIComponent(city)}`);
+  if (!res.ok) {
+    let detail = "Failed to fetch history";
+    try { detail = (await res.json()).detail ?? detail; } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
 export async function fetchForecast(city, baseAqi = null) {
   const body = { city };
   if (baseAqi !== null && baseAqi > 0) body.base_aqi = baseAqi;

@@ -1,126 +1,115 @@
-import hashlib
-import random
-from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Query
+import requests
+import os
+from datetime import datetime
 
 router = APIRouter()
 
-# Shared constants (mirrors forecast.py)
-_DIURNAL_RAW = [
-    0.87, 0.85, 0.83, 0.83, 0.86, 0.92,
-    1.05, 1.28, 1.32, 1.20, 1.08, 1.00,
-    0.95, 0.93, 0.97, 1.05, 1.15, 1.30,
-    1.35, 1.25, 1.10, 1.00, 0.93, 0.89,
-]
-_dm = sum(_DIURNAL_RAW) / 24
-_DIURNAL = [v / _dm for v in _DIURNAL_RAW]
+WAQI_TOKEN = os.getenv("WAQI_TOKEN", "")
 
-_SEASONAL = {
-    1: 1.25, 2: 1.20, 3: 1.05, 4: 1.05, 5: 1.08,
-    6: 0.90, 7: 0.82, 8: 0.78, 9: 0.88, 10: 1.05,
-    11: 1.20, 12: 1.35,
+CITY_SLUGS = {
+    "Delhi": "delhi",
+    "Mumbai": "mumbai",
+    "Bangalore": "bangalore",
+    "Chennai": "chennai",
+    "Kolkata": "kolkata",
+    "Hyderabad": "hyderabad",
+    "Ahmedabad": "ahmedabad",
+    "Pune": "pune",
+    "Jaipur": "jaipur",
+    "Lucknow": "lucknow",
+    "Kanpur": "kanpur",
+    "Patna": "patna",
+    "Bhopal": "bhopal",
+    "Nagpur": "nagpur",
+    "Surat": "surat",
+    "Visakhapatnam": "visakhapatnam",
+    "Chandigarh": "chandigarh",
+    "Indore": "indore",
 }
-_DOW = {0: 1.02, 1: 1.02, 2: 1.02, 3: 1.02, 4: 1.05, 5: 0.92, 6: 0.85}
-
-_CITY_DEFAULTS = {
-    "Delhi": 185, "Mumbai": 95, "Kolkata": 140, "Chennai": 75,
-    "Bengaluru": 85, "Hyderabad": 90, "Ahmedabad": 130, "Jaipur": 145,
-    "Lucknow": 160, "Patna": 175, "Chandigarh": 105, "Amritsar": 120,
-    "Guwahati": 95, "Bhopal": 120, "Pune": 100, "Nagpur": 125,
-    "Surat": 115, "Kanpur": 180, "Varanasi": 170,
-    "Coimbatore": 65, "Kochi": 70, "Thiruvananthapuram": 55,
-    "Visakhapatnam": 80, "Ranchi": 120, "Bhubaneswar": 110,
-    "Indore": 125,
-}
-
-_CITY_NORM = {
-    "bangalore": "Bengaluru", "bengalore": "Bengaluru", "bengaluru": "Bengaluru",
-    "cochin": "Kochi", "kochi": "Kochi", "trivandrum": "Thiruvananthapuram",
-    "vizag": "Visakhapatnam", "delhi": "Delhi", "mumbai": "Mumbai",
-    "kolkata": "Kolkata", "chennai": "Chennai", "hyderabad": "Hyderabad",
-    "ahmedabad": "Ahmedabad", "jaipur": "Jaipur", "lucknow": "Lucknow",
-    "patna": "Patna", "chandigarh": "Chandigarh", "amritsar": "Amritsar",
-    "guwahati": "Guwahati", "bhopal": "Bhopal", "pune": "Pune",
-    "nagpur": "Nagpur", "surat": "Surat", "kanpur": "Kanpur",
-    "varanasi": "Varanasi", "ranchi": "Ranchi", "bhubaneswar": "Bhubaneswar",
-    "indore": "Indore", "coimbatore": "Coimbatore",
-    "visakhapatnam": "Visakhapatnam", "thiruvananthapuram": "Thiruvananthapuram",
-}
-
-
-def _cat(aqi: float) -> str:
-    if aqi <= 50:  return "Good"
-    if aqi <= 100: return "Satisfactory"
-    if aqi <= 200: return "Moderate"
-    if aqi <= 300: return "Poor"
-    if aqi <= 400: return "Very Poor"
-    return "Severe"
-
-
-def _daily_aqi(canon_city: str, base: float, date: datetime) -> float:
-    """
-    Synthetic daily AQI: seasonal × DOW multipliers + seeded noise.
-    Uses mean of the 24-hour diurnal profile (= 1.0 by construction)
-    so multipliers are applied to the base directly.
-    """
-    s_mult = _SEASONAL.get(date.month, 1.0)
-    d_mult = _DOW.get(date.weekday(), 1.0)
-
-    # Reproducible ±15 % noise seeded by city + date
-    seed_str = f"{canon_city.lower()}{date.strftime('%Y%m%d')}"
-    seed_int = int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16)
-    rng = random.Random(seed_int)
-    noise = 1.0 + (rng.random() - 0.5) * 0.30
-
-    return max(5.0, round(base * s_mult * d_mult * noise))
 
 
 @router.get("/history/{city}")
-def get_history(
+async def get_history(
     city: str,
-    days: int = Query(default=7, ge=1, le=90),
+    days: int = Query(default=7, ge=1, le=30),
 ):
-    canon = _CITY_NORM.get(city.lower().strip(), city.strip().title())
-    base  = _CITY_DEFAULTS.get(canon, 150)
+    if not WAQI_TOKEN:
+        raise HTTPException(status_code=503, detail="WAQI API key not configured")
 
-    today   = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    records = []
+    slug = CITY_SLUGS.get(city, city.lower())
 
-    for i in range(days, 0, -1):           # oldest → newest
-        date = today - timedelta(days=i)
-        aqi  = int(_daily_aqi(canon, base, date))
-        records.append({
-            "date":     date.strftime("%Y-%m-%d"),
-            "aqi":      aqi,
-            "category": _cat(aqi),
-        })
+    try:
+        url = f"https://api.waqi.info/feed/{slug}/?token={WAQI_TOKEN}"
+        response = requests.get(url, timeout=10)
+        data = response.json()
 
-    aqi_vals   = [r["aqi"] for r in records]
-    avg        = round(sum(aqi_vals) / len(aqi_vals))
-    worst_rec  = max(records, key=lambda r: r["aqi"])
-    best_rec   = min(records, key=lambda r: r["aqi"])
+        if data.get("status") != "ok":
+            raise HTTPException(status_code=404, detail=f"No data available for {city}")
 
-    # Trend: compare last-3 vs first-3 daily averages
-    first3 = sum(aqi_vals[:3]) / 3
-    last3  = sum(aqi_vals[-3:]) / 3
-    if last3 > first3 * 1.08:
-        trend = "worsening"
-    elif last3 < first3 * 0.92:
-        trend = "improving"
-    else:
-        trend = "stable"
+        city_data = data["data"]
+        current_aqi = city_data.get("aqi", 0)
+        current_time = city_data.get("time", {}).get("s", "")
 
-    return {
-        "city":  canon,
-        "days":  days,
-        "data":  records,
-        "summary": {
-            "average":    avg,
-            "worst_day":  worst_rec["date"],
-            "best_day":   best_rec["date"],
-            "worst_aqi":  worst_rec["aqi"],
-            "best_aqi":   best_rec["aqi"],
-            "trend":      trend,
-        },
-        "note": "Synthetic historical data — real database planned for Phase 6",
-    }
+        forecast = city_data.get("forecast", {})
+        daily = forecast.get("daily", {})
+        pm25_daily = daily.get("pm25", [])
+
+        history_points = []
+        for entry in pm25_daily:
+            day = entry.get("day", "")
+            avg = entry.get("avg")
+            min_val = entry.get("min")
+            max_val = entry.get("max")
+
+            if avg is not None:
+                aqi_approx = int(avg * 1.8)
+                history_points.append({
+                    "date": day,
+                    "aqi": min(aqi_approx, 500),
+                    "aqi_min": int(min_val * 1.8) if min_val is not None else None,
+                    "aqi_max": int(max_val * 1.8) if max_val is not None else None,
+                    "pm25_avg": avg,
+                    "source": "WAQI",
+                    "is_forecast": False,
+                })
+
+        history_points.sort(key=lambda x: x["date"])
+
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        past_points = [p for p in history_points if p["date"] <= today]
+
+        if not past_points:
+            return {
+                "city": city,
+                "message": "Historical breakdown not available from WAQI for this city. Showing current reading only.",
+                "current_aqi": current_aqi,
+                "current_time": current_time,
+                "history": [],
+                "source": "WAQI",
+                "data_available": False,
+            }
+
+        aqi_values = [p["aqi"] for p in past_points]
+
+        return {
+            "city": city,
+            "history": past_points,
+            "current_aqi": current_aqi,
+            "current_time": current_time,
+            "summary": {
+                "avg_aqi": round(sum(aqi_values) / len(aqi_values)),
+                "max_aqi": max(aqi_values),
+                "min_aqi": min(aqi_values),
+                "days_available": len(past_points),
+                "worst_day": past_points[aqi_values.index(max(aqi_values))]["date"],
+                "best_day": past_points[aqi_values.index(min(aqi_values))]["date"],
+            },
+            "source": "WAQI — World Air Quality Index",
+            "data_available": True,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
