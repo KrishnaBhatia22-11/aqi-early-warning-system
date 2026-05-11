@@ -203,7 +203,7 @@ function AppInner() {
           page={page}
           setPage={navigateTo}
           apiOnline={apiOnline}
-          user={user}
+          cities={cities}
           a11y={a11y}
           setA11y={setA11y}
         />

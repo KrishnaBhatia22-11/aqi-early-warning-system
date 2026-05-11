@@ -1,48 +1,59 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const NAV_GROUPS = [
-  {
-    id: "explore", label: "EXPLORE",
-    items: [
-      { id: "map",     icon: "🗺",  label: "Live Map",       desc: "Real-time AQI across 26 Indian cities"    },
-      { id: "cities",  icon: "🏙",  label: "City Dashboard", desc: "Drill into any city's pollution data"    },
-      { id: "compare", icon: "🆚",  label: "Compare Cities", desc: "Side-by-side air quality comparison"     },
-      { id: "history", icon: "📅",  label: "AQI History",    desc: "Real historical data from WAQI — last 7 days" },
-      { id: "weather", icon: "🌤",  label: "Weather & AQI",  desc: "How weather conditions affect air quality"    },
-    ],
-  },
-  {
-    id: "tools", label: "TOOLS",
-    items: [
-      { id: "predict",  icon: "🎯", label: "AQI Predictor",  desc: "XGBoost R²=0.932 — predict any pollutant mix" },
-      { id: "health",   icon: "❤️", label: "Health Impact",  desc: "What is this air doing to your body?"         },
-      { id: "forecast", icon: "📈", label: "24H Forecast",   desc: "Hourly AQI prediction with confidence bands"  },
-      { id: "chat",     icon: "🤖", label: "AI Chatbot",     desc: "Ask anything about air quality"               },
-      { id: "alerts",   icon: "🔔", label: "Alerts",         desc: "Get notified when AQI crosses your threshold" },
-    ],
-  },
-  {
-    id: "data", label: "DATA",
-    items: [
-      { id: "models", icon: "🧠", label: "Model Intelligence", desc: "How we chose XGBoost over 3 models"      },
-      { id: "api",    icon: "🔌", label: "Public API",         desc: "Use our prediction API in your own app" },
-    ],
-  },
+const PRIMARY_NAV = [
+  { id: "map",      label: "LIVE MAP"  },
+  { id: "predict",  label: "PREDICT"   },
+  { id: "health",   label: "HEALTH"    },
+  { id: "forecast", label: "FORECAST"  },
+  { id: "cities",   label: "CITIES"    },
+  { id: "compare",  label: "COMPARE"   },
+  { id: "history",  label: "HISTORY"   },
 ];
 
-export default function Navbar({ page, setPage, apiOnline, a11y, setA11y }) {
+const MORE_ITEMS = [
+  { id: "weather", icon: "🌤", label: "Weather & AQI"      },
+  { id: "chat",    icon: "🤖", label: "AI Chatbot"         },
+  { id: "alerts",  icon: "🔔", label: "Alerts"             },
+  { id: "models",  icon: "🧠", label: "Model Intelligence" },
+  { id: "api",     icon: "🔌", label: "Public API"         },
+  { id: "about",   icon: "ℹ️", label: "About"              },
+];
+
+const MOBILE_PRIMARY = [
+  { id: "map",      icon: "🗺",  label: "Live Map"           },
+  { id: "predict",  icon: "🎯",  label: "AQI Predictor"      },
+  { id: "health",   icon: "❤️",  label: "Health Impact"      },
+  { id: "forecast", icon: "📈",  label: "24H Forecast"       },
+  { id: "cities",   icon: "🏙",  label: "City Dashboard"     },
+  { id: "compare",  icon: "🆚",  label: "Compare Cities"     },
+  { id: "history",  icon: "📅",  label: "AQI History"        },
+];
+
+const MOBILE_MORE = [
+  { id: "weather", icon: "🌤",  label: "Weather & AQI"      },
+  { id: "chat",    icon: "🤖",  label: "AI Chatbot"         },
+  { id: "alerts",  icon: "🔔",  label: "Alerts"             },
+  { id: "models",  icon: "🧠",  label: "Model Intelligence" },
+  { id: "api",     icon: "🔌",  label: "Public API"         },
+  { id: "about",   icon: "ℹ️",  label: "About"              },
+];
+
+export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities = [] }) {
   const { user, logout } = useAuth();
-  const [scrolled, setScrolled]   = useState(false);
-  const [time, setTime]           = useState("");
-  const [openGroup, setOpenGroup] = useState(null);
-  const [menuOpen, setMenuOpen]   = useState(false);
-  const closeTimer = useRef(null);
-  const navRef     = useRef(null);
+  const [time, setTime]         = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const moreRef = useRef(null);
 
-  const activeGroup = NAV_GROUPS.find(g => g.items.some(i => i.id === page))?.id ?? null;
+  const { nationalAvg, hazardous } = useMemo(() => {
+    const valid = cities.filter(c => c.aqi && typeof c.aqi === "number" && c.aqi > 0);
+    if (!valid.length) return { nationalAvg: null, hazardous: 0 };
+    const avg = Math.round(valid.reduce((s, c) => s + c.aqi, 0) / valid.length);
+    const haz = valid.filter(c => c.aqi > 400).length;
+    return { nationalAvg: avg, hazardous: haz };
+  }, [cities]);
 
-  // Clock
   useEffect(() => {
     const fmt = () => {
       const d  = new Date();
@@ -58,125 +69,83 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y }) {
     return () => clearInterval(i);
   }, []);
 
-  // Scroll
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // ESC closes all menus
-  useEffect(() => {
-    const onKey = e => { if (e.key === "Escape") { setOpenGroup(null); setMenuOpen(false); } };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  // Click outside closes dropdown
-  useEffect(() => {
-    const onClick = e => {
-      if (navRef.current && !navRef.current.contains(e.target)) setOpenGroup(null);
+    if (!moreOpen) return;
+    const handler = e => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [moreOpen]);
+
+  useEffect(() => {
+    const handler = e => {
+      if (e.key === "Escape") { setMoreOpen(false); setMenuOpen(false); }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  // Lock body scroll when mobile menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
 
-  // a11y body class
   useEffect(() => {
     document.body.classList.toggle("a11y-mode", !!a11y);
   }, [a11y]);
 
-  const hoverEnter = id => { clearTimeout(closeTimer.current); setOpenGroup(id); };
-  const hoverLeave = ()  => { closeTimer.current = setTimeout(() => setOpenGroup(null), 130); };
-
-  const nav = p => { setPage(p); setOpenGroup(null); setMenuOpen(false); };
+  const nav = p => { setPage(p); setMoreOpen(false); setMenuOpen(false); };
+  const isMoreActive = MORE_ITEMS.some(i => i.id === page);
 
   return (
     <>
-      <div className={`navbar-float-wrap ${scrolled ? "scrolled" : ""}`} ref={navRef}>
-        <div className="navbar-float">
+      <div className="navbar-wrapper">
 
-          {/* Logo */}
-          <button className="logo logo-btn" onClick={() => nav("map")}>
-            <img src="/logo.svg" alt="AQI India" style={{height:'36px', width:'auto'}} />
-          </button>
-
-          {/* Desktop dropdown nav */}
-          <nav className="nav-center" aria-label="Main navigation">
-            {NAV_GROUPS.map(group => (
-              <div
-                key={group.id}
-                className={`nav-group-wrap${openGroup === group.id ? " dd-open" : ""}`}
-                onMouseEnter={() => hoverEnter(group.id)}
-                onMouseLeave={hoverLeave}
-              >
-                <button
-                  className={`nav-group-btn${activeGroup === group.id ? " active" : ""}`}
-                  aria-expanded={openGroup === group.id}
-                  aria-haspopup="true"
-                >
-                  {group.label}
-                  <span className="nav-caret" aria-hidden="true">▾</span>
-                </button>
-
-                <div className="nav-dropdown" role="menu" aria-label={group.label}>
-                  {group.items.map(item => (
-                    <button
-                      key={item.id}
-                      className={`nav-dd-item${page === item.id ? " nav-dd-current" : ""}`}
-                      onClick={() => nav(item.id)}
-                      role="menuitem"
-                    >
-                      <span className="nav-dd-icon" aria-hidden="true">{item.icon}</span>
-                      <span className="nav-dd-body">
-                        <span className="nav-dd-label">{item.label}</span>
-                        <span className="nav-dd-desc">{item.desc}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            <button
-              className={`nav-group-btn${page === "about" ? " active" : ""}`}
-              onClick={() => nav("about")}
-            >
-              ABOUT
+        {/* ── Row 1: Brand Bar ── */}
+        <div className="navbar-brand-bar">
+          <div className="nbb-left">
+            <button className="logo-btn nbb-logo-btn" onClick={() => nav("map")}>
+              <img src="/logo.svg" alt="AQI India" style={{ height: 26, width: "auto" }} />
             </button>
-          </nav>
+            <span className="nbb-system-name mono">AQI EARLY WARNING SYSTEM</span>
+          </div>
 
-          {/* Right side */}
-          <div className="nav-right">
-            <span className="live-pulse mono">
-              <span className={`lp-dot${!apiOnline ? " offline" : ""}`} /> LIVE
-            </span>
-            <span className="mono nav-time">{time}</span>
+          <div className="nbb-center mono">
+            <span className={`nbb-dot${!apiOnline ? " offline" : ""}`} />
+            <span className="nbb-live">LIVE</span>
+            {nationalAvg !== null && (
+              <>
+                <span className="nbb-sep">·</span>
+                <span className="nbb-stat">NATIONAL AQI <strong>{nationalAvg}</strong></span>
+                {hazardous > 0 && (
+                  <>
+                    <span className="nbb-sep">·</span>
+                    <span className="nbb-hazardous">{hazardous} HAZARDOUS</span>
+                  </>
+                )}
+              </>
+            )}
+            {time && (
+              <>
+                <span className="nbb-sep">·</span>
+                <span className="nbb-time">{time}</span>
+              </>
+            )}
+          </div>
+
+          <div className="nbb-right">
             {user ? (
               <>
-                <span className="mono nav-user" onClick={() => nav("alerts")}>
+                <span className="mono nbb-user" onClick={() => nav("alerts")}>
                   {(user.name ?? user.email ?? "USER").split(" ")[0].toUpperCase()}
                 </span>
-                <button
-                  className="btn-ghost"
-                  style={{ padding: "6px 12px", fontSize: 10 }}
-                  onClick={() => { logout(); nav("map"); }}
-                >
+                <button className="nbb-auth-btn" onClick={() => { logout(); nav("map"); }}>
                   OUT
                 </button>
               </>
             ) : (
-              <button
-                className="btn-ghost"
-                style={{ padding: "6px 12px", fontSize: 10 }}
-                onClick={() => nav("login")}
-              >
+              <button className="nbb-auth-btn" onClick={() => nav("login")}>
                 SIGN IN
               </button>
             )}
@@ -188,18 +157,63 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y }) {
               👁
             </button>
             <button
-              className="nav-hamburger"
+              className="nbb-hamburger"
               onClick={() => setMenuOpen(true)}
               aria-label="Open navigation menu"
             >
               <span /><span /><span />
             </button>
           </div>
-
         </div>
+
+        {/* ── Row 2: Nav Bar ── */}
+        <div className="navbar-nav-bar">
+          <nav className="nav-bar-inner" aria-label="Main navigation">
+            {PRIMARY_NAV.map(item => (
+              <button
+                key={item.id}
+                className={`nav-item${page === item.id ? " active" : ""}`}
+                onClick={() => nav(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+
+            <div
+              className={`nav-more-wrap${moreOpen ? " open" : ""}`}
+              ref={moreRef}
+              onMouseEnter={() => setMoreOpen(true)}
+              onMouseLeave={() => setMoreOpen(false)}
+            >
+              <button
+                className={`nav-item nav-more-btn${isMoreActive ? " active" : ""}`}
+                onClick={() => setMoreOpen(v => !v)}
+                aria-expanded={moreOpen}
+                aria-haspopup="true"
+              >
+                MORE
+                <span className="nav-more-caret" aria-hidden="true">▾</span>
+              </button>
+              <div className="nav-more-panel" role="menu">
+                {MORE_ITEMS.map(item => (
+                  <button
+                    key={item.id}
+                    className={`nav-more-item${page === item.id ? " current" : ""}`}
+                    onClick={() => nav(item.id)}
+                    role="menuitem"
+                  >
+                    <span className="nav-more-icon" aria-hidden="true">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </nav>
+        </div>
+
       </div>
 
-      {/* Mobile full-screen menu */}
+      {/* ── Mobile Full-Screen Menu ── */}
       {menuOpen && (
         <div
           className="mobile-nav-overlay"
@@ -207,39 +221,61 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y }) {
         >
           <div className="mobile-nav-panel">
             <div className="mobile-nav-head">
-              <button className="logo logo-btn" onClick={() => nav("map")}>
-                <img src="/logo.svg" alt="AQI India" style={{height:'36px', width:'auto'}} />
+              <button className="logo-btn" onClick={() => nav("map")}>
+                <img src="/logo.svg" alt="AQI India" style={{ height: 32, width: "auto" }} />
               </button>
               <button className="mobile-nav-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
                 ✕
               </button>
             </div>
-
             <div className="mobile-nav-body">
-              {NAV_GROUPS.map(group => (
-                <div key={group.id} className="mobile-nav-group">
-                  <div className="mono mobile-nav-group-label">{group.label}</div>
-                  {group.items.map(item => (
-                    <button
-                      key={item.id}
-                      className={`mobile-nav-item${page === item.id ? " current" : ""}`}
-                      onClick={() => nav(item.id)}
-                    >
-                      <span className="mobile-nav-item-icon" aria-hidden="true">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              ))}
               <div className="mobile-nav-group">
-                <button
-                  className={`mobile-nav-item${page === "about" ? " current" : ""}`}
-                  onClick={() => nav("about")}
-                >
-                  <span className="mobile-nav-item-icon" aria-hidden="true">ℹ️</span>
-                  <span>About</span>
-                </button>
+                <div className="mono mobile-nav-group-label">PRIMARY</div>
+                {MOBILE_PRIMARY.map(item => (
+                  <button
+                    key={item.id}
+                    className={`mobile-nav-item${page === item.id ? " current" : ""}`}
+                    onClick={() => nav(item.id)}
+                  >
+                    <span className="mobile-nav-item-icon" aria-hidden="true">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
               </div>
+              <div className="mobile-nav-group">
+                <div className="mono mobile-nav-group-label">MORE</div>
+                {MOBILE_MORE.map(item => (
+                  <button
+                    key={item.id}
+                    className={`mobile-nav-item${page === item.id ? " current" : ""}`}
+                    onClick={() => nav(item.id)}
+                  >
+                    <span className="mobile-nav-item-icon" aria-hidden="true">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+              {user ? (
+                <div className="mobile-nav-group">
+                  <div className="mono mobile-nav-group-label">ACCOUNT</div>
+                  <button className="mobile-nav-item" onClick={() => nav("alerts")}>
+                    <span className="mobile-nav-item-icon">👤</span>
+                    <span>{(user.name ?? user.email ?? "USER").split(" ")[0].toUpperCase()}</span>
+                  </button>
+                  <button className="mobile-nav-item" onClick={() => { logout(); nav("map"); }}>
+                    <span className="mobile-nav-item-icon">🚪</span>
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="mobile-nav-group">
+                  <div className="mono mobile-nav-group-label">ACCOUNT</div>
+                  <button className="mobile-nav-item" onClick={() => nav("login")}>
+                    <span className="mobile-nav-item-icon">🔑</span>
+                    <span>Sign In</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
