@@ -101,6 +101,8 @@ function AppInner() {
   const [a11y, setA11y] = useState(false);
   const [citiesInitialCity, setCitiesInitialCity] = useState(null);
   const [alertsInitialCity, setAlertsInitialCity] = useState(null);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [showInstall, setShowInstall] = useState(false);
 
   const refreshCities = useCallback(async () => {
     try {
@@ -129,6 +131,25 @@ function AppInner() {
       setApiOnline(false);
     }
   }, []);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      setShowInstall(true);
+    });
+    window.addEventListener('appinstalled', () => {
+      setShowInstall(false);
+    });
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    setShowInstall(false);
+    setInstallPrompt(null);
+  };
 
   useEffect(() => {
     checkHealth();
@@ -200,6 +221,13 @@ function AppInner() {
             onViewReport={() => { setCitiesInitialCity(zoomCity?.name ?? null); setZoomCity(null); navigateTo("cities"); }}
             onSetAlert={() => { setAlertsInitialCity(zoomCity?.name ?? null); setZoomCity(null); navigateTo("alerts"); }}
           />
+        )}
+        {showInstall && (
+          <div className="pwa-install-banner">
+            <span>📱 Install AQI India on your phone</span>
+            <button onClick={handleInstall}>Install</button>
+            <button onClick={() => setShowInstall(false)}>✕</button>
+          </div>
         )}
       </div>
 
