@@ -9,11 +9,11 @@ const PRIMARY_NAV = [
   { id: "cities",   label: "CITIES"    },
   { id: "compare",  label: "COMPARE"   },
   { id: "history",  label: "HISTORY"   },
+  { id: "weather",  label: "WEATHER"   },
+  { id: "chat",     label: "CHATBOT"   },
 ];
 
 const MORE_ITEMS = [
-  { id: "weather", icon: "🌤", label: "Weather & AQI"      },
-  { id: "chat",    icon: "🤖", label: "AI Chatbot"         },
   { id: "alerts",  icon: "🔔", label: "Alerts"             },
   { id: "models",  icon: "🧠", label: "Model Intelligence" },
   { id: "api",     icon: "🔌", label: "Public API"         },
@@ -28,11 +28,11 @@ const MOBILE_PRIMARY = [
   { id: "cities",   icon: "🏙",  label: "City Dashboard"     },
   { id: "compare",  icon: "🆚",  label: "Compare Cities"     },
   { id: "history",  icon: "📅",  label: "AQI History"        },
+  { id: "weather",  icon: "🌤",  label: "Weather & AQI"      },
+  { id: "chat",     icon: "🤖",  label: "AI Chatbot"         },
 ];
 
 const MOBILE_MORE = [
-  { id: "weather", icon: "🌤",  label: "Weather & AQI"      },
-  { id: "chat",    icon: "🤖",  label: "AI Chatbot"         },
   { id: "alerts",  icon: "🔔",  label: "Alerts"             },
   { id: "models",  icon: "🧠",  label: "Model Intelligence" },
   { id: "api",     icon: "🔌",  label: "Public API"         },
