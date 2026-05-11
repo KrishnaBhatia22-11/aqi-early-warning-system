@@ -14,10 +14,11 @@ const PRIMARY_NAV = [
 ];
 
 const MORE_ITEMS = [
-  { id: "alerts",  icon: "🔔", label: "Alerts"             },
-  { id: "models",  icon: "🧠", label: "Model Intelligence" },
-  { id: "api",     icon: "🔌", label: "Public API"         },
-  { id: "about",   icon: "ℹ️", label: "About"              },
+  { id: "cropburn", icon: "🌾", label: "Crop Burn Alert"    },
+  { id: "alerts",   icon: "🔔", label: "Alerts"             },
+  { id: "models",   icon: "🧠", label: "Model Intelligence" },
+  { id: "api",      icon: "🔌", label: "Public API"         },
+  { id: "about",    icon: "ℹ️", label: "About"              },
 ];
 
 const MOBILE_PRIMARY = [
@@ -33,10 +34,11 @@ const MOBILE_PRIMARY = [
 ];
 
 const MOBILE_MORE = [
-  { id: "alerts",  icon: "🔔",  label: "Alerts"             },
-  { id: "models",  icon: "🧠",  label: "Model Intelligence" },
-  { id: "api",     icon: "🔌",  label: "Public API"         },
-  { id: "about",   icon: "ℹ️",  label: "About"              },
+  { id: "cropburn", icon: "🌾",  label: "Crop Burn Alert"    },
+  { id: "alerts",   icon: "🔔",  label: "Alerts"             },
+  { id: "models",   icon: "🧠",  label: "Model Intelligence" },
+  { id: "api",      icon: "🔌",  label: "Public API"         },
+  { id: "about",    icon: "ℹ️",  label: "About"              },
 ];
 
 export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities = [] }) {

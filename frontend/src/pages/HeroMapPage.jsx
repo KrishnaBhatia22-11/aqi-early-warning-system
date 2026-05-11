@@ -5,6 +5,7 @@ import LiveTicker from "../components/LiveTicker";
 import SparkLine from "../components/SparkLine";
 import CountUp from "../components/CountUp";
 import { aqiCategory } from "../utils/aqiCategory";
+import { fetchCropBurnStatus } from "../utils/api";
 
 const HERO_LINES = [
   "India breathes.",
@@ -23,6 +24,8 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroFade, setHeroFade] = useState(true);
   const [mapVisible, setMapVisible] = useState(true);
+  const [cropBurn, setCropBurn] = useState(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -38,6 +41,10 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
   useEffect(() => {
     if (!zoomCity) setMapVisible(true);
   }, [zoomCity]);
+
+  useEffect(() => {
+    fetchCropBurnStatus().then(setCropBurn).catch(() => {});
+  }, []);
 
   const handleCityClick = (city) => {
     setMapVisible(false);
@@ -59,8 +66,25 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
   const _d           = new Date();
   const todayLabel   = `${String(_d.getDate()).padStart(2, "0")} ${_d.toLocaleString("en-US", { month: "short" }).toUpperCase()} ${_d.getFullYear()}`;
 
+  const showBanner = cropBurn && cropBurn.status !== "CLEAR" && !bannerDismissed;
+
   return (
     <div className="hero-map-page">
+      {showBanner && (
+        <div className="crop-burn-alert-banner">
+          <div className="cb-banner-left">
+            <span>
+              {cropBurn.status === "ACTIVE_BURN" ? "🔥" : "⚠️"}&nbsp;
+              CROP BURNING ALERT &nbsp;·&nbsp; {cropBurn.confidence}% confidence
+              &nbsp;·&nbsp; {cropBurn.affected_cities?.length || 0} North Indian cities affected
+            </span>
+            <button className="cb-banner-link" onClick={() => setPage("cropburn")}>
+              See full report →
+            </button>
+          </div>
+          <button className="cb-banner-close" onClick={() => setBannerDismissed(true)}>✕</button>
+        </div>
+      )}
       <section className="dynamic-hero">
         <div className="dh-bg">
           <div className="dh-orb dh-orb-1" />

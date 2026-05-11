@@ -26,6 +26,7 @@ import WeatherAQIPage from "./pages/WeatherAQIPage";
 import ModelComparisonPage from "./pages/ModelComparisonPage";
 import HealthImpactPage from "./pages/HealthImpactPage";
 import CityComparisonPage from "./pages/CityComparisonPage";
+import CropBurnPage from "./pages/CropBurnPage";
 
 // ── Error Boundaries ─────────────────────────────────────────────────────────
 
@@ -88,7 +89,7 @@ class AppBoundary extends Component {
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 
-const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "compare", "alerts", "chat", "about", "login", "register", "api", "history", "weather"];
+const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "compare", "alerts", "chat", "about", "login", "register", "api", "history", "weather", "cropburn"];
 
 function AppInner() {
   const { user } = useAuth();
@@ -190,8 +191,9 @@ function AppInner() {
       case "register": return <AuthPage mode="register" setPage={navigateTo} />;
       case "api":      return <ApiPage />;
       case "history":  return <AQITimeMachinePage />;
-      case "weather":  return <WeatherAQIPage />;
-      default:         return <NotFoundPage setPage={navigateTo} />;
+      case "weather":   return <WeatherAQIPage />;
+      case "cropburn":  return <CropBurnPage setPage={navigateTo} />;
+      default:          return <NotFoundPage setPage={navigateTo} />;
     }
   };
 

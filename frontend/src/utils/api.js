@@ -138,6 +138,12 @@ export async function fetchHistory(city) {
   return res.json();
 }
 
+export async function fetchCropBurnStatus() {
+  const res = await fetch(`${BASE}/api/v1/cropburn/status`);
+  if (!res.ok) throw new Error("Crop burn status unavailable");
+  return res.json();
+}
+
 export async function fetchForecast(city, baseAqi = null) {
   const body = { city };
   if (baseAqi !== null && baseAqi > 0) body.base_aqi = baseAqi;
