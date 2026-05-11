@@ -22,6 +22,7 @@ import ApiPage from "./pages/ApiPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ForecastPage from "./pages/ForecastPage";
 import AQITimeMachinePage from "./pages/AQITimeMachinePage";
+import WeatherAQIPage from "./pages/WeatherAQIPage";
 import ModelComparisonPage from "./pages/ModelComparisonPage";
 import HealthImpactPage from "./pages/HealthImpactPage";
 import CityComparisonPage from "./pages/CityComparisonPage";
@@ -87,7 +88,7 @@ class AppBoundary extends Component {
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 
-const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "compare", "alerts", "chat", "about", "login", "register", "api", "history"];
+const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "compare", "alerts", "chat", "about", "login", "register", "api", "history", "weather"];
 
 function AppInner() {
   const { user } = useAuth();
@@ -189,6 +190,7 @@ function AppInner() {
       case "register": return <AuthPage mode="register" setPage={navigateTo} />;
       case "api":      return <ApiPage />;
       case "history":  return <AQITimeMachinePage />;
+      case "weather":  return <WeatherAQIPage />;
       default:         return <NotFoundPage setPage={navigateTo} />;
     }
   };

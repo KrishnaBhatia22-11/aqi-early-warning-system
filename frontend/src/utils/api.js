@@ -118,6 +118,16 @@ export async function fetchCompare(city1, city2) {
   return res.json();
 }
 
+export async function fetchWeather(city) {
+  const res = await fetch(`${BASE}/api/v1/weather/${encodeURIComponent(city)}`);
+  if (!res.ok) {
+    let detail = "Weather data unavailable";
+    try { detail = (await res.json()).detail ?? detail; } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
 export async function fetchHistory(city) {
   const res = await fetch(`${BASE}/api/v1/history/${encodeURIComponent(city)}`);
   if (!res.ok) {

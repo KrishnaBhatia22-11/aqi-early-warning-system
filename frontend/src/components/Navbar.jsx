@@ -9,6 +9,7 @@ const NAV_GROUPS = [
       { id: "cities",  icon: "🏙",  label: "City Dashboard", desc: "Drill into any city's pollution data"    },
       { id: "compare", icon: "🆚",  label: "Compare Cities", desc: "Side-by-side air quality comparison"     },
       { id: "history", icon: "📅",  label: "AQI History",    desc: "Real historical data from WAQI — last 7 days" },
+      { id: "weather", icon: "🌤",  label: "Weather & AQI",  desc: "How weather conditions affect air quality"    },
     ],
   },
   {
