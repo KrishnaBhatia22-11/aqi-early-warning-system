@@ -20,63 +20,65 @@ function writePNG(size, filename) {
   const pixels = new Uint8Array(size * size * channels);
 
   const cx = size / 2, cy = size / 2;
-  const outerR = size * 0.48;
-  const innerR = size * 0.38;
+  const outerR  = size * 0.47;  // outer edge of green ring
+  const ringW   = size * 0.07;  // ring width
+  const innerR  = outerR - ringW;
+  const dotR    = size * 0.08;  // center green dot
+
+  // Green ring color
+  const G = [34, 197, 94, 255];
+  // Dark navy
+  const N = [6, 13, 26, 255];
+  // Slightly lighter navy for inner area
+  const N2 = [10, 20, 40, 255];
+  // Transparent
+  const T = [0, 0, 0, 0];
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const idx = (y * size + x) * channels;
       const dx = x - cx, dy = y - cy;
-      const dist = Math.sqrt(dx*dx + dy*dy);
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist <= outerR) {
-        if (dist <= innerR) {
-          // Dark navy background
-          pixels[idx]=6; pixels[idx+1]=13;
-          pixels[idx+2]=26; pixels[idx+3]=255;
-        } else {
-          // Green ring
-          pixels[idx]=34; pixels[idx+1]=197;
-          pixels[idx+2]=94; pixels[idx+3]=255;
-        }
+      let col;
+      if (dist > outerR) {
+        col = T;                    // transparent outside
+      } else if (dist > innerR) {
+        col = G;                    // green ring
+      } else if (dist <= dotR) {
+        col = G;                    // green center dot
       } else {
-        // Transparent outside
-        pixels[idx]=6; pixels[idx+1]=13;
-        pixels[idx+2]=26; pixels[idx+3]=255;
+        col = N;                    // dark navy fill
       }
+
+      pixels[idx]   = col[0];
+      pixels[idx+1] = col[1];
+      pixels[idx+2] = col[2];
+      pixels[idx+3] = col[3];
     }
   }
-
-  // Build PNG
-  const chunks = [];
-
-  // IHDR
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8]=8; ihdr[9]=2; // 8-bit RGB...
-  // use RGBA: ihdr[9]=6
-  ihdr[9]=6;
 
   function chunk(type, data) {
     const len = Buffer.alloc(4);
     len.writeUInt32BE(data.length);
     const typeB = Buffer.from(type);
     const crcVal = Buffer.alloc(4);
-    crcVal.writeUInt32BE(
-      crc32(Buffer.concat([typeB, data]))
-    );
+    crcVal.writeUInt32BE(crc32(Buffer.concat([typeB, data])));
     return Buffer.concat([len, typeB, data, crcVal]);
   }
 
-  // Build raw image data with filter bytes
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8; ihdr[9] = 6; // RGBA
+
   const raw = Buffer.alloc(size * (1 + size * 4));
   for (let y = 0; y < size; y++) {
-    raw[y * (1 + size * 4)] = 0; // filter type None
+    raw[y * (1 + size * 4)] = 0;
     for (let x = 0; x < size; x++) {
       const src = (y * size + x) * 4;
       const dst = y * (1 + size * 4) + 1 + x * 4;
-      raw[dst] = pixels[src];
+      raw[dst]   = pixels[src];
       raw[dst+1] = pixels[src+1];
       raw[dst+2] = pixels[src+2];
       raw[dst+3] = pixels[src+3];
@@ -84,17 +86,13 @@ function writePNG(size, filename) {
   }
 
   const compressed = zlib.deflateSync(raw);
-
-  const sig = Buffer.from([137,80,78,71,13,10,26,10]);
-  const ihdrChunk = chunk('IHDR', ihdr);
-  const idatChunk = chunk('IDAT', compressed);
-  const iendChunk = chunk('IEND', Buffer.alloc(0));
+  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
   fs.writeFileSync(
     filename,
-    Buffer.concat([sig, ihdrChunk, idatChunk, iendChunk])
+    Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', compressed), chunk('IEND', Buffer.alloc(0))])
   );
-  console.log(`Created ${filename}`);
+  console.log(`Created ${filename} (${size}x${size})`);
 }
 
 writePNG(192, 'icon-192.png');

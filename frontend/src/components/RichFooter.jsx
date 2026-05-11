@@ -23,7 +23,7 @@ export default function RichFooter({ setPage }) {
 
         {/* Column 1 — Brand */}
         <div className="rfb-brand">
-          <div className="rfb-logo">AQI<span className="bolt">⚡</span></div>
+          <img src="/logo.svg" alt="AQI India" style={{height:'48px', width:'auto'}} />
           <p className="rfb-tag">
             Monitoring India's air since 2024.<br />
             Free forever. Open source.<br />

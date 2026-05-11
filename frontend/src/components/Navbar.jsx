@@ -102,7 +102,7 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y }) {
 
           {/* Logo */}
           <button className="logo logo-btn" onClick={() => nav("map")}>
-            <span>AQI</span><span className="bolt">⚡</span>
+            <img src="/logo.svg" alt="AQI India" style={{height:'36px', width:'auto'}} />
           </button>
 
           {/* Desktop dropdown nav */}
@@ -206,7 +206,7 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y }) {
           <div className="mobile-nav-panel">
             <div className="mobile-nav-head">
               <button className="logo logo-btn" onClick={() => nav("map")}>
-                <span>AQI</span><span className="bolt">⚡</span>
+                <img src="/logo.svg" alt="AQI India" style={{height:'36px', width:'auto'}} />
               </button>
               <button className="mobile-nav-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
                 ✕

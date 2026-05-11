@@ -1147,8 +1147,18 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   .edu-cats { grid-template-columns: repeat(3,1fr); }
   .edu-pollutants { grid-template-columns: 1fr 1fr; }
   .rich-footer-inner { grid-template-columns: 1fr; }
-  .rfb-bottom { flex-direction: column; gap: 8px; }
+  .rfb-brand { text-align: center; }
+  .rfb-social { justify-content: center; }
+  .rfb-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .rfb-bottom > * { text-align: center; width: 100%; }
   .page { padding: 0 16px 120px; }
+}
+
+@media (max-width: 768px) {
+  .rfb-social-link { width: 44px; height: 44px; }
+  .rfb-links a, .rfb-links button { padding: 8px 0; font-size: 15px; display: block; }
+  .rfb-bottom { padding: 16px; font-size: 11px; }
+  .rfb-bottom-center { min-width: unset; }
 }
 
 @media (max-width: 640px) {
