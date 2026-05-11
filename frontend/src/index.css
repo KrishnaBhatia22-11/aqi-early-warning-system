@@ -2585,20 +2585,15 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   display: flex; align-items: center; gap: 12px;
   margin-bottom: 28px; flex-wrap: wrap;
 }
-.tm-select {
+.tm-dd-wrap {
   flex: 1; min-width: 160px; max-width: 240px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  color: #fff; padding: 10px 14px;
-  border-radius: 8px; font-family: inherit;
-  font-size: 14px; cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
 }
-.tm-select:focus { outline: none; border-color: #22c55e; }
+.tm-dd-wrap .cmp-dd-trigger {
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
 .tm-load-btn {
   padding: 10px 24px; background: #22c55e; color: #000;
   border: none; border-radius: 8px; font-family: inherit;

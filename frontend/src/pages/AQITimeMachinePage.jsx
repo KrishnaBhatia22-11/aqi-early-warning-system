@@ -1,5 +1,51 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { fetchHistory } from "../utils/api";
+
+function CityDropdown({ value, onChange, cities }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey  = e => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown",   onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  return (
+    <div className="cmp-dd-wrap tm-dd-wrap" ref={ref}>
+      <button
+        type="button"
+        className={`cmp-dd-trigger${open ? " open" : ""}`}
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="cmp-dd-value">{value}</span>
+        <span className="cmp-dd-arrow" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="cmp-dd-panel" role="listbox">
+          {cities.map(c => (
+            <button
+              key={c}
+              type="button"
+              role="option"
+              aria-selected={c === value}
+              className={`cmp-dd-option${c === value ? " selected" : ""}`}
+              onClick={() => { onChange(c); setOpen(false); }}
+            >
+              <span>{c}</span>
+              {c === value && <span className="cmp-dd-check" aria-hidden="true">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const CITIES = [
   "Delhi", "Mumbai", "Bangalore", "Chennai", "Kolkata",
@@ -196,13 +242,11 @@ export default function AQITimeMachinePage() {
 
       {/* Controls */}
       <div className="tm-controls">
-        <select
-          className="tm-select"
+        <CityDropdown
           value={city}
-          onChange={e => { setCity(e.target.value); setResult(null); setError(null); }}
-        >
-          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+          onChange={c => { setCity(c); setResult(null); setError(null); }}
+          cities={CITIES}
+        />
         <button className="tm-load-btn" onClick={load} disabled={loading}>
           {loading ? "Loading…" : "Load Data"}
         </button>

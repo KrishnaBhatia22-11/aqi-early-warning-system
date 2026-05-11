@@ -63,12 +63,12 @@ async def get_history(
             max_val = entry.get("max")
 
             if avg is not None:
-                aqi_approx = int(avg * 1.8)
+                aqi_approx = int(avg)
                 history_points.append({
                     "date": day,
                     "aqi": min(aqi_approx, 500),
-                    "aqi_min": int(min_val * 1.8) if min_val is not None else None,
-                    "aqi_max": int(max_val * 1.8) if max_val is not None else None,
+                    "aqi_min": int(min_val) if min_val is not None else None,
+                    "aqi_max": int(max_val) if max_val is not None else None,
                     "pm25_avg": avg,
                     "source": "WAQI",
                     "is_forecast": False,
