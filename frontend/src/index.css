@@ -415,12 +415,13 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
   background: transparent;
   border: 1px solid var(--border-faint);
   color: var(--text-dim);
-  font-size: 16px;
-  width: 32px; height: 32px;
+  font-size: 18px;
+  width: 44px; height: 44px;
   border-radius: 50%;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 .mobile-nav-close:hover { border-color: rgba(255,255,255,0.25); color: var(--text); }
 .mobile-nav-body { padding: 10px 10px 40px; }
@@ -428,7 +429,7 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
 .mobile-nav-group-label {
   font-size: 9px;
   letter-spacing: 0.2em;
-  color: var(--text-mute);
+  color: var(--orange);
   padding: 8px 10px 4px;
 }
 .mobile-nav-item {
@@ -439,10 +440,11 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
   background: transparent;
   border: none;
   border-radius: 8px;
-  padding: 11px 10px;
+  padding: 14px 12px;
+  min-height: 48px;
   color: var(--text-dim);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   text-align: left;
   transition: background 0.12s, color 0.12s;
@@ -453,12 +455,13 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
 
 /* Responsive breakpoints */
 @media (max-width: 900px) {
-  .nav-center  { display: none; }
-  .nav-hamburger { display: flex; }
-  .nav-time    { display: none; }
-}
-@media (max-width: 560px) {
-  .live-pulse  { display: none; }
+  .nav-center           { display: none; }
+  .nav-hamburger        { display: flex; }
+  .nav-time             { display: none; }
+  .live-pulse           { display: none; }
+  .a11y-btn             { display: none; }
+  .nav-user             { display: none; }
+  .nav-right .btn-ghost { display: none; }
 }
 
 /* ══════════════════════════════════════
@@ -1170,6 +1173,36 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   .team-grid { grid-template-columns: 1fr; }
   .chat-header { grid-template-columns: 48px 1fr; }
   .chat-status { display: none; }
+
+  /* Hero headline */
+  .dh-headline { font-size: 36px !important; line-height: 1.15 !important; }
+  .dh-sub { font-size: 15px; margin-bottom: 24px; }
+  .dynamic-hero { padding: 32px 16px 32px; }
+
+  /* Stats strip — 3 columns, smaller numbers */
+  .dh-stat-strip { grid-template-columns: repeat(3, 1fr) !important; gap: 12px !important; }
+  .dh-stat-num { font-size: 28px !important; }
+  .dh-stat-label { font-size: 9px !important; }
+
+  /* Impact section — single column, hide dividers */
+  .impact-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .impact-divider { display: none !important; }
+  .impact-num { font-size: 36px !important; }
+  .impact-stat { padding: 0 16px; }
+  .impact-section { padding: 36px 16px; }
+
+  /* Map — single column, reduced height */
+  .map-section-inner { grid-template-columns: 1fr !important; }
+  .india-map-wrap { height: 300px !important; border-radius: 8px !important; }
+  .map-section { padding: 0 16px 32px; }
+
+  /* Page padding */
+  .page { padding-bottom: 80px !important; min-height: auto !important; }
+}
+
+@media (max-width: 400px) {
+  /* Very small screens — 2-column stats */
+  .dh-stat-strip { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
 /* APP ROOT / LAYOUT */
