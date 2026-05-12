@@ -97,6 +97,23 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities
     document.body.classList.toggle("a11y-mode", !!a11y);
   }, [a11y]);
 
+  const closeTimerRef = useRef(null);
+
+  const openMore = () => {
+    clearTimeout(closeTimerRef.current);
+    setMoreOpen(true);
+  };
+
+  const closeMore = () => {
+    closeTimerRef.current = setTimeout(() => {
+      setMoreOpen(false);
+    }, 200);
+  };
+
+  const cancelClose = () => {
+    clearTimeout(closeTimerRef.current);
+  };
+
   const nav = p => { setPage(p); setMoreOpen(false); setMenuOpen(false); };
   const isMoreActive = MORE_ITEMS.some(i => i.id === page);
 
@@ -184,19 +201,19 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities
             <div
               className={`nav-more-wrap${moreOpen ? " open" : ""}`}
               ref={moreRef}
-              onMouseEnter={() => setMoreOpen(true)}
-              onMouseLeave={() => setMoreOpen(false)}
             >
               <button
                 className={`nav-item nav-more-btn${isMoreActive ? " active" : ""}`}
-                onClick={() => setMoreOpen(v => !v)}
+                onClick={() => setMoreOpen(!moreOpen)}
+                onMouseEnter={openMore}
+                onMouseLeave={closeMore}
                 aria-expanded={moreOpen}
                 aria-haspopup="true"
               >
                 MORE
                 <span className="nav-more-caret" aria-hidden="true">▾</span>
               </button>
-              <div className="nav-more-panel" role="menu">
+              <div className="nav-more-panel" role="menu" onMouseEnter={cancelClose} onMouseLeave={closeMore}>
                 {MORE_ITEMS.map(item => (
                   <button
                     key={item.id}
