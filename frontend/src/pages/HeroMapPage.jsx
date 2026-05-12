@@ -20,7 +20,7 @@ const SPARKLINES = {
   chennai: [65,  70,  60,  75,  68,  72,  66 ],
 };
 
-export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity }) {
+export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, backendWaking }) {
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroFade, setHeroFade] = useState(true);
   const [mapVisible, setMapVisible] = useState(true);
@@ -70,6 +70,12 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
 
   return (
     <div className="hero-map-page">
+      {backendWaking && (
+        <div className="wake-banner">
+          <span className="wake-spinner">⟳</span>
+          {" "}Waking up live data engine — first load takes ~30 seconds on free tier
+        </div>
+      )}
       {showBanner && (
         <div className="crop-burn-alert-banner">
           <div className="cb-banner-left">

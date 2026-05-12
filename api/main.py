@@ -1,3 +1,7 @@
+import threading
+import time
+import requests as _requests
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import predict, city, chat, forecast, anomaly, models, health
@@ -45,4 +49,17 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    from datetime import datetime, timezone
+    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+def _keep_alive():
+    """Ping own /health every 14 min so Render never idles the dyno."""
+    while True:
+        time.sleep(14 * 60)
+        try:
+            _requests.get("https://aqi-api-y2qs.onrender.com/health", timeout=10)
+        except Exception:
+            pass
+
+threading.Thread(target=_keep_alive, daemon=True).start()

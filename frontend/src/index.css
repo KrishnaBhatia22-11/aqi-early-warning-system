@@ -3342,6 +3342,25 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 }
 
 /* ── Homepage alert banner ── */
+.wake-banner {
+  background: #0f1f3d;
+  border: 1px solid #22c55e30;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+  margin: 8px 24px;
+  letter-spacing: 0.04em;
+}
+.wake-spinner {
+  display: inline-block;
+  animation: spin 1.2s linear infinite;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .crop-burn-alert-banner {
   background: linear-gradient(to right, #7f1d1d, #991b1b);
   border-bottom: 2px solid #ef4444;

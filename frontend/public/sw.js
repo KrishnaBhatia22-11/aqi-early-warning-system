@@ -7,7 +7,10 @@ const STATIC_ASSETS = [
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    Promise.all([
+      caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS)),
+      fetch('https://aqi-api-y2qs.onrender.com/health').catch(() => {}),
+    ])
   );
   self.skipWaiting();
 });

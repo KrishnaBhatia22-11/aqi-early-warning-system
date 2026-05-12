@@ -100,6 +100,8 @@ function AppInner() {
   const [cities, setCities] = useState(CITIES_STATIC);
   const [apiOnline, setApiOnline] = useState(false);
   const [lastSync, setLastSync] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [backendWaking, setBackendWaking] = useState(false);
   const [zoomCity, setZoomCity] = useState(null);
   const [a11y, setA11y] = useState(false);
   const [citiesInitialCity, setCitiesInitialCity] = useState(null);
@@ -108,8 +110,13 @@ function AppInner() {
   const [showInstall, setShowInstall] = useState(false);
 
   const refreshCities = useCallback(async () => {
+    // After 4 s with no response, show "backend waking" message
+    const wakeTimer = setTimeout(() => setBackendWaking(true), 4000);
     try {
       const data = await fetchCities();
+      clearTimeout(wakeTimer);
+      setIsLoading(false);
+      setBackendWaking(false);
       if (Array.isArray(data) && data.length > 0) {
         setCities(prev =>
           prev.map(c => {
@@ -142,6 +149,9 @@ function AppInner() {
       }
       setLastSync(Date.now());
     } catch {
+      clearTimeout(wakeTimer);
+      setIsLoading(false);
+      setBackendWaking(false);
       setLastSync(Date.now());
     }
   }, []);
@@ -197,7 +207,7 @@ function AppInner() {
 
   const renderPage = () => {
     switch (page) {
-      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} zoomCity={zoomCity} />;
+      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} zoomCity={zoomCity} backendWaking={backendWaking} />;
       case "predict":  return <PredictorPage />;
       case "health":   return <HealthImpactPage cities={cities} />;
       case "forecast": return <ForecastPage cities={cities} />;
