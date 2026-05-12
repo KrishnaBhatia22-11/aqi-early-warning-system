@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { aqiCategory } from "../utils/aqiCategory";
 import CountUp from "./CountUp";
 import { TREND_7D } from "../data/index";
@@ -139,10 +139,26 @@ function StationBreakdown({ city, avgAqi, catColor }) {
 
 export default function CityZoomModal({ city, onClose, onPredict, onViewReport, onSetAlert }) {
   const [phase, setPhase] = useState("zooming");
+  const [showHint, setShowHint] = useState(true);
+
   useEffect(() => {
     const t = setTimeout(() => setPhase("loaded"), 1500);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowHint(false), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleEsc = useCallback((e) => {
+    if (e.key === "Escape") onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [handleEsc]);
 
   if (!city) return null;
   const cat = aqiCategory(city.aqi);
@@ -165,7 +181,7 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
     : "SINGLE STATION · LIVE";
 
   return (
-    <div className="city-zoom-overlay">
+    <div className="city-zoom-overlay" onClick={onClose}>
       <div className={`zoom-map phase-${phase}`}>
         <div className="zoom-map-inner">
           <svg viewBox="0 0 800 800" className="street-map">
@@ -221,11 +237,15 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
         </div>
       </div>
 
-      <div className={`zoom-panel glass-strong phase-${phase}`}>
+      <div className={`zoom-panel glass-strong phase-${phase}`} onClick={e => e.stopPropagation()}>
+        <button className="city-zoom-out-btn" onClick={onClose}>✕ ZOOM OUT</button>
         <div className="zp-top">
           <div>
             <div className="mono zp-eyebrow">{stationLabel} · {city.name.toUpperCase()} · LIVE</div>
             <div className="display zp-name">{city.name}</div>
+            {showHint && (
+              <div className="zp-hint mono">Press ESC or click ✕ to return to map</div>
+            )}
             <div className="mono zp-coords">
               {city.source ?? "WAQI"} · {city.data_quality ?? "LIVE"}
             </div>
