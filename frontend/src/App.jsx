@@ -116,7 +116,21 @@ function AppInner() {
             const live = data.find(d =>
               (d.name ?? d.city ?? "").toLowerCase() === c.name.toLowerCase()
             );
-            return live ? { ...c, aqi: live.aqi ?? c.aqi, pollutant: live.pollutant ?? c.pollutant } : c;
+            return live ? {
+              ...c,
+              aqi:               live.aqi              ?? c.aqi,
+              pollutant:         live.pollutant         ?? c.pollutant,
+              station_count:     live.station_count,
+              stations:          live.stations,
+              cleanest_area:     live.cleanest_area,
+              cleanest_aqi:      live.cleanest_aqi,
+              most_polluted_area: live.most_polluted_area,
+              most_polluted_aqi: live.most_polluted_aqi,
+              city_spread:       live.city_spread,
+              data_quality:      live.data_quality,
+              source:            live.source,
+              last_updated:      live.last_updated,
+            } : c;
           })
         );
       }

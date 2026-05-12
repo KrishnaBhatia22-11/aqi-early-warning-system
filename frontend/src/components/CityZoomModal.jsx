@@ -28,6 +28,115 @@ function ZpSparkline({ values, color }) {
   );
 }
 
+function aqiBarColor(aqi) {
+  if (aqi <= 50)  return "#22c55e";
+  if (aqi <= 100) return "#84cc16";
+  if (aqi <= 200) return "#f59e0b";
+  if (aqi <= 300) return "#f97316";
+  if (aqi <= 400) return "#ef4444";
+  return "#a855f7";
+}
+
+const QUALITY_STYLE = {
+  HIGH:   { color: "#22c55e", label: "HIGH QUALITY" },
+  MEDIUM: { color: "#f59e0b", label: "MEDIUM QUALITY" },
+  LOW:    { color: "#f97316", label: "LOW QUALITY" },
+  SINGLE: { color: "#6b7280", label: "SINGLE STATION" },
+};
+
+function StationBreakdown({ city, avgAqi, catColor }) {
+  const stations = city.stations?.slice(0, 8) ?? [];
+  if (!stations.length) return null;
+
+  const maxAqi    = Math.max(...stations.map(s => s.aqi));
+  const quality   = city.data_quality ?? "SINGLE";
+  const qStyle    = QUALITY_STYLE[quality] ?? QUALITY_STYLE.SINGLE;
+  const chartW    = 220;
+
+  return (
+    <div className="zp-station-breakdown">
+      <div className="zp-section-title mono" style={{ marginBottom: 10 }}>
+        STATION BREAKDOWN
+        <span
+          className="mono"
+          style={{
+            marginLeft: 10, fontSize: 10, padding: "2px 8px",
+            border: `1px solid ${qStyle.color}`, color: qStyle.color, borderRadius: 2,
+          }}
+        >
+          {qStyle.label}
+        </span>
+      </div>
+
+      <div className="mono" style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>
+        City average from {city.station_count} CPCB station{city.station_count !== 1 ? "s" : ""}
+        {city.source ? ` · ${city.source}` : ""}
+      </div>
+
+      <svg
+        viewBox={`0 0 ${chartW + 160} ${stations.length * 26 + 4}`}
+        style={{ width: "100%", maxWidth: 460, display: "block", marginBottom: 12 }}
+      >
+        {stations.map((s, i) => {
+          const barW  = (s.aqi / maxAqi) * chartW;
+          const color = aqiBarColor(s.aqi);
+          const y     = i * 26 + 2;
+          const nameShort = s.name.length > 20 ? s.name.slice(0, 19) + "…" : s.name;
+          return (
+            <g key={i}>
+              <text x="0" y={y + 14} fontSize="9" fontFamily="JetBrains Mono, monospace"
+                fill="rgba(255,255,255,0.55)" textAnchor="start">
+                {nameShort}
+              </text>
+              <rect x="130" y={y + 3} width={barW} height="14" rx="2"
+                fill={color} opacity="0.85"/>
+              <text x={130 + barW + 6} y={y + 14} fontSize="10"
+                fontFamily="JetBrains Mono, monospace" fill={color} fontWeight="bold">
+                {s.aqi}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* City average dashed line */}
+        {(() => {
+          const lineX = 130 + (avgAqi / maxAqi) * chartW;
+          return (
+            <line
+              x1={lineX} y1="0"
+              x2={lineX} y2={stations.length * 26}
+              stroke={catColor} strokeWidth="1.5"
+              strokeDasharray="4,3" opacity="0.7"
+            />
+          );
+        })()}
+      </svg>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        {city.cleanest_area && (
+          <div className="mono" style={{ fontSize: 11 }}>
+            <span style={{ color: "#34d27a" }}>CLEANEST</span>
+            <span style={{ color: "rgba(255,255,255,0.6)" }}> {city.cleanest_area.split(',')[0]} — </span>
+            <span style={{ color: "#34d27a", fontWeight: "bold" }}>{city.cleanest_aqi}</span>
+          </div>
+        )}
+        {city.most_polluted_area && (
+          <div className="mono" style={{ fontSize: 11 }}>
+            <span style={{ color: "#ef3a4d" }}>WORST</span>
+            <span style={{ color: "rgba(255,255,255,0.6)" }}> {city.most_polluted_area.split(',')[0]} — </span>
+            <span style={{ color: "#ef3a4d", fontWeight: "bold" }}>{city.most_polluted_aqi}</span>
+          </div>
+        )}
+        {city.city_spread > 0 && (
+          <div className="mono" style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+            SPREAD {city.city_spread} AQI
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CityZoomModal({ city, onClose, onPredict, onViewReport, onSetAlert }) {
   const [phase, setPhase] = useState("zooming");
   useEffect(() => {
@@ -50,6 +159,10 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
     { name: "O3",    val: Math.round(40 * factor),          unit: "µg/m³", crit: city.pollutant === "O3"    },
   ];
   const trend = TREND_7D.map(v => Math.max(20, v + (city.aqi - 200)));
+
+  const stationLabel = city.station_count > 1
+    ? `AVG OF ${city.station_count} CPCB STATIONS`
+    : "SINGLE STATION · LIVE";
 
   return (
     <div className="city-zoom-overlay">
@@ -111,15 +224,20 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
       <div className={`zoom-panel glass-strong phase-${phase}`}>
         <div className="zp-top">
           <div>
-            <div className="mono zp-eyebrow">STATION · {city.name.toUpperCase().replace(/\s/g,"_")}_01 · LIVE</div>
+            <div className="mono zp-eyebrow">{stationLabel} · {city.name.toUpperCase()} · LIVE</div>
             <div className="display zp-name">{city.name}</div>
-            <div className="mono zp-coords">28.61°N · 77.21°E · POPULATION 16.7M · ELEV 216m</div>
+            <div className="mono zp-coords">
+              {city.source ?? "WAQI"} · {city.data_quality ?? "LIVE"}
+            </div>
           </div>
           <div className="zp-aqi-block" style={{ color: cat.color }}>
             <div className="display zp-aqi-num"><CountUp to={city.aqi} duration={1200}/></div>
             <span className={`badge ${cat.klass}`} style={{ fontSize: 13, padding: "6px 14px" }}>{cat.name.toUpperCase()}</span>
           </div>
         </div>
+
+        {/* Station breakdown — only shows when multi-station data is available */}
+        <StationBreakdown city={city} avgAqi={city.aqi} catColor={cat.color} />
 
         <div className="zp-grid">
           <div className="zp-pollutants">
@@ -171,7 +289,7 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
       <button className="zoom-close" onClick={onClose}>✕ ZOOM OUT</button>
       <div className="zoom-meta mono">
         <div>● ZOOMED · {city.name.toUpperCase()}</div>
-        <div>UPDATED 12s AGO</div>
+        <div>{city.last_updated ? `UPDATED ${city.last_updated}` : "UPDATED 12s AGO"}</div>
       </div>
     </div>
   );

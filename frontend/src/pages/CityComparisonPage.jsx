@@ -4,11 +4,16 @@ import { fetchForecast } from "../utils/api";
 const BASE = "https://aqi-api-y2qs.onrender.com";
 
 const ALL_CITIES = [
-  "Delhi", "Mumbai", "Kolkata", "Chennai", "Bengaluru", "Hyderabad",
-  "Ahmedabad", "Jaipur", "Lucknow", "Patna", "Chandigarh", "Amritsar",
-  "Guwahati", "Bhopal", "Pune", "Nagpur", "Surat", "Kanpur", "Varanasi",
-  "Coimbatore", "Kochi", "Thiruvananthapuram", "Visakhapatnam", "Ranchi",
-  "Bhubaneswar", "Indore",
+  "Delhi", "Mumbai", "Bengaluru", "Chennai", "Kolkata", "Hyderabad",
+  "Ahmedabad", "Pune", "Jaipur", "Lucknow", "Kanpur", "Patna",
+  "Bhopal", "Nagpur", "Surat", "Indore", "Visakhapatnam", "Chandigarh",
+  "Coimbatore", "Kochi", "Agra", "Varanasi", "Amritsar", "Jodhpur",
+  "Udaipur", "Mysuru", "Pondicherry", "Ghaziabad", "Noida", "Faridabad",
+  "Gurugram", "Meerut", "Moradabad", "Ludhiana", "Jalandhar",
+  "Bhubaneswar", "Guwahati", "Ranchi", "Raipur", "Dehradun", "Shimla",
+  "Jammu", "Srinagar", "Thiruvananthapuram", "Madurai", "Vijayawada",
+  "Nashik", "Aurangabad", "Kolhapur", "Solapur", "Warangal", "Guntur",
+  "Tiruchirappalli",
 ];
 
 const CAT_COLORS = {

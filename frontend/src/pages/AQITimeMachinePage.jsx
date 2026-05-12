@@ -48,10 +48,16 @@ function CityDropdown({ value, onChange, cities }) {
 }
 
 const CITIES = [
-  "Delhi", "Mumbai", "Bangalore", "Chennai", "Kolkata",
-  "Hyderabad", "Ahmedabad", "Pune", "Jaipur", "Lucknow",
-  "Kanpur", "Patna", "Bhopal", "Nagpur", "Surat",
-  "Visakhapatnam", "Chandigarh", "Indore",
+  "Delhi", "Mumbai", "Bengaluru", "Chennai", "Kolkata", "Hyderabad",
+  "Ahmedabad", "Pune", "Jaipur", "Lucknow", "Kanpur", "Patna",
+  "Bhopal", "Nagpur", "Surat", "Indore", "Visakhapatnam", "Chandigarh",
+  "Coimbatore", "Kochi", "Agra", "Varanasi", "Amritsar", "Jodhpur",
+  "Udaipur", "Mysuru", "Pondicherry", "Ghaziabad", "Noida", "Faridabad",
+  "Gurugram", "Meerut", "Moradabad", "Ludhiana", "Jalandhar",
+  "Bhubaneswar", "Guwahati", "Ranchi", "Raipur", "Dehradun", "Shimla",
+  "Jammu", "Srinagar", "Thiruvananthapuram", "Madurai", "Vijayawada",
+  "Nashik", "Aurangabad", "Kolhapur", "Solapur", "Warangal", "Guntur",
+  "Tiruchirappalli",
 ];
 
 function aqiColor(aqi) {

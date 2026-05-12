@@ -5,10 +5,16 @@ import { aqiCategory } from "../utils/aqiCategory";
 import AnomalyBanner from "../components/AnomalyBanner";
 
 const FORECAST_CITIES = [
-  "Delhi", "Mumbai", "Bengaluru", "Chennai", "Kolkata",
-  "Hyderabad", "Ahmedabad", "Jaipur", "Lucknow", "Patna",
-  "Chandigarh", "Amritsar", "Guwahati", "Thiruvananthapuram",
-  "Visakhapatnam", "Coimbatore", "Kochi", "Bhopal",
+  "Delhi", "Mumbai", "Bengaluru", "Chennai", "Kolkata", "Hyderabad",
+  "Ahmedabad", "Pune", "Jaipur", "Lucknow", "Kanpur", "Patna",
+  "Bhopal", "Nagpur", "Surat", "Indore", "Visakhapatnam", "Chandigarh",
+  "Coimbatore", "Kochi", "Agra", "Varanasi", "Amritsar", "Jodhpur",
+  "Udaipur", "Mysuru", "Pondicherry", "Ghaziabad", "Noida", "Faridabad",
+  "Gurugram", "Meerut", "Moradabad", "Ludhiana", "Jalandhar",
+  "Bhubaneswar", "Guwahati", "Ranchi", "Raipur", "Dehradun", "Shimla",
+  "Jammu", "Srinagar", "Thiruvananthapuram", "Madurai", "Vijayawada",
+  "Nashik", "Aurangabad", "Kolhapur", "Solapur", "Warangal", "Guntur",
+  "Tiruchirappalli",
 ];
 
 export default function ForecastPage({ cities }) {

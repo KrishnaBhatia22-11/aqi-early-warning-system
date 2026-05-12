@@ -29,14 +29,29 @@ const ACTION_ITEMS = {
 };
 
 const CITY_POPULATIONS = {
+  // Metro Tier
   Delhi: 32_000_000, Mumbai: 20_700_000, Bengaluru: 13_200_000,
   Chennai: 10_900_000, Kolkata: 15_000_000, Hyderabad: 10_500_000,
-  Ahmedabad: 8_400_000, Jaipur: 4_100_000, Lucknow: 3_700_000, Kanpur: 3_200_000,
-  Patna: 2_400_000, Bhopal: 2_300_000, Pune: 7_400_000, Nagpur: 2_900_000,
-  Surat: 7_100_000, Visakhapatnam: 2_300_000, Coimbatore: 2_200_000,
-  Kochi: 2_100_000, Indore: 3_300_000, Chandigarh: 1_200_000,
-  Amritsar: 1_300_000, Guwahati: 1_100_000, Bhubaneswar: 1_000_000,
-  Thiruvananthapuram: 1_700_000, Varanasi: 1_500_000, Ranchi: 1_400_000,
+  Ahmedabad: 8_400_000, Pune: 7_400_000,
+  // Major Cities
+  Jaipur: 4_100_000, Lucknow: 3_700_000, Kanpur: 3_200_000,
+  Patna: 2_400_000, Bhopal: 2_300_000, Nagpur: 2_900_000,
+  Surat: 7_100_000, Indore: 3_300_000, Visakhapatnam: 2_300_000,
+  Chandigarh: 1_200_000, Coimbatore: 2_200_000, Kochi: 2_100_000,
+  // Heritage / Tourist
+  Agra: 1_800_000, Varanasi: 1_500_000, Amritsar: 1_300_000,
+  Jodhpur: 1_600_000, Udaipur: 700_000, Mysuru: 1_200_000, Pondicherry: 650_000,
+  // Industrial Corridors
+  Ghaziabad: 2_600_000, Noida: 700_000, Faridabad: 1_800_000,
+  Gurugram: 1_500_000, Meerut: 1_700_000, Moradabad: 1_000_000,
+  Ludhiana: 1_700_000, Jalandhar: 900_000,
+  // Tier 2 Growing
+  Bhubaneswar: 1_000_000, Guwahati: 1_100_000, Ranchi: 1_400_000,
+  Raipur: 1_200_000, Dehradun: 800_000, Shimla: 200_000,
+  Jammu: 600_000, Srinagar: 1_400_000, Thiruvananthapuram: 1_700_000,
+  Madurai: 1_600_000, Vijayawada: 1_500_000, Nashik: 2_000_000,
+  Aurangabad: 1_200_000, Kolhapur: 700_000, Solapur: 1_000_000,
+  Warangal: 1_100_000, Guntur: 950_000, Tiruchirappalli: 1_000_000,
 };
 
 const BREATHING_RATES = { child: 0.65, adult: 0.83, elderly: 0.70, athlete: 1.5 };

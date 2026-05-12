@@ -91,7 +91,7 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
           <div className="dh-orb dh-orb-2" />
         </div>
         <div className="dh-content">
-          <div className="mono dh-eyebrow">● LIVE · {cities.length || 10} LIVE STATIONS · 26 CITIES IN ML DATASET · INDIA</div>
+          <div className="mono dh-eyebrow">● LIVE · 50+ CITIES · 200+ STATIONS · INDIA</div>
           <h1 className="display dh-headline" style={{ opacity: heroFade ? 1 : 0, transition: "opacity 0.4s" }}>
             {HERO_LINES[heroIdx]}
           </h1>
@@ -137,15 +137,15 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity })
             </div>
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: "#FFB300" }}>
-                <CountUp to={cities.length || 10} duration={600} />
+                200+
               </span>
               <span className="mono dh-stat-label">LIVE STATIONS</span>
             </div>
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: "#3498db" }}>
-                <CountUp to={26} duration={600} />
+                <CountUp to={cities.length || 53} duration={600} />
               </span>
-              <span className="mono dh-stat-label">CITIES IN ML DATASET</span>
+              <span className="mono dh-stat-label">CITIES MONITORED</span>
             </div>
           </div>
         </div>
