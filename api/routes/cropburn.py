@@ -10,7 +10,7 @@ WAQI_TOKEN = os.getenv("WAQI_TOKEN", "")
 OWM_KEY    = os.getenv("OPENWEATHER_API_KEY", "")
 
 _cache = {}
-_CACHE_TTL = 1800  # 30 min
+_CACHE_TTL = 300  # 5 min
 
 # ── Seasonal calendar ──────────────────────────────────────────
 SEASONS = {
