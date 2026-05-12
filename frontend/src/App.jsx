@@ -116,20 +116,26 @@ function AppInner() {
             const live = data.find(d =>
               (d.name ?? d.city ?? "").toLowerCase() === c.name.toLowerCase()
             );
+            const noData = live.data_available === false;
             return live ? {
               ...c,
-              aqi:               live.aqi              ?? c.aqi,
-              pollutant:         live.pollutant         ?? c.pollutant,
-              station_count:     live.station_count,
-              stations:          live.stations,
-              cleanest_area:     live.cleanest_area,
-              cleanest_aqi:      live.cleanest_aqi,
+              aqi:                noData ? null : (live.aqi ?? c.aqi),
+              data_available:     !noData,
+              pollutant:          live.pollutant         ?? c.pollutant,
+              station_count:      live.station_count,
+              stations:           live.stations,
+              primary_station:    live.primary_station,
+              all_stations_used:  live.all_stations_used,
+              station_names_display: live.station_names_display,
+              cleanest_area:      live.cleanest_area,
+              cleanest_aqi:       live.cleanest_aqi,
               most_polluted_area: live.most_polluted_area,
-              most_polluted_aqi: live.most_polluted_aqi,
-              city_spread:       live.city_spread,
-              data_quality:      live.data_quality,
-              source:            live.source,
-              last_updated:      live.last_updated,
+              most_polluted_aqi:  live.most_polluted_aqi,
+              city_spread:        live.city_spread,
+              data_quality:       live.data_quality,
+              source:             live.source,
+              last_updated:       live.last_updated,
+              aqi_standard:       live.aqi_standard,
             } : c;
           })
         );

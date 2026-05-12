@@ -9,8 +9,56 @@ from concurrent.futures import ThreadPoolExecutor
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from config.settings import WAQI_API_KEY, CITY_COORDS
 
-_cache = {}
-CACHE_DURATION = 900  # 15 minutes
+_cache         = {}
+CACHE_DURATION = 900   # 15 minutes
+AQI_STANDARD   = "US AQI (EPA)"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bounding boxes — prevent picking up stations from neighbouring cities
+# Format: (lat_min, lat_max, lon_min, lon_max)
+# Tight custom boxes for NCR and other densely-packed regions;
+# all others fall back to city-centre ± DEFAULT_DELTA degrees.
+# ─────────────────────────────────────────────────────────────────────────────
+_DEFAULT_DELTA = 0.35  # ≈ 40 km
+
+_BBOX_OVERRIDES = {
+    "Delhi":      (28.40, 28.88, 76.84, 77.35),
+    "Faridabad":  (28.35, 28.55, 77.25, 77.45),
+    "Gurugram":   (28.39, 28.53, 76.95, 77.13),
+    "Noida":      (28.45, 28.64, 77.30, 77.52),
+    "Ghaziabad":  (28.59, 28.77, 77.35, 77.56),
+    "Mumbai":     (18.87, 19.27, 72.77, 73.00),
+    "Kolkata":    (22.40, 22.75, 88.20, 88.55),
+    "Bengaluru":  (12.82, 13.14, 77.45, 77.75),
+    "Chennai":    (12.92, 13.24, 80.13, 80.38),
+    "Hyderabad":  (17.25, 17.55, 78.36, 78.60),
+    "Ahmedabad":  (22.92, 23.15, 72.43, 72.68),
+    "Pune":       (18.43, 18.62, 73.76, 73.97),
+}
+
+
+def _get_bbox(city_name):
+    if city_name in _BBOX_OVERRIDES:
+        return _BBOX_OVERRIDES[city_name]
+    coords = CITY_COORDS.get(city_name)
+    if not coords:
+        return None
+    lat, lon = coords['lat'], coords['lon']
+    d = _DEFAULT_DELTA
+    return (lat - d, lat + d, lon - d, lon + d)
+
+
+def _in_bbox(bbox, geo):
+    """Return True if geo [lat, lon] falls inside bbox, or if no geo info."""
+    if not bbox or not geo or len(geo) < 2:
+        return True
+    try:
+        lat, lon = float(geo[0]), float(geo[1])
+        lat_min, lat_max, lon_min, lon_max = bbox
+        return lat_min <= lat <= lat_max and lon_min <= lon <= lon_max
+    except (TypeError, ValueError):
+        return True
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -19,66 +67,69 @@ CACHE_DURATION = 900  # 15 minutes
 
 def fetch_city_aqi(city_name):
     """
-    Three-layer resilient fetch for a single city:
-      Layer 1 — WAQI multi-station average
+    Three-layer resilient fetch:
+      Layer 1 — WAQI multi-station (geo-filtered)
       Layer 2 — CPCB direct scraper
-      Layer 3 — Last cached value (never return empty)
+      Layer 3 — Last cached value (never empty)
     """
     now = time.time()
 
-    # Return fresh cache immediately
     if city_name in _cache:
         cached_time, cached_data = _cache[city_name]
         if now - cached_time < CACHE_DURATION:
             return cached_data
 
-    # Try all layers
     result = _fetch_waqi_multi(city_name) or _fetch_cpcb(city_name) or _fetch_waqi_single(city_name)
 
     if result and result.get('success'):
         _cache[city_name] = (now, result)
         return result
 
-    # Layer 3 — stale cache is better than nothing
+    # Layer 3 — stale cache beats "no data"
     if city_name in _cache:
         _, stale = _cache[city_name]
         out = dict(stale)
         out['source'] = out.get('source', '') + ' (CACHED)'
         return out
 
-    return {"success": False, "city": city_name, "error": "No data available from any source"}
+    # All layers failed — honest no-data response
+    return {
+        "success":       False,
+        "data_available": False,
+        "city":          city_name,
+        "aqi":           None,
+        "aqi_standard":  AQI_STANDARD,
+        "error":         "No monitoring station found for this city",
+    }
 
 
 def fetch_all_cities():
     """
     Fetch all 50+ cities in parallel.
-    Returns list of result dicts with lat/lon appended.
+    Always includes no-data cities so the frontend can mark them.
     """
     cities_list = list(CITY_COORDS.keys())
 
     def fetch_one(city):
         result = fetch_city_aqi(city)
-        if result:
-            result = dict(result)
-            result['lat'] = CITY_COORDS[city]['lat']
-            result['lon'] = CITY_COORDS[city]['lon']
+        if result is None:
+            result = {"success": False, "data_available": False, "city": city, "aqi": None}
+        result = dict(result)
+        result['lat'] = CITY_COORDS[city]['lat']
+        result['lon'] = CITY_COORDS[city]['lon']
         return result
 
     with ThreadPoolExecutor(max_workers=20) as executor:
         results = list(executor.map(fetch_one, cities_list))
 
-    return [r for r in results if r is not None]
+    return results   # includes no-data cities so frontend can mark them
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# LAYER 1 — WAQI multi-station average
+# LAYER 1 — WAQI multi-station average (geo-filtered)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _fetch_waqi_multi(city_name):
-    """
-    Search WAQI for all stations in city, fetch in parallel,
-    remove outliers, apply freshness weights, return averaged result.
-    """
     try:
         search_url = f"https://api.waqi.info/search/?token={WAQI_API_KEY}&keyword={city_name}"
         resp = requests.get(search_url, timeout=10)
@@ -87,21 +138,37 @@ def _fetch_waqi_multi(city_name):
         if data.get('status') != 'ok' or not data.get('data'):
             return None
 
-        city_lower = city_name.lower()
+        city_lower   = city_name.lower()
         stations_raw = data['data']
+        bbox         = _get_bbox(city_name)
 
-        # Filter stations whose name contains the city name
-        relevant_uids = [
-            s['uid'] for s in stations_raw
+        # Filter: station must be inside the city bounding box
+        bbox_filtered = [
+            s for s in stations_raw
+            if _in_bbox(bbox, s.get('station', {}).get('geo', []))
+        ]
+
+        # Also try name-based filter in case bbox returns too few
+        name_filtered = [
+            s for s in stations_raw
             if city_lower in (s.get('station', {}).get('name', '') or '').lower()
         ]
-        # Fallback: accept top results if name filter returned nothing
-        if not relevant_uids:
-            relevant_uids = [s['uid'] for s in stations_raw[:8]]
-        if not relevant_uids:
+
+        # Prefer bbox+name overlap; fall back to bbox-only; last resort: name-only
+        combined = [s for s in bbox_filtered if s in name_filtered] or bbox_filtered or name_filtered
+
+        # Hard cap: never more than 15 stations to keep fetches fast
+        relevant = combined[:15]
+        if not relevant:
             return None
 
-        # Fetch all matching stations in parallel
+        relevant_uids = [s['uid'] for s in relevant]
+        station_geo_map = {
+            s['uid']: s.get('station', {}).get('name', 'Unknown')
+            for s in relevant
+        }
+
+        # Fetch all stations in parallel
         def fetch_uid(uid):
             try:
                 r = requests.get(
@@ -110,18 +177,18 @@ def _fetch_waqi_multi(city_name):
                 )
                 d = r.json()
                 if d.get('status') == 'ok':
-                    return d['data']
+                    return uid, d['data']
             except Exception:
                 pass
-            return None
+            return uid, None
 
         now_unix = time.time()
         with ThreadPoolExecutor(max_workers=min(len(relevant_uids), 10)) as ex:
             raw_results = list(ex.map(fetch_uid, relevant_uids))
 
-        # Parse station data with freshness weighting
+        # Parse with freshness weighting
         station_data = []
-        for r in raw_results:
+        for uid, r in raw_results:
             if r is None:
                 continue
             aqi_raw = r.get('aqi')
@@ -146,9 +213,10 @@ def _fetch_waqi_multi(city_name):
             else:
                 weight = 1.0
 
-            iaqi = r.get('iaqi', {})
+            iaqi         = r.get('iaqi', {})
+            station_name = r.get('city', {}).get('name') or station_geo_map.get(uid, 'Unknown')
             station_data.append({
-                'name':    r.get('city', {}).get('name', 'Unknown'),
+                'name':    station_name,
                 'aqi':     aqi,
                 'weight':  weight,
                 'updated': r.get('time', {}).get('s', 'Unknown'),
@@ -175,41 +243,52 @@ def _fetch_waqi_multi(city_name):
         total_w  = sum(s['weight'] for s in station_data)
         city_aqi = round(sum(s['aqi'] * s['weight'] for s in station_data) / total_w)
 
-        n              = len(station_data)
-        cleanest       = min(station_data, key=lambda s: s['aqi'])
-        most_polluted  = max(station_data, key=lambda s: s['aqi'])
+        n             = len(station_data)
+        cleanest      = min(station_data, key=lambda s: s['aqi'])
+        most_polluted = max(station_data, key=lambda s: s['aqi'])
 
         if n >= 8:   quality = "HIGH"
         elif n >= 4: quality = "MEDIUM"
         elif n >= 2: quality = "LOW"
         else:        quality = "SINGLE"
 
-        # Best pollutants: from the freshest station
-        best = max(station_data, key=lambda s: s['weight'])
+        # Best pollutants: freshest station
+        best          = max(station_data, key=lambda s: s['weight'])
+        primary_stn   = best['name']
+        all_stns      = [s['name'] for s in station_data]
+
+        # Compact display label (max 3 names)
+        short_names   = [n.split(',')[0] for n in all_stns[:3]]
+        display_label = " · ".join(short_names) + ("…" if len(all_stns) > 3 else "")
 
         return {
-            'success':             True,
-            'city':                city_name,
-            'aqi':                 city_aqi,
-            'category':            categorize_aqi(city_aqi),
-            'color':               aqi_color(city_aqi),
-            'pm25':                best.get('pm25'),
-            'pm10':                best.get('pm10'),
-            'no2':                 best.get('no2'),
-            'co':                  best.get('co'),
-            'so2':                 best.get('so2'),
-            'o3':                  best.get('o3'),
-            'station_name':        city_name,
-            'station_count':       n,
-            'stations':            sorted(station_data, key=lambda s: s['aqi'], reverse=True),
-            'cleanest_area':       cleanest['name'],
-            'cleanest_aqi':        cleanest['aqi'],
-            'most_polluted_area':  most_polluted['name'],
-            'most_polluted_aqi':   most_polluted['aqi'],
-            'city_spread':         most_polluted['aqi'] - cleanest['aqi'],
-            'data_quality':        quality,
-            'source':              f"WAQI — average of {n} CPCB stations",
-            'last_updated':        station_data[0].get('updated', 'Unknown'),
+            'success':              True,
+            'data_available':       True,
+            'city':                 city_name,
+            'aqi':                  city_aqi,
+            'aqi_standard':         AQI_STANDARD,
+            'category':             categorize_aqi(city_aqi),
+            'color':                aqi_color(city_aqi),
+            'pm25':                 best.get('pm25'),
+            'pm10':                 best.get('pm10'),
+            'no2':                  best.get('no2'),
+            'co':                   best.get('co'),
+            'so2':                  best.get('so2'),
+            'o3':                   best.get('o3'),
+            'station_name':         city_name,
+            'primary_station':      primary_stn,
+            'all_stations_used':    all_stns,
+            'station_names_display': f"Avg of: {display_label}",
+            'station_count':        n,
+            'stations':             sorted(station_data, key=lambda s: s['aqi'], reverse=True),
+            'cleanest_area':        cleanest['name'],
+            'cleanest_aqi':         cleanest['aqi'],
+            'most_polluted_area':   most_polluted['name'],
+            'most_polluted_aqi':    most_polluted['aqi'],
+            'city_spread':          most_polluted['aqi'] - cleanest['aqi'],
+            'data_quality':         quality,
+            'source':               f"WAQI — avg of {n} CPCB stations",
+            'last_updated':         station_data[0].get('updated', 'Unknown'),
         }
 
     except Exception as e:
@@ -222,21 +301,20 @@ def _fetch_waqi_multi(city_name):
 # ─────────────────────────────────────────────────────────────────────────────
 
 _cpcb_cache = {'data': [], 'ts': 0}
-_CPCB_TTL   = 3600  # CPCB bulk data cached 1 hour (changes slowly)
+_CPCB_TTL   = 3600
+
 
 def _scrape_cpcb_all():
-    """Fetch all-India last-hour station data from CPCB."""
     now = time.time()
     if now - _cpcb_cache['ts'] < _CPCB_TTL and _cpcb_cache['data']:
         return _cpcb_cache['data']
     try:
         resp = requests.post(
             "https://app.cpcbccr.com/caaqm-backend-ui/api/caaqm/getLastHourData",
-            json={},
-            timeout=15,
+            json={}, timeout=15,
             headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
         )
-        raw = resp.json()
+        raw      = resp.json()
         stations = raw if isinstance(raw, list) else raw.get('data', [])
         _cpcb_cache['data'] = stations
         _cpcb_cache['ts']   = now
@@ -247,13 +325,12 @@ def _scrape_cpcb_all():
 
 
 def _fetch_cpcb(city_name):
-    """Layer 2: CPCB scraper fallback for a single city."""
     try:
         all_stations = _scrape_cpcb_all()
         if not all_stations:
             return None
 
-        city_lower = city_name.lower()
+        city_lower    = city_name.lower()
         city_stations = [
             s for s in all_stations
             if city_lower in str(s.get('city',        '')).lower() or
@@ -262,12 +339,14 @@ def _fetch_cpcb(city_name):
         if not city_stations:
             return None
 
-        aqis = []
+        aqis     = []
+        stn_names = []
         for s in city_stations:
             raw = s.get('aqi') or s.get('AQI') or s.get('aqiValue')
             if raw:
                 try:
                     aqis.append(int(float(raw)))
+                    stn_names.append(s.get('stationName', 'CPCB station'))
                 except (ValueError, TypeError):
                     pass
 
@@ -276,20 +355,24 @@ def _fetch_cpcb(city_name):
 
         city_aqi = round(sum(aqis) / len(aqis))
         n        = len(aqis)
-
         return {
-            'success':       True,
-            'city':          city_name,
-            'aqi':           city_aqi,
-            'category':      categorize_aqi(city_aqi),
-            'color':         aqi_color(city_aqi),
-            'pm25':          None, 'pm10': None, 'no2': None,
-            'co':            None, 'so2':  None, 'o3':  None,
-            'station_name':  city_name,
-            'station_count': n,
-            'data_quality':  "HIGH" if n >= 8 else "MEDIUM" if n >= 4 else "LOW" if n >= 2 else "SINGLE",
-            'source':        f"CPCB — average of {n} stations",
-            'last_updated':  'Last hour',
+            'success':              True,
+            'data_available':       True,
+            'city':                 city_name,
+            'aqi':                  city_aqi,
+            'aqi_standard':         AQI_STANDARD,
+            'category':             categorize_aqi(city_aqi),
+            'color':                aqi_color(city_aqi),
+            'pm25':                 None, 'pm10': None, 'no2': None,
+            'co':                   None, 'so2':  None, 'o3':  None,
+            'station_name':         city_name,
+            'primary_station':      stn_names[0] if stn_names else city_name,
+            'all_stations_used':    stn_names,
+            'station_names_display': f"CPCB avg of {n} station{'s' if n != 1 else ''}",
+            'station_count':        n,
+            'data_quality':         "HIGH" if n >= 8 else "MEDIUM" if n >= 4 else "LOW" if n >= 2 else "SINGLE",
+            'source':               f"CPCB — avg of {n} stations",
+            'last_updated':         'Last hour',
         }
     except Exception as e:
         print(f"[CPCB City] {city_name}: {e}")
@@ -317,24 +400,30 @@ def _fetch_waqi_single(city_name):
 
         aqi  = int(aqi_raw)
         iaqi = station.get('iaqi', {})
+        stn_name = station.get('city', {}).get('name', city_name)
 
         return {
-            'success':       True,
-            'city':          city_name,
-            'aqi':           aqi,
-            'category':      categorize_aqi(aqi),
-            'color':         aqi_color(aqi),
-            'pm25':          iaqi.get('pm25', {}).get('v'),
-            'pm10':          iaqi.get('pm10', {}).get('v'),
-            'no2':           iaqi.get('no2',  {}).get('v'),
-            'co':            iaqi.get('co',   {}).get('v'),
-            'so2':           iaqi.get('so2',  {}).get('v'),
-            'o3':            iaqi.get('o3',   {}).get('v'),
-            'station_name':  station.get('city', {}).get('name', city_name),
-            'station_count': 1,
-            'data_quality':  'SINGLE',
-            'source':        'WAQI — single station',
-            'last_updated':  station.get('time', {}).get('s', 'Unknown'),
+            'success':              True,
+            'data_available':       True,
+            'city':                 city_name,
+            'aqi':                  aqi,
+            'aqi_standard':         AQI_STANDARD,
+            'category':             categorize_aqi(aqi),
+            'color':                aqi_color(aqi),
+            'pm25':                 iaqi.get('pm25', {}).get('v'),
+            'pm10':                 iaqi.get('pm10', {}).get('v'),
+            'no2':                  iaqi.get('no2',  {}).get('v'),
+            'co':                   iaqi.get('co',   {}).get('v'),
+            'so2':                  iaqi.get('so2',  {}).get('v'),
+            'o3':                   iaqi.get('o3',   {}).get('v'),
+            'station_name':         stn_name,
+            'primary_station':      stn_name,
+            'all_stations_used':    [stn_name],
+            'station_names_display': stn_name,
+            'station_count':        1,
+            'data_quality':         'SINGLE',
+            'source':               'WAQI — single station',
+            'last_updated':         station.get('time', {}).get('s', 'Unknown'),
         }
     except Exception:
         return None
@@ -375,7 +464,7 @@ def aqi_color(aqi):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Background cache warmup on module load
+# Background cache warmup
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _warmup():

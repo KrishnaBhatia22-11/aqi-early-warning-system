@@ -410,12 +410,15 @@ export default function CityComparisonPage({ cities = [] }) {
             <span className="mono cmp-city-card-label">CITY 1</span>
             <CityDropdown value={city1} onChange={setCity1} cities={cityList} />
             {liveAqi1 != null && (() => {
-              const cat = catFromAqi(liveAqi1);
+              const cat  = catFromAqi(liveAqi1);
+              const c1City = cities.find(c => c.name?.toLowerCase() === city1.toLowerCase());
+              const src1  = c1City?.station_names_display ?? c1City?.primary_station?.split(',')[0];
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi1}</span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi1} <span style={{ fontSize: 9, opacity: 0.6 }}>US AQI</span></span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
+                  {src1 && <span className="mono" style={{ fontSize: 10, opacity: 0.45, display: "block", marginTop: 2 }}>{src1}</span>}
                 </div>
               );
             })()}
@@ -434,12 +437,15 @@ export default function CityComparisonPage({ cities = [] }) {
             <span className="mono cmp-city-card-label">CITY 2</span>
             <CityDropdown value={city2} onChange={setCity2} cities={cityList} />
             {liveAqi2 != null && (() => {
-              const cat = catFromAqi(liveAqi2);
+              const cat  = catFromAqi(liveAqi2);
+              const c2City = cities.find(c => c.name?.toLowerCase() === city2.toLowerCase());
+              const src2  = c2City?.station_names_display ?? c2City?.primary_station?.split(',')[0];
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi2}</span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi2} <span style={{ fontSize: 9, opacity: 0.6 }}>US AQI</span></span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
+                  {src2 && <span className="mono" style={{ fontSize: 10, opacity: 0.45, display: "block", marginTop: 2 }}>{src2}</span>}
                 </div>
               );
             })()}

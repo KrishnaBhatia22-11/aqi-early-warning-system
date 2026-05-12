@@ -300,14 +300,24 @@ export default function WeatherAQIPage() {
                     <div className="wx-city-name">{cityAqi.name}</div>
                     <div className="wx-condition">Current Air Quality</div>
                   </div>
-                  <span className="wx-source-badge">● WAQI Live</span>
+                  <span className="wx-source-badge">
+                    ● {cityAqi.primary_station
+                      ? `WAQI — ${cityAqi.primary_station.split(',')[0]}`
+                      : "WAQI Live"}
+                  </span>
                 </div>
                 <div className="wx-aqi-big" style={{ color: aqiColor(cityAqi.aqi) }}>
                   {cityAqi.aqi}
+                  <span style={{ fontSize: 12, opacity: 0.5, marginLeft: 6, fontFamily: "JetBrains Mono, monospace" }}>US AQI</span>
                 </div>
                 <div className="wx-cat-badge" style={{ color: aqiColor(cityAqi.aqi), borderColor: aqiColor(cityAqi.aqi) + "40" }}>
                   {aqiCategory(cityAqi.aqi)}
                 </div>
+                {cityAqi.station_names_display && (
+                  <div className="wx-pollutant mono" style={{ opacity: 0.55, fontSize: 11 }}>
+                    {cityAqi.station_names_display}
+                  </div>
+                )}
                 {cityAqi.pollutant && (
                   <div className="wx-pollutant mono">Dominant: {cityAqi.pollutant}</div>
                 )}

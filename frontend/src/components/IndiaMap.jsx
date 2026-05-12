@@ -160,9 +160,12 @@ export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
         {cities.map(city => {
           const coords = CITY_COORDS[city.name];
           if (!coords) return null;
-          const cat = aqiCategory(city.aqi);
+          const hasData = city.data_available !== false && city.aqi != null;
+          const cat = hasData ? aqiCategory(city.aqi) : { color: "#4b5563", name: "No Data" };
           const stationLabel = city.station_count > 1
             ? `avg of ${city.station_count} stations`
+            : city.primary_station
+            ? city.primary_station.split(',')[0]
             : null;
           return (
             <Marker
@@ -178,12 +181,18 @@ export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
                 className="city-tooltip"
               >
                 <div className="ct-name mono">{city.name.toUpperCase()}</div>
-                <div className="ct-aqi" style={{ color: cat.color }}>{city.aqi}</div>
-                <div className="ct-cat" style={{ color: cat.color }}>{cat.name.toUpperCase()}</div>
-                {stationLabel && (
-                  <div className="ct-stations mono" style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>
-                    {stationLabel}
-                  </div>
+                {hasData ? (
+                  <>
+                    <div className="ct-aqi" style={{ color: cat.color }}>{city.aqi} <span style={{ fontSize: 9, opacity: 0.6 }}>US AQI</span></div>
+                    <div className="ct-cat" style={{ color: cat.color }}>{cat.name.toUpperCase()}</div>
+                    {stationLabel && (
+                      <div className="ct-stations mono" style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
+                        {stationLabel}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="ct-cat mono" style={{ color: "#6b7280", fontSize: 10 }}>NO DATA</div>
                 )}
                 <div className="ct-cta mono">Click to explore →</div>
               </Tooltip>

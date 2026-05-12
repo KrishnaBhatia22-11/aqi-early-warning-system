@@ -233,6 +233,7 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
           <div className="zp-aqi-block" style={{ color: cat.color }}>
             <div className="display zp-aqi-num"><CountUp to={city.aqi} duration={1200}/></div>
             <span className={`badge ${cat.klass}`} style={{ fontSize: 13, padding: "6px 14px" }}>{cat.name.toUpperCase()}</span>
+            <div className="mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>US AQI (EPA)</div>
           </div>
         </div>
 

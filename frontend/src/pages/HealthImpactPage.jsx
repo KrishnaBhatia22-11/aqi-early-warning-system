@@ -214,12 +214,17 @@ export default function HealthImpactPage({ cities = [] }) {
                 >
                   {cityNames.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                {isLive && (
-                  <span className="health-live-badge">
-                    <span className="hlb-dot" />
-                    LIVE {liveAqi} AQI
-                  </span>
-                )}
+                {isLive && (() => {
+                  const liveCity = cities.find(c => c.name?.toLowerCase() === city.toLowerCase());
+                  const stnName  = liveCity?.primary_station?.split(',')[0];
+                  return (
+                    <span className="health-live-badge">
+                      <span className="hlb-dot" />
+                      LIVE {liveAqi} US AQI
+                      {stnName && <span style={{ opacity: 0.6, marginLeft: 5, fontSize: 10 }}>· {stnName}</span>}
+                    </span>
+                  );
+                })()}
               </div>
               <div className="health-aqi-row">
                 <span className="mono health-sublabel">{isLive ? "Override AQI:" : "AQI:"}</span>

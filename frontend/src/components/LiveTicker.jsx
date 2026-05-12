@@ -1,12 +1,13 @@
 import { aqiCategory } from "../utils/aqiCategory";
 
 export default function LiveTicker({ cities }) {
-  if (!cities?.length) return null;
-  const items = [...cities, ...cities];
+  const live = cities?.filter(c => c.data_available !== false && c.aqi != null) ?? [];
+  if (!live.length) return null;
+  const items = [...live, ...live];
   return (
     <div style={{ position: "relative", width: "100%", display: "block" }}>
       <div className="ticker-wrap">
-<div className="ticker-track">
+        <div className="ticker-track">
           {items.map((c, i) => {
             const cat = aqiCategory(c.aqi);
             return (
