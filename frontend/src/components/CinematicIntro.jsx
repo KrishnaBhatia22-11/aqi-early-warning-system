@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { INDIA_PATH, CITIES_STATIC } from "../data/index";
+import { INDIA_PATH } from "../data/index";
 import { aqiCategory } from "../utils/aqiCategory";
 
 export default function CinematicIntro({ onDone }) {
@@ -78,7 +78,7 @@ export default function CinematicIntro({ onDone }) {
 
         {stage >= 2 && (
           <div className="intro-cities">
-            {CITIES_STATIC.map((c, i) => {
+            {[].map((c, i) => {
               const cat = aqiCategory(c.aqi);
               return (
                 <span key={c.name} className="intro-city-dot" style={{
