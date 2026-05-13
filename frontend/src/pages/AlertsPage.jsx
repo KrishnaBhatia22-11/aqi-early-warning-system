@@ -13,9 +13,13 @@ export default function AlertsPage({ cities, initialCity }) {
   const [alerts, setAlerts] = useState(INITIAL_ALERTS);
   const [form, setForm] = useState({ city: initialCity || "Delhi", threshold: 200, email: "" });
   const [saved, setSaved] = useState(false);
+  const [apiStatus, setApiStatus] = useState(null);   // null | "loading" | "success" | "error"
+  const [apiMessage, setApiMessage] = useState("");
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
+
+    // Always add to local alerts list (existing behaviour)
     const city = cities.find(c => c.name === form.city);
     setAlerts(a => [
       ...a,
@@ -30,6 +34,40 @@ export default function AlertsPage({ cities, initialCity }) {
     ]);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+
+    // Guard: email required for backend subscription
+    if (!form.email) {
+      setApiStatus("error");
+      setApiMessage("Please enter your email to receive alerts");
+      setTimeout(() => { setApiStatus(null); setApiMessage(""); }, 5000);
+      return;
+    }
+
+    setApiStatus("loading");
+    try {
+      const res = await fetch("https://aqi-api-y2qs.onrender.com/api/v1/alerts/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          city: form.city,
+          threshold: Number(form.threshold),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setApiStatus("success");
+        setApiMessage(`✓ Alert created! Confirmation email sent to ${form.email}`);
+        setForm(f => ({ ...f, email: "" }));
+      } else {
+        setApiStatus("error");
+        setApiMessage("Failed to create alert. Please try again.");
+      }
+    } catch {
+      setApiStatus("error");
+      setApiMessage("Failed to create alert. Please try again.");
+    }
+    setTimeout(() => { setApiStatus(null); setApiMessage(""); }, 5000);
   };
 
   const toggleAlert = (id) => {
@@ -103,9 +141,27 @@ export default function AlertsPage({ cities, initialCity }) {
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               />
             </div>
-            <button type="submit" className="btn-primary" style={{ width: "100%" }}>
-              {saved ? "✓ ALERT SAVED" : "CREATE ALERT →"}
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{ width: "100%" }}
+              disabled={apiStatus === "loading"}
+            >
+              {apiStatus === "loading" ? "Creating..." : saved ? "✓ ALERT SAVED" : "CREATE ALERT →"}
             </button>
+            {apiMessage && (
+              <div style={{
+                marginTop: 12,
+                padding: "10px 14px",
+                borderRadius: 8,
+                fontSize: 13,
+                color:      apiStatus === "success" ? "#22c55e" : "#ef4444",
+                background: apiStatus === "success" ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                border:     `1px solid ${apiStatus === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+              }}>
+                {apiMessage}
+              </div>
+            )}
           </form>
         </div>
 
