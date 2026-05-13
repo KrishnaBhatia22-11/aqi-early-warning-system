@@ -20,3 +20,4 @@ holidays
 asyncpg
 sqlalchemy[asyncio]
 alembic
+apscheduler

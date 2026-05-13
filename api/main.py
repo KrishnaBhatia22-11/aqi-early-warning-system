@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routes import predict, city, chat, forecast, anomaly, models, health
 from api.routes import weather, compare, history, share, cropburn, cpcb
 from api.routes.db import router as db_router
+from api.scheduler import scheduler, save_hourly_snapshot
 
 app = FastAPI(
     title="AI-Driven Early Warning System for Urban Air Quality Risk Zones",
@@ -44,6 +45,11 @@ async def startup_event():
     import api.models  # noqa: F401 — registers models with Base.metadata
     from api.database import init_db
     await init_db()
+
+    # Run once immediately, then every 60 minutes
+    await save_hourly_snapshot()
+    scheduler.add_job(save_hourly_snapshot, "interval", minutes=60)
+    scheduler.start()
 
 
 @app.on_event("startup")
