@@ -5,7 +5,8 @@ import requests as _requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import predict, city, chat, forecast, anomaly, models, health
-from api.routes import weather, compare, history, share, cropburn, cpcb, db
+from api.routes import weather, compare, history, share, cropburn, cpcb
+from api.routes.db import router as db_router
 
 app = FastAPI(
     title="AI-Driven Early Warning System for Urban Air Quality Risk Zones",
@@ -35,7 +36,7 @@ app.include_router(history.router,  prefix="/api/v1", tags=["History"])
 app.include_router(share.router,    prefix="/api/v1", tags=["Share"])
 app.include_router(cropburn.router, prefix="/api/v1", tags=["Crop Burn"])
 app.include_router(cpcb.router,    prefix="/api/v1", tags=["CPCB"])
-app.include_router(db.router,      prefix="/api/v1", tags=["Database"])
+app.include_router(db_router,      prefix="/api/v1", tags=["Database"])
 
 
 @app.on_event("startup")
@@ -43,6 +44,12 @@ async def startup_event():
     import api.models  # noqa: F401 — registers models with Base.metadata
     from api.database import init_db
     await init_db()
+
+
+@app.on_event("startup")
+async def print_routes():
+    for route in app.routes:
+        print(route.path)
 
 
 @app.get("/")
