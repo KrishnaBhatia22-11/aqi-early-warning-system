@@ -3417,3 +3417,119 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   .cb-health-msg { font-size: 16px; }
   .cb-vuln-grid  { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Loading Skeleton ── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.6; }
+}
+
+.skeleton {
+  background: #1e293b;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.loading-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 80vh;
+}
+
+.skeleton-bar {
+  height: 40px;
+  background: #1e293b;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.wake-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #0f1f3d;
+  border: 1px solid #22c55e30;
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.wake-spinner {
+  font-size: 24px;
+  color: #22c55e;
+  animation: spin 2s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.wake-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wake-title {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.wake-sub {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.skeleton-stats {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  background: #0a0f1e;
+  border-radius: 8px;
+}
+
+.skeleton-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.skeleton-num   { height: 48px; width: 80%; }
+.skeleton-label { height: 14px; width: 60%; }
+
+.skeleton-ticker   { padding: 0 24px; }
+.skeleton-map-area { padding: 0 24px; }
+
+.load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  text-align: center;
+}
+
+.load-error-icon  { font-size: 48px; color: #ef4444; }
+.load-error-title { font-size: 18px; font-weight: 500; color: var(--text); }
+.load-error-sub   { font-size: 14px; color: #64748b; }
+
+.load-retry-btn {
+  background: #22c55e;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}

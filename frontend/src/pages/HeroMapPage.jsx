@@ -20,7 +20,7 @@ const SPARKLINES = {
   chennai: [65,  70,  60,  75,  68,  72,  66 ],
 };
 
-export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, backendWaking }) {
+export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, isLoading, isWaking, wakeSeconds, loadError, onRetry }) {
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroFade, setHeroFade] = useState(true);
   const [mapVisible, setMapVisible] = useState(true);
@@ -51,9 +51,51 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, b
     onCitySelect(city);
   };
 
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="skeleton-bar" />
+        {isWaking && (
+          <div className="wake-banner">
+            <div className="wake-spinner">⟳</div>
+            <div className="wake-text">
+              <span className="wake-title">Connecting to live data engine...</span>
+              <span className="wake-sub">Free hosting wakes up in ~45 seconds · {wakeSeconds}s elapsed</span>
+            </div>
+          </div>
+        )}
+        <div className="skeleton-stats">
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="skeleton-stat">
+              <div className="skeleton skeleton-num" />
+              <div className="skeleton skeleton-label" />
+            </div>
+          ))}
+        </div>
+        <div className="skeleton-ticker">
+          <div className="skeleton" style={{ height: "32px", width: "100%" }} />
+        </div>
+        <div className="skeleton-map-area">
+          <div className="skeleton" style={{ height: "500px", borderRadius: "12px" }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="load-error">
+        <div className="load-error-icon">⚠</div>
+        <div className="load-error-title">Could not connect to data engine</div>
+        <div className="load-error-sub">The server may be temporarily unavailable.</div>
+        <button className="load-retry-btn" onClick={() => onRetry()}>Retry</button>
+      </div>
+    );
+  }
+
   const nationalAvg = cities.length
-    ? Math.round(cities.reduce((s, c) => s + c.aqi, 0) / cities.length)
-    : 187;
+    ? Math.round(cities.reduce((s, c) => s + (c.aqi ?? 0), 0) / cities.length)
+    : 0;
   const hazardousCities = cities.filter(c => c.aqi > 300).length;
   const cleanCities = cities.filter(c => c.aqi <= 100).length;
   const cat = aqiCategory(nationalAvg);
@@ -70,12 +112,6 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, b
 
   return (
     <div className="hero-map-page">
-      {backendWaking && (
-        <div className="wake-banner">
-          <span className="wake-spinner">⟳</span>
-          {" "}Waking up live data engine — first load takes ~30 seconds on free tier
-        </div>
-      )}
       {showBanner && (
         <div className="crop-burn-alert-banner">
           <div className="cb-banner-left">
@@ -149,7 +185,7 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, b
             </div>
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: "#3498db" }}>
-                <CountUp to={cities.length || 53} duration={600} />
+                <CountUp to={cities.length} duration={600} />
               </span>
               <span className="mono dh-stat-label">CITIES MONITORED</span>
             </div>

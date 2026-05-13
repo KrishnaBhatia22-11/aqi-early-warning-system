@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, Component } from "react";
+import { useState, useEffect, useCallback, useRef, Component } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { fetchHealth, fetchCities } from "./utils/api";
-import { CITIES_STATIC } from "./data/index";
+import { fetchHealth } from "./utils/api";
 
 import CinematicIntro from "./components/CinematicIntro";
 import Navbar from "./components/Navbar";
@@ -97,11 +96,13 @@ function AppInner() {
     try { return !sessionStorage.getItem("intro_done"); } catch { return false; }
   });
   const [page, setPage] = useState("map");
-  const [cities, setCities] = useState(CITIES_STATIC);
+  const [cities, setCities] = useState([]);
   const [apiOnline, setApiOnline] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [backendWaking, setBackendWaking] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [wakeSeconds, setWakeSeconds] = useState(0);
+  const [isWaking, setIsWaking] = useState(false);
   const [zoomCity, setZoomCity] = useState(null);
   const [a11y, setA11y] = useState(false);
   const [citiesInitialCity, setCitiesInitialCity] = useState(null);
@@ -109,51 +110,42 @@ function AppInner() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
 
-  const refreshCities = useCallback(async () => {
-    // After 4 s with no response, show "backend waking" message
-    const wakeTimer = setTimeout(() => setBackendWaking(true), 4000);
+  const fetchCitiesRef = useRef(null);
+  const fetchCities = useCallback(async (attempt = 1) => {
+    setIsLoading(true);
+    setLoadError(false);
+    const wakeTimer = setTimeout(() => setIsWaking(true), 4000);
     try {
-      const data = await fetchCities();
+      const res = await fetch(
+        "https://aqi-api-y2qs.onrender.com/api/v1/cities",
+        { signal: AbortSignal.timeout(120000) }
+      );
       clearTimeout(wakeTimer);
+      const data = await res.json();
+      setCities(data.cities.filter(c => c.data_available !== false));
       setIsLoading(false);
-      setBackendWaking(false);
-      if (Array.isArray(data) && data.length > 0) {
-        setCities(prev =>
-          prev.map(c => {
-            const live = data.find(d =>
-              (d.name ?? d.city ?? "").toLowerCase() === c.name.toLowerCase()
-            );
-            const noData = live.data_available === false;
-            return live ? {
-              ...c,
-              aqi:                noData ? null : (live.aqi ?? c.aqi),
-              data_available:     !noData,
-              pollutant:          live.pollutant         ?? c.pollutant,
-              station_count:      live.station_count,
-              stations:           live.stations,
-              primary_station:    live.primary_station,
-              all_stations_used:  live.all_stations_used,
-              station_names_display: live.station_names_display,
-              cleanest_area:      live.cleanest_area,
-              cleanest_aqi:       live.cleanest_aqi,
-              most_polluted_area: live.most_polluted_area,
-              most_polluted_aqi:  live.most_polluted_aqi,
-              city_spread:        live.city_spread,
-              data_quality:       live.data_quality,
-              source:             live.source,
-              last_updated:       live.last_updated,
-              aqi_standard:       live.aqi_standard,
-            } : c;
-          })
-        );
+      setIsWaking(false);
+      setLastSync(Date.now());
+    } catch (e) {
+      clearTimeout(wakeTimer);
+      if (attempt < 3) {
+        setTimeout(() => fetchCitiesRef.current(attempt + 1), 5000);
+      } else {
+        setIsLoading(false);
+        setIsWaking(false);
+        setLoadError(true);
       }
-      setLastSync(Date.now());
-    } catch {
-      clearTimeout(wakeTimer);
-      setIsLoading(false);
-      setBackendWaking(false);
-      setLastSync(Date.now());
     }
+  }, []);
+  fetchCitiesRef.current = fetchCities;
+
+  const refreshCities = useCallback(async () => {
+    try {
+      const res = await fetch("https://aqi-api-y2qs.onrender.com/api/v1/cities");
+      const data = await res.json();
+      setCities(data.cities.filter(c => c.data_available !== false));
+      setLastSync(Date.now());
+    } catch {}
   }, []);
 
   const checkHealth = useCallback(async () => {
@@ -164,6 +156,12 @@ function AppInner() {
       setApiOnline(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isWaking) { setWakeSeconds(0); return; }
+    const interval = setInterval(() => setWakeSeconds(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isWaking]);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -186,14 +184,14 @@ function AppInner() {
 
   useEffect(() => {
     checkHealth();
-    refreshCities();
+    fetchCities();
     const healthInterval = setInterval(checkHealth, 30000);
     const citiesInterval = setInterval(refreshCities, 60000);
     return () => {
       clearInterval(healthInterval);
       clearInterval(citiesInterval);
     };
-  }, [checkHealth, refreshCities]);
+  }, [checkHealth, fetchCities, refreshCities]);
 
   const handleIntroDone = useCallback(() => {
     try { sessionStorage.setItem("intro_done", "1"); } catch {}
@@ -207,7 +205,7 @@ function AppInner() {
 
   const renderPage = () => {
     switch (page) {
-      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} zoomCity={zoomCity} backendWaking={backendWaking} />;
+      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} zoomCity={zoomCity} isLoading={isLoading} isWaking={isWaking} wakeSeconds={wakeSeconds} loadError={loadError} onRetry={fetchCities} />;
       case "predict":  return <PredictorPage />;
       case "health":   return <HealthImpactPage cities={cities} />;
       case "forecast": return <ForecastPage cities={cities} />;
