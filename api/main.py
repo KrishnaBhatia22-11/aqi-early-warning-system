@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routes import predict, city, chat, forecast, anomaly, models, health
 from api.routes import weather, compare, history, share, cropburn, cpcb
 from api.routes.db import router as db_router
+from api.routes.alerts import router as alerts_router
 from api.scheduler import scheduler, save_hourly_snapshot
 
 app = FastAPI(
@@ -38,6 +39,7 @@ app.include_router(share.router,    prefix="/api/v1", tags=["Share"])
 app.include_router(cropburn.router, prefix="/api/v1", tags=["Crop Burn"])
 app.include_router(cpcb.router,    prefix="/api/v1", tags=["CPCB"])
 app.include_router(db_router,      prefix="/api/v1", tags=["Database"])
+app.include_router(alerts_router,  prefix="/api/v1", tags=["Alerts"])
 
 
 @app.on_event("startup")

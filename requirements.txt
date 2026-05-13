@@ -21,3 +21,4 @@ asyncpg
 sqlalchemy[asyncio]
 alembic
 apscheduler
+resend
