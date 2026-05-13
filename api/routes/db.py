@@ -33,3 +33,27 @@ async def db_latest():
         ]
     except Exception as e:
         return {"status": "error", "detail": str(e)}
+
+
+@router.get("/db/all")
+async def db_all():
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(AQIReading.city, AQIReading.aqi, AQIReading.pm25,
+                       AQIReading.timestamp, AQIReading.source)
+                .order_by(AQIReading.timestamp.desc())
+            )
+            rows = result.all()
+        return [
+            {
+                "city":      r.city,
+                "aqi":       r.aqi,
+                "pm25":      r.pm25,
+                "timestamp": r.timestamp.isoformat(),
+                "source":    r.source,
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
