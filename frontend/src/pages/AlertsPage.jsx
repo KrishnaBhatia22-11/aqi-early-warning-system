@@ -39,11 +39,12 @@ export default function AlertsPage({ cities, initialCity }) {
     if (!form.email) {
       setApiStatus("error");
       setApiMessage("Please enter your email to receive alerts");
-      setTimeout(() => { setApiStatus(null); setApiMessage(""); }, 5000);
+      setTimeout(() => { setApiStatus(null); setApiMessage(""); }, 15000);
       return;
     }
 
     setApiStatus("loading");
+    console.log("Calling API with:", { email: form.email, city: form.city, threshold: Number(form.threshold) });
     try {
       const res = await fetch("https://aqi-api-y2qs.onrender.com/api/v1/alerts/subscribe", {
         method: "POST",
@@ -55,6 +56,7 @@ export default function AlertsPage({ cities, initialCity }) {
         }),
       });
       const data = await res.json();
+      console.log("API response:", data);
       if (data.success) {
         setApiStatus("success");
         setApiMessage(`✓ Alert created! Confirmation email sent to ${form.email}`);
@@ -63,11 +65,12 @@ export default function AlertsPage({ cities, initialCity }) {
         setApiStatus("error");
         setApiMessage("Failed to create alert. Please try again.");
       }
-    } catch {
+    } catch (error) {
+      console.log("API error:", error);
       setApiStatus("error");
       setApiMessage("Failed to create alert. Please try again.");
     }
-    setTimeout(() => { setApiStatus(null); setApiMessage(""); }, 5000);
+    setTimeout(() => { setApiStatus(null); setApiMessage(""); }, 15000);
   };
 
   const toggleAlert = (id) => {
@@ -141,6 +144,19 @@ export default function AlertsPage({ cities, initialCity }) {
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               />
             </div>
+            {apiMessage && (
+              <div style={{
+                marginBottom: 12,
+                padding: "12px 16px",
+                borderRadius: 8,
+                fontSize: 16,
+                fontWeight: 700,
+                color:      "#fff",
+                background: apiStatus === "success" ? "#16a34a" : "#dc2626",
+              }}>
+                {apiMessage}
+              </div>
+            )}
             <button
               type="submit"
               className="btn-primary"
@@ -149,19 +165,6 @@ export default function AlertsPage({ cities, initialCity }) {
             >
               {apiStatus === "loading" ? "Creating..." : saved ? "✓ ALERT SAVED" : "CREATE ALERT →"}
             </button>
-            {apiMessage && (
-              <div style={{
-                marginTop: 12,
-                padding: "10px 14px",
-                borderRadius: 8,
-                fontSize: 13,
-                color:      apiStatus === "success" ? "#22c55e" : "#ef4444",
-                background: apiStatus === "success" ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
-                border:     `1px solid ${apiStatus === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
-              }}>
-                {apiMessage}
-              </div>
-            )}
           </form>
         </div>
 
