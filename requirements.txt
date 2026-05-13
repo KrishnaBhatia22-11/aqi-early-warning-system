@@ -17,3 +17,6 @@ seaborn
 fastapi
 uvicorn
 holidays
+asyncpg
+sqlalchemy[asyncio]
+alembic
