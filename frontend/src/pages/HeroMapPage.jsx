@@ -251,7 +251,7 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
 
             <div className="sparkline-strip">
               {Object.entries(SPARKLINES).map(([city, vals]) => {
-                const cityData = cities.find(c => c.name.toLowerCase().includes(city));
+                const cityData = cities.find(c => c.name?.toLowerCase().includes(city));
                 const aqi = cityData?.aqi ?? vals[vals.length - 1];
                 const c = aqiCategory(aqi);
                 return (

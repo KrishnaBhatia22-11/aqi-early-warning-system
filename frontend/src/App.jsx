@@ -122,7 +122,9 @@ function AppInner() {
       );
       clearTimeout(wakeTimer);
       const data = await res.json();
-      setCities(data.cities.filter(c => c.data_available !== false));
+      setCities(data.cities
+        .filter(c => c.data_available !== false)
+        .map(c => ({ ...c, name: c.name ?? c.city })));
       setIsLoading(false);
       setIsWaking(false);
       setLastSync(Date.now());
@@ -143,7 +145,9 @@ function AppInner() {
     try {
       const res = await fetch("https://aqi-api-y2qs.onrender.com/api/v1/cities");
       const data = await res.json();
-      setCities(data.cities.filter(c => c.data_available !== false));
+      setCities(data.cities
+        .filter(c => c.data_available !== false)
+        .map(c => ({ ...c, name: c.name ?? c.city })));
       setLastSync(Date.now());
     } catch {}
   }, []);
