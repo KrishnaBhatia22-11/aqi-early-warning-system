@@ -3183,7 +3183,7 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 /* ── Signal cards ── */
 .cb-signals-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 .cb-signal-card {
