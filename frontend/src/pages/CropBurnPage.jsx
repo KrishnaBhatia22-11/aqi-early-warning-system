@@ -206,7 +206,7 @@ export default function CropBurnPage({ setPage }) {
             <div className="cb-section-head">
               <div className="mono cb-eyebrow">DETECTION SIGNALS</div>
               <h2 className="cb-section-title">What our system detected</h2>
-              <p className="cb-section-sub">Three independent signals confirm or rule out a burning event</p>
+              <p className="cb-section-sub">Four independent signals confirm or rule out a burning event</p>
             </div>
 
             <div className="cb-signals-grid">
