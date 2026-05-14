@@ -185,6 +185,14 @@ export default function CropBurnPage({ setPage }) {
                 color={CONF_COLOR[data.confidence_level] ?? "#22c55e"}
               />
 
+              <p style={{ color: "#fff", fontSize: 14, textAlign: "center", maxWidth: 400, margin: "0 auto", opacity: 0.8 }}>
+                {data.confidence >= 85 ? "Peak burning. Severe smoke event for 400 million people."
+                : data.confidence >= 70 ? "Active burning. Expect smoke in North India within 24hrs."
+                : data.confidence >= 50 ? "Early burning activity. Sensitive groups take precautions."
+                : data.confidence >= 25 ? "Season active but no burning detected. Stay informed."
+                :                         "No crop burning activity detected right now."}
+              </p>
+
               {data.season_active ? (
                 <div className="cb-season-strip">
                   🌾&nbsp; {sig.season_name?.toUpperCase()}
