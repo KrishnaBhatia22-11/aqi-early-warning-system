@@ -1,5 +1,7 @@
+import asyncio
 import os
 import time
+import httpx
 import requests
 from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter
@@ -15,6 +17,8 @@ OWM_KEY    = os.getenv("OPENWEATHER_API_KEY", "")
 
 _cache = {}
 _CACHE_TTL = 300  # 5 min
+
+_nasa_cache = {"count": 0, "level": "NONE", "fetched_at": None}
 
 # ── Seasonal calendar ──────────────────────────────────────────
 SEASONS = {
@@ -133,6 +137,58 @@ def _wind_dir_delhi():
     return None
 
 
+async def fetch_nasa_fires() -> dict:
+    global _nasa_cache
+
+    if _nasa_cache["fetched_at"]:
+        age = (datetime.utcnow() - _nasa_cache["fetched_at"]).seconds
+        if age < 10800:  # 3 hours
+            return _nasa_cache
+
+    try:
+        api_key = os.environ.get("NASA_FIRMS_API_KEY", "")
+        if not api_key:
+            return {"count": 0, "level": "NONE", "fetched_at": None}
+
+        # Bounding box: Punjab + Haryana + Western UP (west,south,east,north)
+        area = "73.5,29.5,80.5,32.5"
+        url  = f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{api_key}/VIIRS_SNPP_NRT/{area}/1"
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url)
+
+        if response.status_code != 200:
+            return {"count": 0, "level": "NONE", "fetched_at": None}
+
+        lines      = response.text.strip().split("\n")
+        fire_count = 0
+        for line in lines[1:]:  # skip header
+            if line.strip():
+                parts = line.split(",")
+                if len(parts) > 9:
+                    conf = parts[9].strip().lower()
+                    if conf in ["nominal", "high"]:
+                        fire_count += 1
+
+        if fire_count == 0:
+            level = "NONE"
+        elif fire_count <= 50:
+            level = "LOW"
+        elif fire_count <= 200:
+            level = "MODERATE"
+        elif fire_count <= 500:
+            level = "HIGH"
+        else:
+            level = "PEAK"
+
+        _nasa_cache = {"count": fire_count, "level": level, "fetched_at": datetime.utcnow()}
+        return _nasa_cache
+
+    except Exception as e:
+        print(f"NASA FIRMS error: {e}")
+        return {"count": 0, "level": "NONE", "fetched_at": None}
+
+
 async def _query_city_spikes(cities: list):
     """
     Query 24h avg and 7-day avg AQI per city from own DB.
@@ -215,8 +271,11 @@ async def get_cropburn_status():
     season        = _season_info(month, day)
     season_active = season["active"]
 
-    # ── Query own DB for spike signals ────────────────────────
-    db_data, db_error = await _query_city_spikes(ALL_MONITOR)
+    # ── Query DB and NASA satellite in parallel ────────────────
+    (db_data, db_error), nasa_data = await asyncio.gather(
+        _query_city_spikes(ALL_MONITOR),
+        fetch_nasa_fires(),
+    )
     db_available = len(db_data) > 0
 
     # ── Signal 1: 2+ Punjab cities >20% above 7-day baseline (40 pts) ──
@@ -241,7 +300,13 @@ async def get_cropburn_status():
     if signal1: confidence += 40
     if signal2: confidence += 35
     if signal3: confidence += 25
-    confidence = min(confidence, 100)
+
+    # ── Signal 4: NASA FIRMS satellite fire count ──────────────
+    fire_level     = nasa_data["level"]
+    signal4_points = {"NONE": 0, "LOW": 15, "MODERATE": 30, "HIGH": 45, "PEAK": 60}.get(fire_level, 0)
+    signal4_active = fire_level != "NONE"
+    confidence    += signal4_points
+    confidence     = min(confidence, 100)
 
     if confidence >= 70:   conf_level = "HIGH"
     elif confidence >= 40: conf_level = "MEDIUM"
@@ -334,6 +399,9 @@ async def get_cropburn_status():
             "signal1_punjab_active":   signal1,
             "signal2_downwind_active": signal2,
             "signal3_season_active":   signal3,
+            "signal4_nasa_active":     signal4_active,
+            "nasa_fire_count":         nasa_data["count"],
+            "nasa_fire_level":         fire_level,
         },
         "health_warning": {
             "level":   hw_level,
@@ -348,8 +416,11 @@ async def get_cropburn_status():
             ],
         },
         "city_aqi":        city_data,
-        "affected_cities": all_spiking,
-        "data_source":     "Own DB + WAQI live + seasonal calendar",
+        "affected_cities":    all_spiking,
+        "nasa_fire_count":    nasa_data["count"],
+        "nasa_fire_level":    nasa_data["level"],
+        "signal4_nasa_active": signal4_active,
+        "data_source":        "Own DB + WAQI live + seasonal calendar + NASA FIRMS VIIRS satellite",
         "last_updated":    datetime.utcnow().isoformat(),
     }
 
