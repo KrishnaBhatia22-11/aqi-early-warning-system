@@ -11,6 +11,22 @@ const STATUS_CFG = {
 
 const CONF_COLOR = { HIGH: "#ef4444", MEDIUM: "#f59e0b", LOW: "#f97316", NONE: "#22c55e" };
 
+const NASA_LEVEL_COLOR = {
+  NONE:     "#94a3b8",
+  LOW:      "#eab308",
+  MODERATE: "#f97316",
+  HIGH:     "#ef4444",
+  PEAK:     "#7c3aed",
+};
+
+const NASA_LEVEL_DESC = {
+  NONE:     "No active crop fires detected by NASA VIIRS satellite in Punjab + Haryana in last 24 hours.",
+  LOW:      "Low fire activity detected. Early burning activity beginning.",
+  MODERATE: "Moderate burning detected. Smoke likely traveling toward Indo-Gangetic plain.",
+  HIGH:     "High fire activity. Significant smoke expected in Delhi, Lucknow, Kanpur within 12–24 hours.",
+  PEAK:     "Peak burning season. Severe smoke event imminent for 400 million people.",
+};
+
 function aqiColor(aqi) {
   if (!aqi) return "#94a3b8";
   if (aqi <= 50)  return "#22c55e";
@@ -64,8 +80,8 @@ function ConfidenceMeter({ value, color }) {
 }
 
 // ── Signal card ───────────────────────────────────────────────
-function SignalCard({ icon, title, status, children }) {
-  const label = status === "confirmed" ? "CONFIRMED" : status === "partial" ? "PARTIAL" : "NOT DETECTED";
+function SignalCard({ icon, title, status, label: labelProp, children }) {
+  const label = labelProp ?? (status === "confirmed" ? "CONFIRMED" : status === "partial" ? "PARTIAL" : "NOT DETECTED");
   return (
     <div className={`cb-signal-card ${status}`}>
       <div className="cb-sig-icon">{icon}</div>
@@ -295,6 +311,46 @@ export default function CropBurnPage({ setPage }) {
                 )}
               </SignalCard>
 
+              {/* Signal 4 — NASA FIRMS Satellite */}
+              {(() => {
+                const fireLevel = data.nasa_fire_level ?? "NONE";
+                const fireCount = data.nasa_fire_count ?? 0;
+                const active    = data.signal4_nasa_active ?? false;
+                const levelColor = NASA_LEVEL_COLOR[fireLevel] ?? "#94a3b8";
+                return (
+                  <SignalCard
+                    icon="🛰️"
+                    title="NASA SATELLITE FIRES"
+                    status={active ? "confirmed" : "inactive"}
+                    label={active ? "DETECTED" : "NOT DETECTED"}
+                  >
+                    <div style={{ fontSize: 26, fontWeight: 700, color: levelColor, marginBottom: 6 }}>
+                      {fireCount} fire hotspots
+                    </div>
+                    <span style={{
+                      display: "inline-block",
+                      padding: "2px 10px",
+                      borderRadius: 999,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.08em",
+                      background: levelColor + "22",
+                      color: levelColor,
+                      border: `1px solid ${levelColor}55`,
+                      marginBottom: 10,
+                    }}>
+                      {fireLevel}
+                    </span>
+                    <div style={{ color: "var(--text-dim)", fontSize: 13, lineHeight: 1.5 }}>
+                      {NASA_LEVEL_DESC[fireLevel] ?? NASA_LEVEL_DESC.NONE}
+                    </div>
+                    <div style={{ marginTop: 10, color: "var(--text-mute)", fontSize: 11 }}>
+                      Source: NASA FIRMS VIIRS · Updates every 3 hours · Covers Punjab + Haryana + W.UP
+                    </div>
+                  </SignalCard>
+                );
+              })()}
+
             </div>
           </div>
 
@@ -382,9 +438,8 @@ export default function CropBurnPage({ setPage }) {
 
           {/* Source footer */}
           <div className="cb-source-footer">
-            AQI: WAQI — World Air Quality Index · updated every 30 min &nbsp;·&nbsp;
-            Wind: OpenWeatherMap &nbsp;·&nbsp;
-            Seasonal calendar: CPCB + IMD historical data &nbsp;·&nbsp;
+            {data.data_source ?? "Own DB + WAQI live + seasonal calendar + NASA FIRMS VIIRS satellite"}
+            &nbsp;·&nbsp;
             Last updated: {new Date(data.last_updated + "Z").toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })} IST
           </div>
 
