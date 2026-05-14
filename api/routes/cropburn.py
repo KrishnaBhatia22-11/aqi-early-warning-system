@@ -1,8 +1,12 @@
 import os
 import time
 import requests
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter
+from sqlalchemy import select, func
+
+from api.database import AsyncSessionLocal
+from api.models import AQIReading
 
 router = APIRouter()
 
@@ -31,33 +35,23 @@ SEASONS = {
 }
 
 # ── Monitored cities ───────────────────────────────────────────
-PUNJAB_CITIES = ["Amritsar", "Chandigarh", "Ludhiana"]
-HINDI_BELT    = ["Delhi", "Lucknow", "Kanpur"]
-ALL_MONITOR   = PUNJAB_CITIES + HINDI_BELT
+PUNJAB_CITIES   = ["Amritsar", "Ludhiana", "Jalandhar", "Chandigarh", "Patiala"]
+DOWNWIND_CITIES = ["Delhi", "Lucknow", "Kanpur", "Agra", "Noida", "Ghaziabad"]
+ALL_MONITOR     = PUNJAB_CITIES + DOWNWIND_CITIES
 
 CITY_SLUGS = {
     "Amritsar":   "amritsar",
     "Chandigarh": "chandigarh",
     "Ludhiana":   "ludhiana",
+    "Jalandhar":  "jalandhar",
+    "Patiala":    "patiala",
     "Delhi":      "delhi",
     "Lucknow":    "lucknow",
     "Kanpur":     "kanpur",
+    "Agra":       "agra",
+    "Noida":      "noida",
+    "Ghaziabad":  "ghaziabad",
 }
-
-# ── Monthly AQI baselines from training data (city_day.csv) ────
-CITY_BASELINES = {
-    "Delhi":      {1:175,2:150,3:130,4:120,5:115,6:110,7:100,8:105,9:120,10:175,11:210,12:185},
-    "Amritsar":   {1:140,2:120,3:105,4:100,5:95, 6:90, 7:85, 8:90, 9:100,10:130,11:160,12:145},
-    "Chandigarh": {1:120,2:105,3:92, 4:95, 5:88, 6:80, 7:75, 8:80, 9:90, 10:110,11:140,12:125},
-    "Ludhiana":   {1:145,2:125,3:110,4:105,5:100,6:92, 7:88, 8:92, 9:105,10:135,11:165,12:150},
-    "Lucknow":    {1:185,2:160,3:140,4:130,5:120,6:115,7:105,8:110,9:125,10:165,11:190,12:180},
-    "Kanpur":     {1:195,2:170,3:150,4:140,5:130,6:125,7:115,8:120,9:135,10:175,11:200,12:190},
-}
-_DEFAULT_BL = {1:140,2:120,3:105,4:100,5:110,6:100,7:95,8:100,9:110,10:140,11:165,12:150}
-
-
-def _baseline(city, month):
-    return CITY_BASELINES.get(city, _DEFAULT_BL).get(month, 110)
 
 
 def _season_info(month, day):
@@ -78,7 +72,6 @@ def _season_info(month, day):
                 "days_into": into, "days_remaining": remaining,
             }
 
-    # Off-season — find next upcoming season
     today_d  = date.today()
     upcoming = []
     for key, s in SEASONS.items():
@@ -140,8 +133,75 @@ def _wind_dir_delhi():
     return None
 
 
+async def _query_city_spikes(cities: list):
+    """
+    Query 24h avg and 7-day avg AQI per city from own DB.
+    Returns (dict of city -> spike info, error_str or None).
+    Cities with no 24h data are skipped gracefully.
+    Falls back to ({}, error) on any DB failure.
+    """
+    try:
+        now        = datetime.now(timezone.utc)
+        cutoff_24h = now - timedelta(hours=24)
+        cutoff_7d  = now - timedelta(days=7)
+
+        async with AsyncSessionLocal() as session:
+            res_24h = await session.execute(
+                select(
+                    AQIReading.city,
+                    func.avg(AQIReading.aqi).label("avg_aqi"),
+                    func.count(AQIReading.id).label("cnt"),
+                )
+                .where(
+                    AQIReading.city.in_(cities),
+                    AQIReading.timestamp >= cutoff_24h,
+                )
+                .group_by(AQIReading.city)
+            )
+            rows_24h = {r.city: {"avg": float(r.avg_aqi), "cnt": r.cnt} for r in res_24h}
+
+            res_7d = await session.execute(
+                select(
+                    AQIReading.city,
+                    func.avg(AQIReading.aqi).label("avg_aqi"),
+                    func.count(AQIReading.id).label("cnt"),
+                )
+                .where(
+                    AQIReading.city.in_(cities),
+                    AQIReading.timestamp >= cutoff_7d,
+                )
+                .group_by(AQIReading.city)
+            )
+            rows_7d = {r.city: {"avg": float(r.avg_aqi), "cnt": r.cnt} for r in res_7d}
+
+        result = {}
+        for city in cities:
+            d24 = rows_24h.get(city)
+            d7d = rows_7d.get(city)
+            # Skip cities with no 24h data or no 7-day baseline
+            if not d24 or not d7d or d24["cnt"] == 0 or d7d["cnt"] == 0:
+                continue
+            current_avg  = d24["avg"]
+            baseline_avg = d7d["avg"]
+            if not baseline_avg or baseline_avg <= 0:
+                continue
+            pct_above = ((current_avg - baseline_avg) / baseline_avg) * 100
+            result[city] = {
+                "current_avg":  round(current_avg, 1),
+                "baseline_avg": round(baseline_avg, 1),
+                "pct_above":    round(pct_above, 1),
+                "spiking_20":   pct_above > 20,
+                "spiking_15":   pct_above > 15,
+            }
+
+        return result, None
+
+    except Exception as e:
+        return {}, str(e)
+
+
 @router.get("/cropburn/status")
-def get_cropburn_status():
+async def get_cropburn_status():
     cache_key = "cropburn"
     now = time.time()
     if cache_key in _cache:
@@ -155,49 +215,32 @@ def get_cropburn_status():
     season        = _season_info(month, day)
     season_active = season["active"]
 
-    # Fetch live AQI for all monitored cities
-    city_aqi_raw = {c: _fetch_aqi(c) for c in ALL_MONITOR}
-    aqi_available = any(v is not None for v in city_aqi_raw.values())
+    # ── Query own DB for spike signals ────────────────────────
+    db_data, db_error = await _query_city_spikes(ALL_MONITOR)
+    db_available = len(db_data) > 0
 
-    # Build per-city enriched data
-    city_data = {}
-    for city, aqi in city_aqi_raw.items():
-        if aqi is not None:
-            bl  = _baseline(city, month)
-            pct = round(((aqi - bl) / bl) * 100)
-            city_data[city] = {
-                "aqi": aqi,
-                "baseline": bl,
-                "pct_above_baseline": pct,
-                "spiking": aqi > bl * 1.6,
-            }
-        else:
-            city_data[city] = None
+    # ── Signal 1: 2+ Punjab cities >20% above 7-day baseline (40 pts) ──
+    punjab_spiking = [
+        c for c in PUNJAB_CITIES
+        if db_data.get(c, {}).get("spiking_20", False)
+    ]
+    signal1 = len(punjab_spiking) >= 2
 
-    valid = {c: v for c, v in city_data.items() if v is not None}
+    # ── Signal 2: 3+ downwind cities >15% above 7-day baseline (35 pts) ─
+    downwind_spiking = [
+        c for c in DOWNWIND_CITIES
+        if db_data.get(c, {}).get("spiking_15", False)
+    ]
+    signal2 = len(downwind_spiking) >= 3
 
-    punjab_spiking    = [c for c in PUNJAB_CITIES if valid.get(c, {}).get("spiking")]
-    all_spiking       = [c for c in ALL_MONITOR   if valid.get(c, {}).get("spiking")]
-    delhi_spiking     = valid.get("Delhi", {}).get("spiking", False)
-    early_warn_pattern = len(punjab_spiking) >= 2 and not delhi_spiking
-    regional_pattern   = len(all_spiking) >= 3
+    # ── Signal 3: Burning season active (25 pts) ──────────────
+    signal3 = season_active
 
-    if valid:
-        peak_city = max(valid, key=lambda c: valid[c]["aqi"])
-        peak_aqi  = valid[peak_city]["aqi"]
-        peak_pct  = valid[peak_city]["pct_above_baseline"]
-    else:
-        peak_city, peak_aqi, peak_pct = None, 0, 0
-
-    wind_dir     = _wind_dir_delhi()
-    wind_from_nw = wind_dir in ("NW", "NNW", "WNW") if wind_dir else False
-
-    # Confidence score
+    # ── Confidence: sum of confirmed signals, max 100 ─────────
     confidence = 0
-    if season_active:             confidence += 40
-    if len(punjab_spiking) >= 2:  confidence += 25
-    if regional_pattern:          confidence += 20
-    if wind_from_nw:              confidence += 15
+    if signal1: confidence += 40
+    if signal2: confidence += 35
+    if signal3: confidence += 25
     confidence = min(confidence, 100)
 
     if confidence >= 70:   conf_level = "HIGH"
@@ -205,7 +248,37 @@ def get_cropburn_status():
     elif confidence >= 20: conf_level = "LOW"
     else:                  conf_level = "NONE"
 
-    # Status
+    # ── Fetch live WAQI AQI for display ───────────────────────
+    city_aqi_raw = {c: _fetch_aqi(c) for c in ALL_MONITOR}
+    aqi_available = any(v is not None for v in city_aqi_raw.values())
+
+    city_data = {}
+    for city in ALL_MONITOR:
+        live_aqi = city_aqi_raw.get(city)
+        db_city  = db_data.get(city)
+        if live_aqi is not None or db_city:
+            city_data[city] = {
+                "aqi":              live_aqi,
+                "db_current_avg":   db_city["current_avg"]  if db_city else None,
+                "db_baseline_avg":  db_city["baseline_avg"] if db_city else None,
+                "pct_above_baseline": db_city["pct_above"]  if db_city else None,
+                "spiking": (
+                    db_city["spiking_20"] if city in PUNJAB_CITIES and db_city else
+                    db_city["spiking_15"] if db_city else False
+                ),
+            }
+        else:
+            city_data[city] = None
+
+    all_spiking          = punjab_spiking + downwind_spiking
+    north_india_affected = len(all_spiking)
+
+    wind_dir     = _wind_dir_delhi()
+    wind_from_nw = wind_dir in ("NW", "NNW", "WNW") if wind_dir else False
+
+    early_warn_pattern = len(punjab_spiking) >= 2 and "Delhi" not in downwind_spiking
+    regional_pattern   = north_india_affected >= 3
+
     if not season_active or confidence < 20:
         status = "CLEAR"
     elif confidence >= 70:
@@ -215,7 +288,6 @@ def get_cropburn_status():
     else:
         status = "CLEAR"
 
-    # Health warning
     HW = {
         "ACTIVE_BURN":    ("CRITICAL",
                            "Crop burning smoke detected across North India",
@@ -232,38 +304,36 @@ def get_cropburn_status():
     }
     hw_level, hw_msg, hw_action = HW[status]
 
-    affected = sorted(
-        [c for c in valid if valid[c]["spiking"]],
-        key=lambda c: valid[c]["aqi"], reverse=True
-    )
-
     result = {
-        "status":           status,
-        "confidence":       confidence,
-        "confidence_level": conf_level,
-        "season":           season["season"],
-        "season_active":    season_active,
+        "status":             status,
+        "confidence":         confidence,
+        "confidence_level":   conf_level,
+        "season":             season["season"],
+        "season_active":      season_active,
         "aqi_data_available": aqi_available,
+        "db_data_available":  db_available,
+        "db_error":           db_error,
         "detection_signals": {
-            "season_active":         season_active,
-            "season_name":           season.get("name", ""),
-            "season_dates":          season.get("dates", ""),
-            "season_crop":           season.get("crop", ""),
-            "season_states":         season.get("states", ""),
-            "days_into_season":      season.get("days_into", 0),
-            "days_remaining":        season.get("days_remaining", 0),
-            "next_season":           season.get("next_season"),
-            "next_season_start":     season.get("next_season_start"),
-            "days_until_next":       season.get("days_until_next"),
-            "punjab_cities_spiking": punjab_spiking,
-            "north_india_affected":  len(all_spiking),
-            "peak_aqi":              peak_aqi,
-            "peak_city":             peak_city,
-            "baseline_exceeded_pct": peak_pct,
-            "wind_direction":        wind_dir,
-            "wind_from_nw":          wind_from_nw,
-            "early_warning_pattern": early_warn_pattern,
-            "regional_pattern":      regional_pattern,
+            "season_active":           season_active,
+            "season_name":             season.get("name", ""),
+            "season_dates":            season.get("dates", ""),
+            "season_crop":             season.get("crop", ""),
+            "season_states":           season.get("states", ""),
+            "days_into_season":        season.get("days_into", 0),
+            "days_remaining":          season.get("days_remaining", 0),
+            "next_season":             season.get("next_season"),
+            "next_season_start":       season.get("next_season_start"),
+            "days_until_next":         season.get("days_until_next"),
+            "punjab_cities_spiking":   punjab_spiking,
+            "downwind_cities_spiking": downwind_spiking,
+            "north_india_affected":    north_india_affected,
+            "wind_direction":          wind_dir,
+            "wind_from_nw":            wind_from_nw,
+            "early_warning_pattern":   early_warn_pattern,
+            "regional_pattern":        regional_pattern,
+            "signal1_punjab_active":   signal1,
+            "signal2_downwind_active": signal2,
+            "signal3_season_active":   signal3,
         },
         "health_warning": {
             "level":   hw_level,
@@ -277,10 +347,10 @@ def get_cropburn_status():
                 {"icon": "🤰", "group": "Pregnant",        "advice": "Avoid outdoor exposure entirely"},
             ],
         },
-        "city_aqi":       city_data,
-        "affected_cities": affected,
-        "source":         "WAQI live AQI + seasonal calendar + OpenWeatherMap wind",
-        "last_updated":   datetime.utcnow().isoformat(),
+        "city_aqi":        city_data,
+        "affected_cities": all_spiking,
+        "data_source":     "Own DB + WAQI live + seasonal calendar",
+        "last_updated":    datetime.utcnow().isoformat(),
     }
 
     _cache[cache_key] = (now, result)
