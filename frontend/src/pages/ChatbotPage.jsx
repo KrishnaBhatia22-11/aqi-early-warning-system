@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
 import { aqiCategory } from "../utils/aqiCategory";
 import { chatWithAI } from "../utils/api";
 
 const SUGGESTIONS = [
-  "What is AQI?",
-  "Which city has worst air today?",
-  "Is it safe to exercise in Delhi?",
-  "What causes PM2.5 pollution?",
-  "How accurate is your ML model?",
-  "What does AQI 300 mean for my health?",
+  "Is it safe to take my child outside in Delhi today?",
+  "Is Punjab crop burning affecting North India right now?",
+  "Which city has the worst air quality right now?",
+  "Should I wear a mask in Faridabad today?",
+  "What will Delhi's AQI be like tonight?",
+  "How many cities are in the danger zone right now?",
 ];
 
 function localReply(msg, cities) {
@@ -117,12 +118,25 @@ export default function ChatbotPage({ cities }) {
                   <div className="chat-bubble-avatar">🤖</div>
                 )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: m.role === "ai" ? "flex-start" : "flex-end" }}>
-                  <div
-                    className="chat-bubble"
-                    dangerouslySetInnerHTML={{
-                      __html: m.text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                    }}
-                  />
+                  <div className="chat-bubble">
+                    {m.role === "ai" ? (
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p style={{ margin: "6px 0", lineHeight: 1.7 }}>{children}</p>,
+                          ul: ({ children }) => <ul style={{ paddingLeft: 20, margin: "8px 0" }}>{children}</ul>,
+                          ol: ({ children }) => <ol style={{ paddingLeft: 20, margin: "8px 0" }}>{children}</ol>,
+                          li: ({ children }) => <li style={{ margin: "4px 0", lineHeight: 1.6 }}>{children}</li>,
+                          strong: ({ children }) => <strong style={{ color: "white", fontWeight: 700 }}>{children}</strong>,
+                          b: ({ children }) => <b style={{ color: "white", fontWeight: 700 }}>{children}</b>,
+                          h1: ({ children }) => <h1 style={{ color: "#f97316", margin: "10px 0 6px" }}>{children}</h1>,
+                          h2: ({ children }) => <h2 style={{ color: "#f97316", margin: "10px 0 6px" }}>{children}</h2>,
+                          h3: ({ children }) => <h3 style={{ color: "#f97316", margin: "10px 0 6px" }}>{children}</h3>,
+                        }}
+                      >
+                        {m.text}
+                      </ReactMarkdown>
+                    ) : m.text}
+                  </div>
                   {m.role === "ai" && m.source && (
                     <span className="mono" style={{ fontSize: 9, color: m.source === "groq" ? "#34d27a" : "rgba(255,255,255,0.25)", letterSpacing: "0.1em" }}>
                       {m.source === "groq" ? "● GROQ AI" : "● LOCAL"}
