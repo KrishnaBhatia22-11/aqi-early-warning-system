@@ -395,15 +395,24 @@ export default function CropBurnPage({ setPage }) {
                 <div className={`cb-health-level ${hw.level}`}>{hw.level} RISK</div>
                 <div className="cb-health-msg">{hw.message}</div>
                 <div className="cb-health-action">{hw.action}</div>
-                <div className="cb-vuln-grid">
-                  {VULN.map(v => (
-                    <div key={v.group} className="cb-vuln-card">
-                      <div className="cb-vuln-icon">{v.icon}</div>
-                      <div className="cb-vuln-group">{v.group}</div>
-                      <div className="cb-vuln-advice">{v.advice}</div>
-                    </div>
-                  ))}
-                </div>
+                {data.confidence < 50 ? (
+                  <div style={{ marginTop: 16, padding: "16px 20px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.4)", borderRadius: 12, color: "#22c55e", fontSize: 14, lineHeight: 1.6 }}>
+                    ✓ Air quality not significantly affected by crop burning right now. No special precautions needed beyond your city's normal AQI guidelines.
+                  </div>
+                ) : (
+                  <div className="cb-vuln-grid">
+                    {(data.confidence < 70
+                      ? VULN.filter(v => ["Children", "Elderly", "Asthma patients"].includes(v.group))
+                      : VULN
+                    ).map(v => (
+                      <div key={v.group} className="cb-vuln-card">
+                        <div className="cb-vuln-icon">{v.icon}</div>
+                        <div className="cb-vuln-group">{v.group}</div>
+                        <div className="cb-vuln-advice">{v.advice}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

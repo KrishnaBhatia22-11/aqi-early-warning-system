@@ -61,6 +61,22 @@ def _in_bbox(bbox, geo):
         return True
 
 
+# India's geographic bounding box
+_INDIA_BBOX = (8.0, 37.5, 68.0, 97.5)  # lat_min, lat_max, lon_min, lon_max
+
+
+def _in_india(geo):
+    """Return True if geo [lat, lon] is within India's bounding box, or if no coords."""
+    if not geo or len(geo) < 2:
+        return True
+    try:
+        lat, lon = float(geo[0]), float(geo[1])
+        lat_min, lat_max, lon_min, lon_max = _INDIA_BBOX
+        return lat_min <= lat <= lat_max and lon_min <= lon <= lon_max
+    except (TypeError, ValueError):
+        return True
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # PUBLIC API
 # ─────────────────────────────────────────────────────────────────────────────
@@ -188,6 +204,7 @@ def _fetch_waqi_multi(city_name):
 
         # Parse with freshness weighting
         station_data = []
+        excluded_stations = []
         for uid, r in raw_results:
             if r is None:
                 continue
@@ -198,7 +215,24 @@ def _fetch_waqi_multi(city_name):
                 aqi = int(aqi_raw)
             except (ValueError, TypeError):
                 continue
-            if aqi <= 0 or aqi > 999:
+
+            stn_name_raw = r.get('city', {}).get('name') or station_geo_map.get(uid, 'Unknown')
+            geo = r.get('city', {}).get('geo', [])
+
+            # Discard stations outside India (prevents French/foreign stations appearing for Indian cities)
+            if geo and len(geo) >= 2:
+                try:
+                    lat, lon = float(geo[0]), float(geo[1])
+                    if not _in_india(geo):
+                        print(f"Discarded foreign station: {stn_name_raw} at {lat},{lon} for city {city_name}")
+                        excluded_stations.append({'name': stn_name_raw, 'reason': f'outside India ({lat:.2f},{lon:.2f})'})
+                        continue
+                except (TypeError, ValueError):
+                    pass
+
+            # Discard invalid AQI values — 999 is a sensor malfunction sentinel; valid range is 1–500
+            if aqi <= 0 or aqi > 500:
+                excluded_stations.append({'name': stn_name_raw, 'reason': f'invalid AQI {aqi} (valid range: 1–500)'})
                 continue
 
             ts = r.get('time', {}).get('v')
@@ -214,7 +248,7 @@ def _fetch_waqi_multi(city_name):
                 weight = 1.0
 
             iaqi         = r.get('iaqi', {})
-            station_name = r.get('city', {}).get('name') or station_geo_map.get(uid, 'Unknown')
+            station_name = stn_name_raw
             station_data.append({
                 'name':    station_name,
                 'aqi':     aqi,
@@ -229,6 +263,12 @@ def _fetch_waqi_multi(city_name):
             })
 
         if not station_data:
+            if excluded_stations:
+                return {
+                    'success': False, 'data_available': False, 'city': city_name,
+                    'no_data': True, 'excluded_stations': excluded_stations,
+                    'error': 'All stations filtered out (invalid AQI or outside India)',
+                }
             return None
 
         # Remove outliers: |aqi - median| > 100
@@ -239,7 +279,7 @@ def _fetch_waqi_multi(city_name):
         if not station_data:
             return None
 
-        # Weighted average
+        # Weighted average (after outlier removal)
         total_w  = sum(s['weight'] for s in station_data)
         city_aqi = round(sum(s['aqi'] * s['weight'] for s in station_data) / total_w)
 
@@ -287,6 +327,7 @@ def _fetch_waqi_multi(city_name):
             'most_polluted_aqi':    most_polluted['aqi'],
             'city_spread':          most_polluted['aqi'] - cleanest['aqi'],
             'data_quality':         quality,
+            'excluded_stations':    excluded_stations,
             'source':               f"WAQI — avg of {n} CPCB stations",
             'last_updated':         station_data[0].get('updated', 'Unknown'),
         }
@@ -345,8 +386,10 @@ def _fetch_cpcb(city_name):
             raw = s.get('aqi') or s.get('AQI') or s.get('aqiValue')
             if raw:
                 try:
-                    aqis.append(int(float(raw)))
-                    stn_names.append(s.get('stationName', 'CPCB station'))
+                    val = int(float(raw))
+                    if 1 <= val <= 500:
+                        aqis.append(val)
+                        stn_names.append(s.get('stationName', 'CPCB station'))
                 except (ValueError, TypeError):
                     pass
 
