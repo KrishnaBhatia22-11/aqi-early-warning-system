@@ -1,4 +1,5 @@
 import math
+import re
 import requests
 import time
 import sys
@@ -79,21 +80,35 @@ def _in_india(geo):
         return True
 
 
-# Foreign station name keywords — discard any station whose name contains these
-_FOREIGN_KEYWORDS = [
-    "japan", "china", "france", "korea", "usa", "united states", "uk",
-    "united kingdom", "germany", "australia", "canada", "russia", "thailand",
-    "vietnam", "indonesia", "malaysia", "singapore", "taiwan", "hong kong",
-    "italia", "italy", "españa", "spain", "brasil", "brazil",
-    "pakistan", "bangladesh",
-    "prefecture", "province",
+# Short keywords matched as whole words only — prevents "pusa" matching "usa",
+# "kukrail" matching "uk", etc.
+_FOREIGN_KEYWORDS_WORDS = {
+    "japan", "china", "france", "korea", "usa", "uk",
+    "germany", "australia", "canada", "russia", "thailand",
+    "vietnam", "indonesia", "malaysia", "singapore", "taiwan",
+    "italia", "italy", "brazil", "brasil", "pakistan", "bangladesh",
+    "prefecture", "province", "spain",
+}
+
+# Multi-word / special patterns — safe as substrings (too distinctive to false-positive)
+_FOREIGN_KEYWORDS_SUBSTR = [
+    "united kingdom", "united states", "hong kong",
+    "kochi prefecture", "kochi-ken", "高知",
 ]
 
 
 def _is_foreign_name(name):
-    """Return True if the station name contains a known non-Indian keyword."""
+    """
+    Return True if the station name contains a foreign keyword.
+    Short single-word keywords are matched as whole words only (word-boundary split)
+    so that Indian names like 'Pusa' or 'Kukrail' are never false-positives.
+    """
     lower = (name or "").lower()
-    return any(kw in lower for kw in _FOREIGN_KEYWORDS)
+    if any(s in lower for s in _FOREIGN_KEYWORDS_SUBSTR):
+        return True
+    tokens = set(re.split(r'[^a-z0-9]+', lower))
+    tokens.discard('')
+    return bool(tokens & _FOREIGN_KEYWORDS_WORDS)
 
 
 def _haversine_km(lat1, lon1, lat2, lon2):
@@ -127,6 +142,24 @@ def _hours_since(r, now_unix):
     return 0
 
 
+def _result_is_stale(result):
+    """
+    Return True if result['last_updated'] is more than 48 hours ago.
+    Applied after ALL fetch layers so the single-station path is covered too.
+    """
+    ts = (result or {}).get('last_updated', '')
+    if not ts or ts in ('Last hour', 'Unknown', ''):
+        return False
+    now = datetime.now(timezone.utc)
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            ts_dt = datetime.strptime(ts, fmt).replace(tzinfo=timezone.utc)
+            return (now - ts_dt).total_seconds() / 3600 > 48
+        except (ValueError, TypeError):
+            continue
+    return False
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # PUBLIC API
 # ─────────────────────────────────────────────────────────────────────────────
@@ -148,8 +181,14 @@ def fetch_city_aqi(city_name):
     result = _fetch_waqi_multi(city_name) or _fetch_cpcb(city_name) or _fetch_waqi_single(city_name)
 
     if result and result.get('success'):
-        _cache[city_name] = (now, result)
-        return result
+        # Final staleness gate — applies to ALL layers including single-station fallback.
+        # Pune was returning 2021 data via the single-station path which had no staleness check.
+        if _result_is_stale(result):
+            print(f"[Stale] {city_name}: data from {result.get('last_updated')} is >48h old — discarding")
+            result = None
+        else:
+            _cache[city_name] = (now, result)
+            return result
 
     # Layer 3 — stale cache beats "no data"
     if city_name in _cache:
@@ -517,6 +556,29 @@ def _fetch_waqi_single(city_name):
         aqi  = int(aqi_raw)
         iaqi = station.get('iaqi', {})
         stn_name = station.get('city', {}).get('name', city_name)
+
+        # Apply the same foreign-name and distance guards as the multi-station path.
+        # Without this, Kochi fell through to /feed/kochi/ → Japanese station,
+        # and Raipur fell through to /feed/raipur/ → Dehradun station.
+        if _is_foreign_name(stn_name):
+            print(f"[Single] Discarded foreign station: {stn_name} for city {city_name}")
+            return None
+
+        station_geo = station.get('city', {}).get('geo', [])
+        city_coords = CITY_COORDS.get(city_name)
+        if city_coords and station_geo and len(station_geo) >= 2:
+            try:
+                stn_lat, stn_lon = float(station_geo[0]), float(station_geo[1])
+                if stn_lat != 0 and stn_lon != 0:
+                    dist_km = _haversine_km(
+                        city_coords['lat'], city_coords['lon'], stn_lat, stn_lon
+                    )
+                    print(f"[Single] {city_name}: station '{stn_name}' is {dist_km:.0f}km away")
+                    if dist_km > 150:
+                        print(f"[Single] Discarded distant station: {stn_name} at {dist_km:.0f}km from {city_name}")
+                        return None
+            except (TypeError, ValueError):
+                pass
 
         return {
             'success':              True,
