@@ -1,3 +1,4 @@
+import math
 import requests
 import time
 import sys
@@ -5,6 +6,7 @@ import os
 import statistics
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from config.settings import WAQI_API_KEY, CITY_COORDS
@@ -75,6 +77,52 @@ def _in_india(geo):
         return lat_min <= lat <= lat_max and lon_min <= lon <= lon_max
     except (TypeError, ValueError):
         return True
+
+
+# Foreign station name keywords — discard any station whose name contains these
+_FOREIGN_KEYWORDS = [
+    "japan", "china", "france", "korea", "usa", "united states", "uk",
+    "united kingdom", "germany", "australia", "canada", "russia", "thailand",
+    "vietnam", "indonesia", "malaysia", "singapore", "taiwan", "hong kong",
+    "prefecture", "province",
+]
+
+
+def _is_foreign_name(name):
+    """Return True if the station name contains a known non-Indian keyword."""
+    lower = (name or "").lower()
+    return any(kw in lower for kw in _FOREIGN_KEYWORDS)
+
+
+def _haversine_km(lat1, lon1, lat2, lon2):
+    """Great-circle distance in km between two lat/lon points."""
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) ** 2
+         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2)
+    return 2 * R * math.asin(math.sqrt(a))
+
+
+def _hours_since(r, now_unix):
+    """
+    Return how many hours ago this station's reading was taken.
+    Tries time.v (Unix timestamp) first; falls back to parsing time.s string.
+    Returns 0 (treat as fresh) if timestamp is absent or unparseable.
+    """
+    ts_unix = r.get('time', {}).get('v')
+    if ts_unix:
+        return (now_unix - ts_unix) / 3600
+
+    ts_str = r.get('time', {}).get('s', '')
+    if ts_str:
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+            try:
+                ts_dt = datetime.strptime(ts_str, fmt).replace(tzinfo=timezone.utc)
+                return (datetime.now(timezone.utc) - ts_dt).total_seconds() / 3600
+            except (ValueError, TypeError):
+                continue
+    return 0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -217,28 +265,52 @@ def _fetch_waqi_multi(city_name):
                 continue
 
             stn_name_raw = r.get('city', {}).get('name') or station_geo_map.get(uid, 'Unknown')
-            geo = r.get('city', {}).get('geo', [])
+            geo          = r.get('city', {}).get('geo', [])
+            ts_str       = r.get('time', {}).get('s', 'Unknown')
 
-            # Only discard when we can CONFIRM the station is outside India.
-            # Stations with missing, zero, or unparseable coords are assumed Indian and kept.
-            if geo and len(geo) >= 2:
-                try:
-                    lat, lon = float(geo[0]), float(geo[1])
-                    if lat != 0 and lon != 0 and not _in_india(geo):
-                        print(f"Discarded foreign station: {stn_name_raw} at {lat},{lon} for city {city_name}")
-                        excluded_stations.append({'name': stn_name_raw, 'reason': f'outside India ({lat:.2f},{lon:.2f})'})
-                        continue
-                except (TypeError, ValueError):
-                    pass  # Unparseable coords → assume Indian → keep
-
-            # Discard invalid AQI values — 999 is a sensor malfunction sentinel; valid range is 1–500
+            # CHECK 1 — Invalid AQI sentinel (999 = sensor malfunction; valid range 1–500)
             if aqi <= 0 or aqi > 500:
                 excluded_stations.append({'name': stn_name_raw, 'reason': f'invalid AQI {aqi} (valid range: 1–500)'})
                 continue
 
-            ts = r.get('time', {}).get('v')
-            hours_ago = (now_unix - ts) / 3600 if ts else 0
+            # CHECK 2 — Stale data: discard if reading is > 48 hours old.
+            # _hours_since() parses time.v (Unix) with time.s string as fallback,
+            # so stations that return no Unix timestamp are no longer treated as fresh.
+            hours_ago = _hours_since(r, now_unix)
+            if hours_ago > 48:
+                excluded_stations.append({'name': stn_name_raw, 'reason': f'stale data — last updated {ts_str}'})
+                continue
 
+            # CHECK 3 — Foreign station name (e.g. "Kera, Kochi, Kochi Prefecture, Japan")
+            if _is_foreign_name(stn_name_raw):
+                print(f"Discarded foreign-named station: {stn_name_raw} for city {city_name}")
+                excluded_stations.append({'name': stn_name_raw, 'reason': f'foreign station name'})
+                continue
+
+            # CHECK 4 & 5 — Coordinate validation (only applied when non-zero coords exist)
+            stn_lat, stn_lon = None, None
+            if geo and len(geo) >= 2:
+                try:
+                    stn_lat, stn_lon = float(geo[0]), float(geo[1])
+                except (TypeError, ValueError):
+                    pass  # Unparseable → no coord checks → keep
+
+            if stn_lat is not None and stn_lon is not None and stn_lat != 0 and stn_lon != 0:
+                # CHECK 4 — Outside India bounding box
+                if not _in_india([stn_lat, stn_lon]):
+                    print(f"Discarded foreign station: {stn_name_raw} at {stn_lat:.4f},{stn_lon:.4f} for city {city_name}")
+                    excluded_stations.append({'name': stn_name_raw, 'reason': f'outside India ({stn_lat:.2f},{stn_lon:.2f})'})
+                    continue
+                # CHECK 5 — Station is > 100 km from the city's known centre
+                city_coords = CITY_COORDS.get(city_name)
+                if city_coords:
+                    dist_km = _haversine_km(city_coords['lat'], city_coords['lon'], stn_lat, stn_lon)
+                    if dist_km > 100:
+                        print(f"Discarded distant station: {stn_name_raw} at {dist_km:.0f}km from {city_name}")
+                        excluded_stations.append({'name': stn_name_raw, 'reason': f'too far from {city_name} ({dist_km:.0f}km)'})
+                        continue
+
+            # Freshness weighting for the weighted average
             if hours_ago > 4:
                 continue
             elif hours_ago > 2:
