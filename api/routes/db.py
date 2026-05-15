@@ -57,3 +57,41 @@ async def db_all():
         ]
     except Exception as e:
         return {"status": "error", "detail": str(e)}
+
+
+@router.get("/db/cleanup")
+async def db_cleanup():
+    """
+    Delete known-bad historical rows caused by stale data, foreign stations,
+    and city mismatches that were stored before the validation fixes.
+    """
+    try:
+        async with AsyncSessionLocal() as session:
+            r_pune = await session.execute(
+                text("DELETE FROM aqi_readings WHERE city = 'Pune' AND aqi > 150")
+            )
+            r_raipur = await session.execute(
+                text("DELETE FROM aqi_readings WHERE city = 'Raipur'")
+            )
+            r_kochi = await session.execute(
+                text("DELETE FROM aqi_readings WHERE city = 'Kochi'")
+            )
+            r_ranchi = await session.execute(
+                text("DELETE FROM aqi_readings WHERE city = 'Ranchi'")
+            )
+            r_chandigarh = await session.execute(
+                text("DELETE FROM aqi_readings WHERE city = 'Chandigarh' AND aqi > 200")
+            )
+            await session.commit()
+
+        deleted = {
+            "Pune":           r_pune.rowcount,
+            "Raipur":         r_raipur.rowcount,
+            "Kochi":          r_kochi.rowcount,
+            "Ranchi":         r_ranchi.rowcount,
+            "Chandigarh_bad": r_chandigarh.rowcount,
+        }
+        total = sum(deleted.values())
+        return {"cleaned": True, "deleted": deleted, "total_deleted": total}
+    except Exception as e:
+        return {"cleaned": False, "error": str(e)}

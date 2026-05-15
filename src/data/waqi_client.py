@@ -84,6 +84,8 @@ _FOREIGN_KEYWORDS = [
     "japan", "china", "france", "korea", "usa", "united states", "uk",
     "united kingdom", "germany", "australia", "canada", "russia", "thailand",
     "vietnam", "indonesia", "malaysia", "singapore", "taiwan", "hong kong",
+    "italia", "italy", "españa", "spain", "brasil", "brazil",
+    "pakistan", "bangladesh",
     "prefecture", "province",
 ]
 
@@ -301,13 +303,13 @@ def _fetch_waqi_multi(city_name):
                     print(f"Discarded foreign station: {stn_name_raw} at {stn_lat:.4f},{stn_lon:.4f} for city {city_name}")
                     excluded_stations.append({'name': stn_name_raw, 'reason': f'outside India ({stn_lat:.2f},{stn_lon:.2f})'})
                     continue
-                # CHECK 5 — Station is > 100 km from the city's known centre
+                # CHECK 5 — Station is > 150 km from the city's known centre
                 city_coords = CITY_COORDS.get(city_name)
                 if city_coords:
                     dist_km = _haversine_km(city_coords['lat'], city_coords['lon'], stn_lat, stn_lon)
-                    if dist_km > 100:
+                    if dist_km > 150:
                         print(f"Discarded distant station: {stn_name_raw} at {dist_km:.0f}km from {city_name}")
-                        excluded_stations.append({'name': stn_name_raw, 'reason': f'too far from {city_name} ({dist_km:.0f}km)'})
+                        excluded_stations.append({'name': stn_name_raw, 'reason': f'station too far: {dist_km:.0f}km from {city_name}'})
                         continue
 
             # Freshness weighting for the weighted average
