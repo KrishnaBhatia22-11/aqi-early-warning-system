@@ -219,16 +219,17 @@ def _fetch_waqi_multi(city_name):
             stn_name_raw = r.get('city', {}).get('name') or station_geo_map.get(uid, 'Unknown')
             geo = r.get('city', {}).get('geo', [])
 
-            # Discard stations outside India (prevents French/foreign stations appearing for Indian cities)
+            # Only discard when we can CONFIRM the station is outside India.
+            # Stations with missing, zero, or unparseable coords are assumed Indian and kept.
             if geo and len(geo) >= 2:
                 try:
                     lat, lon = float(geo[0]), float(geo[1])
-                    if not _in_india(geo):
+                    if lat != 0 and lon != 0 and not _in_india(geo):
                         print(f"Discarded foreign station: {stn_name_raw} at {lat},{lon} for city {city_name}")
                         excluded_stations.append({'name': stn_name_raw, 'reason': f'outside India ({lat:.2f},{lon:.2f})'})
                         continue
                 except (TypeError, ValueError):
-                    pass
+                    pass  # Unparseable coords → assume Indian → keep
 
             # Discard invalid AQI values — 999 is a sensor malfunction sentinel; valid range is 1–500
             if aqi <= 0 or aqi > 500:
@@ -263,12 +264,10 @@ def _fetch_waqi_multi(city_name):
             })
 
         if not station_data:
+            # Return None so fetch_city_aqi falls through to CPCB and single-station layers.
+            # A truthy dict here would short-circuit the `or` chain and block all fallbacks.
             if excluded_stations:
-                return {
-                    'success': False, 'data_available': False, 'city': city_name,
-                    'no_data': True, 'excluded_stations': excluded_stations,
-                    'error': 'All stations filtered out (invalid AQI or outside India)',
-                }
+                print(f"[WAQI Multi] {city_name}: all {len(excluded_stations)} station(s) filtered out — {[s['reason'] for s in excluded_stations]}")
             return None
 
         # Remove outliers: |aqi - median| > 100
