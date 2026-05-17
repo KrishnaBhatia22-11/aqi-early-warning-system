@@ -51,7 +51,7 @@ async def get_all_cities():
         try:
             result = await asyncio.wait_for(
                 loop.run_in_executor(None, fetch_city_aqi, city),
-                timeout=5.0,
+                timeout=10.0,
             )
         except asyncio.TimeoutError:
             result = {"success": False, "data_available": False, "no_data": True,

@@ -41,6 +41,13 @@ _BBOX_OVERRIDES = {
 }
 
 
+# Station name substrings to exclude per city — prevents neighbouring-city stations
+# from inflating a city's average (e.g. Greater Noida stations in Noida results).
+_STATION_NAME_BLACKLIST = {
+    "Noida": ["Greater Noida"],
+}
+
+
 def _get_bbox(city_name):
     if city_name in _BBOX_OVERRIDES:
         return _BBOX_OVERRIDES[city_name]
@@ -261,6 +268,15 @@ def _fetch_waqi_multi(city_name):
 
         # Prefer bbox+name overlap; fall back to bbox-only; last resort: name-only
         combined = [s for s in bbox_filtered if s in name_filtered] or bbox_filtered or name_filtered
+
+        # Drop blacklisted station names (e.g. Greater Noida stations from Noida results)
+        blacklist = _STATION_NAME_BLACKLIST.get(city_name, [])
+        if blacklist:
+            combined = [
+                s for s in combined
+                if not any(bl.lower() in (s.get('station', {}).get('name', '') or '').lower()
+                           for bl in blacklist)
+            ]
 
         # Hard cap: never more than 15 stations to keep fetches fast
         relevant = combined[:15]
