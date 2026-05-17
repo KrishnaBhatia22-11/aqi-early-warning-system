@@ -342,11 +342,13 @@ def _fetch_waqi_multi(city_name):
                     print(f"Discarded foreign station: {stn_name_raw} at {stn_lat:.4f},{stn_lon:.4f} for city {city_name}")
                     excluded_stations.append({'name': stn_name_raw, 'reason': f'outside India ({stn_lat:.2f},{stn_lon:.2f})'})
                     continue
-                # CHECK 5 — Station is > 150 km from the city's known centre
+                # CHECK 5 — Station is > 200 km from the city's known centre
                 city_coords = CITY_COORDS.get(city_name)
                 if city_coords:
                     dist_km = _haversine_km(city_coords['lat'], city_coords['lon'], stn_lat, stn_lon)
-                    if dist_km > 150:
+                    if city_name == "Dehradun":
+                        print(f"[Distance Debug] {stn_name_raw} is {dist_km:.0f}km from {city_name}")
+                    if dist_km > 200:
                         print(f"Discarded distant station: {stn_name_raw} at {dist_km:.0f}km from {city_name}")
                         excluded_stations.append({'name': stn_name_raw, 'reason': f'station too far: {dist_km:.0f}km from {city_name}'})
                         continue
@@ -559,7 +561,9 @@ def _fetch_waqi_single(city_name):
                         city_coords['lat'], city_coords['lon'], stn_lat, stn_lon
                     )
                     print(f"[Single] {city_name}: station '{stn_name}' is {dist_km:.0f}km away")
-                    if dist_km > 150:
+                    if city_name == "Dehradun":
+                        print(f"[Distance Debug] {stn_name} is {dist_km:.0f}km from {city_name}")
+                    if dist_km > 200:
                         print(f"[Single] Discarded distant station: {stn_name} at {dist_km:.0f}km from {city_name}")
                         return None
             except (TypeError, ValueError):
