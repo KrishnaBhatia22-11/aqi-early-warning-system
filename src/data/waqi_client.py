@@ -346,8 +346,6 @@ def _fetch_waqi_multi(city_name):
                 city_coords = CITY_COORDS.get(city_name)
                 if city_coords:
                     dist_km = _haversine_km(city_coords['lat'], city_coords['lon'], stn_lat, stn_lon)
-                    if city_name == "Dehradun":
-                        print(f"[Distance Debug] {stn_name_raw} is {dist_km:.0f}km from {city_name}")
                     if dist_km > 200:
                         print(f"Discarded distant station: {stn_name_raw} at {dist_km:.0f}km from {city_name}")
                         excluded_stations.append({'name': stn_name_raw, 'reason': f'station too far: {dist_km:.0f}km from {city_name}'})
@@ -561,10 +559,8 @@ def _fetch_waqi_single(city_name):
                         city_coords['lat'], city_coords['lon'], stn_lat, stn_lon
                     )
                     print(f"[Single] {city_name}: station '{stn_name}' is {dist_km:.0f}km away")
-                    if city_name == "Dehradun":
-                        print(f"[Distance Debug] {stn_name} is {dist_km:.0f}km from {city_name}")
-                    if dist_km > 200:
-                        print(f"[Single] Discarded distant station: {stn_name} at {dist_km:.0f}km from {city_name}")
+                    if dist_km > 300:
+                        print(f"[Single] Discarded distant station: {stn_name} at {dist_km:.0f}km from {city_name} (>300km)")
                         return None
             except (TypeError, ValueError):
                 pass
