@@ -458,23 +458,8 @@ _CPCB_TTL   = 3600
 
 
 def _scrape_cpcb_all():
-    now = time.time()
-    if now - _cpcb_cache['ts'] < _CPCB_TTL and _cpcb_cache['data']:
-        return _cpcb_cache['data']
-    try:
-        resp = requests.post(
-            "https://app.cpcbccr.com/caaqm-backend-ui/api/caaqm/getLastHourData",
-            json={}, timeout=15,
-            headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
-        )
-        raw      = resp.json()
-        stations = raw if isinstance(raw, list) else raw.get('data', [])
-        _cpcb_cache['data'] = stations
-        _cpcb_cache['ts']   = now
-        return stations
-    except Exception as e:
-        print(f"[CPCB] Scrape failed: {e}")
-        return _cpcb_cache.get('data', [])
+    # CPCB scraper disabled — endpoint changed, needs investigation
+    return None
 
 
 def _fetch_cpcb(city_name):

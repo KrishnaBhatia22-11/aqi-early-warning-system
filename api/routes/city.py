@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+import asyncio
 import sys
 import os
 
@@ -43,14 +44,36 @@ def get_city_aqi(city_name: str):
 # GET /cities — live data for ALL cities on map
 # ─────────────────────────────────────────────
 @router.get("/cities")
-def get_all_cities():
+async def get_all_cities():
+    loop = asyncio.get_event_loop()
+
+    async def fetch_one_async(city):
+        try:
+            result = await asyncio.wait_for(
+                loop.run_in_executor(None, fetch_city_aqi, city),
+                timeout=5.0,
+            )
+        except asyncio.TimeoutError:
+            result = {"success": False, "data_available": False, "no_data": True,
+                      "city": city, "aqi": None}
+        if result is None:
+            result = {"success": False, "data_available": False, "no_data": True,
+                      "city": city, "aqi": None}
+        result = dict(result)
+        result["lat"] = CITY_COORDS[city]["lat"]
+        result["lon"] = CITY_COORDS[city]["lon"]
+        return result
+
     try:
-        cities_data = fetch_all_cities()
+        tasks = [fetch_one_async(city) for city in CITY_COORDS.keys()]
+        cities_data = await asyncio.wait_for(asyncio.gather(*tasks), timeout=30.0)
         return {
             "success": True,
             "count":   len(cities_data),
-            "cities":  cities_data
+            "cities":  list(cities_data),
         }
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Global timeout: cities endpoint exceeded 30s")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
