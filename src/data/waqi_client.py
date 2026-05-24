@@ -50,6 +50,13 @@ _STATION_NAME_BLACKLIST = {
     "Raipur": ["Dehradun", "Doon University"],
 }
 
+# Alternate WAQI search keywords for cities that are poorly indexed under their
+# primary name (e.g. renamed cities). Tried in order after the primary search fails.
+# The bbox and distance checks always use the canonical city name / CITY_COORDS entry.
+_CITY_SEARCH_ALIASES = {
+    "Aurangabad": ["Chhatrapati Sambhajinagar", "Aurangabad Maharashtra", "sambhajinagar"],
+}
+
 
 def _get_bbox(city_name):
     if city_name in _BBOX_OVERRIDES:
@@ -190,6 +197,17 @@ def fetch_city_aqi(city_name):
 
     result = _fetch_waqi_multi(city_name) or _fetch_cpcb(city_name) or _fetch_waqi_single(city_name)
 
+    # If primary fetch failed, retry multi-station search with alternate city names.
+    # Handles renamed cities like Aurangabad → Chhatrapati Sambhajinagar that WAQI
+    # may index under a different keyword than our canonical name.
+    if not (result and result.get('success')):
+        for alias in _CITY_SEARCH_ALIASES.get(city_name, []):
+            alt = _fetch_waqi_multi(city_name, search_keyword=alias)
+            if alt and alt.get('success'):
+                print(f"[AliasSearch] {city_name}: found data via alias '{alias}'")
+                result = alt
+                break
+
     if result and result.get('success'):
         # Final staleness gate — applies to ALL layers including single-station fallback.
         # Pune was returning 2021 data via the single-station path which had no staleness check.
@@ -244,9 +262,10 @@ def fetch_all_cities():
 # LAYER 1 — WAQI multi-station average (geo-filtered)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _fetch_waqi_multi(city_name):
+def _fetch_waqi_multi(city_name, search_keyword=None):
     try:
-        search_url = f"https://api.waqi.info/search/?token={WAQI_API_KEY}&keyword={city_name}"
+        keyword    = search_keyword or city_name
+        search_url = f"https://api.waqi.info/search/?token={WAQI_API_KEY}&keyword={keyword}"
         resp = requests.get(search_url, timeout=10)
         data = resp.json()
 
