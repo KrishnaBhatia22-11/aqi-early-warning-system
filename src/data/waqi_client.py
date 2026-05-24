@@ -43,8 +43,11 @@ _BBOX_OVERRIDES = {
 
 # Station name substrings to exclude per city — prevents neighbouring-city stations
 # from inflating a city's average (e.g. Greater Noida stations in Noida results).
+# Applied in BOTH the multi-station and single-station fetch paths, and against the
+# actual feed station name (not just the search-result name, which can differ).
 _STATION_NAME_BLACKLIST = {
-    "Noida": ["Greater Noida"],
+    "Noida":  ["Greater Noida"],
+    "Raipur": ["Dehradun", "Doon University"],
 }
 
 
@@ -325,6 +328,14 @@ def _fetch_waqi_multi(city_name):
             geo          = r.get('city', {}).get('geo', [])
             ts_str       = r.get('time', {}).get('s', 'Unknown')
 
+            # CHECK 0 — Blacklist re-check against the actual feed name.
+            # The pre-fetch blacklist (applied to search-result names) can miss stations
+            # whose feed city.name differs from the search-result station.name.
+            if any(bl.lower() in (stn_name_raw or '').lower() for bl in blacklist):
+                print(f"[Blacklist] Excluded '{stn_name_raw}' from {city_name} — matched blacklist rule")
+                excluded_stations.append({'name': stn_name_raw, 'reason': 'blacklisted station name'})
+                continue
+
             # CHECK 1 — Invalid AQI sentinel (999 = sensor malfunction; valid range 1–500)
             if aqi <= 0 or aqi > 500:
                 excluded_stations.append({'name': stn_name_raw, 'reason': f'invalid AQI {aqi} (valid range: 1–500)'})
@@ -557,6 +568,14 @@ def _fetch_waqi_single(city_name):
         aqi  = int(aqi_raw)
         iaqi = station.get('iaqi', {})
         stn_name = station.get('city', {}).get('name', city_name)
+
+        # Blacklist check — same rules as multi-station path.
+        # Prevents /feed/<city>/ returning a neighbouring-city station as the sole result
+        # (e.g. /feed/noida/ resolving to a Greater Noida station).
+        _single_blacklist = _STATION_NAME_BLACKLIST.get(city_name, [])
+        if any(bl.lower() in (stn_name or '').lower() for bl in _single_blacklist):
+            print(f"[Blacklist] Excluded '{stn_name}' from {city_name} — matched blacklist rule")
+            return None
 
         # Apply the same foreign-name and distance guards as the multi-station path.
         # Without this, Kochi fell through to /feed/kochi/ → Japanese station,
