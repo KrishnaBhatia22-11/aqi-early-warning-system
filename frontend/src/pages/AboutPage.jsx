@@ -1,3 +1,5 @@
+import krishnaImg from '../../assets/krishna.jpeg';
+
 export default function AboutPage() {
   const stats = [
     { n: "10",    l: "Live Stations" },
@@ -98,12 +100,17 @@ export default function AboutPage() {
         }}>
           {/* Left side */}
           <div style={{ flex: "0 0 35%", minWidth: 220, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 120, height: 120, borderRadius: "50%",
-              background: "linear-gradient(135deg, #f97316, #ea580c)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 40, fontWeight: 700, color: "white",
-            }}>KB</div>
+            <img
+              src={krishnaImg}
+              alt="Krishna Bhatia"
+              style={{
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "3px solid #f97316",
+              }}
+            />
             <div style={{ fontSize: 28, fontWeight: 700, color: "white", textAlign: "center" }}>Krishna Bhatia</div>
             <div style={{ fontSize: 15, color: "#f97316", textAlign: "center" }}>Full Stack ML Engineer</div>
             <div style={{ fontSize: 13, color: "#888", textAlign: "center" }}>Manav Rachna International Institute of Research and Studies</div>
