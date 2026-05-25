@@ -129,6 +129,15 @@ async def db_cleanup():
             r_chandigarh = await session.execute(
                 text("DELETE FROM aqi_readings WHERE city = 'Chandigarh' AND aqi > 200")
             )
+            r_surat = await session.execute(
+                text("DELETE FROM aqi_readings WHERE city = 'Surat'")
+            )
+            r_aurangabad = await session.execute(
+                text("DELETE FROM aqi_readings WHERE city = 'Aurangabad'")
+            )
+            r_invalid_aqi = await session.execute(
+                text("DELETE FROM aqi_readings WHERE aqi > 500")
+            )
             await session.commit()
 
         deleted = {
@@ -137,6 +146,9 @@ async def db_cleanup():
             "Kochi":          r_kochi.rowcount,
             "Ranchi":         r_ranchi.rowcount,
             "Chandigarh_bad": r_chandigarh.rowcount,
+            "Surat":          r_surat.rowcount,
+            "Aurangabad":     r_aurangabad.rowcount,
+            "invalid_aqi":    r_invalid_aqi.rowcount,
         }
         total = sum(deleted.values())
         return {"cleaned": True, "deleted": deleted, "total_deleted": total}
