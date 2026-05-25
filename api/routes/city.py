@@ -10,6 +10,8 @@ from config.settings import CITY_COORDS
 
 router = APIRouter()
 
+SLOW_CITIES = {"Surat", "Pune"}
+
 
 # ─────────────────────────────────────────────
 # GET /city/{city_name} — live data for one city
@@ -49,9 +51,10 @@ async def get_all_cities():
 
     async def fetch_one_async(city):
         try:
+            timeout = 15.0 if city in SLOW_CITIES else 10.0
             result = await asyncio.wait_for(
                 loop.run_in_executor(None, fetch_city_aqi, city),
-                timeout=10.0,
+                timeout=timeout,
             )
         except asyncio.TimeoutError:
             result = {"success": False, "data_available": False, "no_data": True,

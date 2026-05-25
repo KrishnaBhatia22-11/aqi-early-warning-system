@@ -55,6 +55,7 @@ _STATION_NAME_BLACKLIST = {
 # The bbox and distance checks always use the canonical city name / CITY_COORDS entry.
 _CITY_SEARCH_ALIASES = {
     "Aurangabad": ["Chhatrapati Sambhajinagar", "Aurangabad Maharashtra", "sambhajinagar"],
+    "Surat": ["Surat Gujarat", "Surat city", "Udhna Surat", "Sachin Surat"],
 }
 
 
@@ -195,7 +196,20 @@ def fetch_city_aqi(city_name):
         if now - cached_time < CACHE_DURATION:
             return cached_data
 
-    result = _fetch_waqi_multi(city_name) or _fetch_cpcb(city_name) or _fetch_waqi_single(city_name)
+    if city_name == "Surat":
+        print(f"[SURAT DEBUG] Starting fetch for Surat")
+
+    result = _fetch_waqi_multi(city_name)
+    if city_name == "Surat":
+        print(f"[SURAT DEBUG] multi result: {result}")
+    if not result:
+        result = _fetch_cpcb(city_name)
+        if city_name == "Surat":
+            print(f"[SURAT DEBUG] cpcb result: {result}")
+    if not result:
+        result = _fetch_waqi_single(city_name)
+        if city_name == "Surat":
+            print(f"[SURAT DEBUG] single result: {result}")
 
     # If primary fetch failed, retry multi-station search with alternate city names.
     # Handles renamed cities like Aurangabad → Chhatrapati Sambhajinagar that WAQI
@@ -269,7 +283,12 @@ def _fetch_waqi_multi(city_name, search_keyword=None):
         resp = requests.get(search_url, timeout=10)
         data = resp.json()
 
+        if city_name == "Surat":
+            print(f"[SURAT DEBUG] WAQI raw response (multi, keyword='{keyword}'): {data}")
+
         if data.get('status') != 'ok' or not data.get('data'):
+            if city_name == "Surat":
+                print(f"[SURAT DEBUG] rejection reason: status={data.get('status')!r}, data count={len(data.get('data') or [])}")
             return None
 
         city_lower   = city_name.lower()
@@ -302,6 +321,8 @@ def _fetch_waqi_multi(city_name, search_keyword=None):
 
         # Hard cap: never more than 15 stations to keep fetches fast
         relevant = combined[:15]
+        if city_name == "Surat":
+            print(f"[SURAT DEBUG] rejection reason: stations_raw={len(stations_raw)}, bbox_filtered={len(bbox_filtered)}, name_filtered={len(name_filtered)}, combined={len(combined)}, relevant={len(relevant)}")
         if not relevant:
             return None
 
@@ -576,12 +597,18 @@ def _fetch_waqi_single(city_name):
             timeout=10,
         )
         data = resp.json()
+        if city_name == "Surat":
+            print(f"[SURAT DEBUG] WAQI raw response (single): {data}")
         if data.get('status') != 'ok':
+            if city_name == "Surat":
+                print(f"[SURAT DEBUG] rejection reason: single status={data.get('status')!r}")
             return None
 
         station = data['data']
         aqi_raw = station.get('aqi')
         if aqi_raw is None or str(aqi_raw) == '-':
+            if city_name == "Surat":
+                print(f"[SURAT DEBUG] rejection reason: aqi_raw={aqi_raw!r}")
             return None
 
         aqi  = int(aqi_raw)
