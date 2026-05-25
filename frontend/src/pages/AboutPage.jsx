@@ -1,4 +1,4 @@
-import krishnaImg from '../../assets/krishna.jpeg';
+import krishnaImg from '../assets/krishna.jpeg';
 
 export default function AboutPage() {
   const stats = [
