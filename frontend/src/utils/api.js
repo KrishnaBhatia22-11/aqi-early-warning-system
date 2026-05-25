@@ -138,6 +138,18 @@ export async function fetchHistory(city) {
   return res.json();
 }
 
+export async function fetchDbHistory(city, days = 7) {
+  const res = await fetch(
+    `${BASE}/api/v1/db/history?city=${encodeURIComponent(city)}&days=${days}`
+  );
+  if (!res.ok) {
+    let detail = "Failed to fetch history";
+    try { detail = (await res.json()).detail ?? detail; } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
 export async function fetchCropBurnStatus() {
   const res = await fetch(`${BASE}/api/v1/cropburn/status`);
   if (!res.ok) throw new Error("Crop burn status unavailable");

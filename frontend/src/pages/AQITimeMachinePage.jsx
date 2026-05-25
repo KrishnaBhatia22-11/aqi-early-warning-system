@@ -1,5 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { fetchHistory } from "../utils/api";
+import { useState, useEffect, useRef } from "react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from "recharts";
+import { fetchDbHistory } from "../utils/api";
+
+// ── City Dropdown ─────────────────────────────────────────────────────────────
 
 function CityDropdown({ value, onChange, cities }) {
   const [open, setOpen] = useState(false);
@@ -11,7 +17,10 @@ function CityDropdown({ value, onChange, cities }) {
     const onKey  = e => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown",   onKey);
-    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown",   onKey);
+    };
   }, [open]);
 
   return (
@@ -47,6 +56,8 @@ function CityDropdown({ value, onChange, cities }) {
   );
 }
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const CITIES = [
   "Delhi", "Mumbai", "Bengaluru", "Chennai", "Kolkata", "Hyderabad",
   "Ahmedabad", "Pune", "Jaipur", "Lucknow", "Kanpur", "Patna",
@@ -60,16 +71,22 @@ const CITIES = [
   "Tiruchirappalli",
 ];
 
+const DAYS_OPTIONS = [1, 3, 7, 12];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function aqiColor(aqi) {
-  if (aqi <= 50)  return "#22c55e";
-  if (aqi <= 100) return "#a3e635";
-  if (aqi <= 200) return "#eab308";
-  if (aqi <= 300) return "#f97316";
-  if (aqi <= 400) return "#ef4444";
-  return "#a855f7";
+  if (!aqi) return "#94a3b8";
+  if (aqi <= 50)  return "#10b981";
+  if (aqi <= 100) return "#84cc16";
+  if (aqi <= 200) return "#f97316";
+  if (aqi <= 300) return "#ef4444";
+  if (aqi <= 400) return "#7c3aed";
+  return "#475569";
 }
 
 function aqiCategory(aqi) {
+  if (!aqi) return "Unknown";
   if (aqi <= 50)  return "Good";
   if (aqi <= 100) return "Satisfactory";
   if (aqi <= 200) return "Moderate";
@@ -78,184 +95,178 @@ function aqiCategory(aqi) {
   return "Severe";
 }
 
-function fmtDate(dateStr) {
-  if (!dateStr) return "";
-  const parts = dateStr.split("-");
-  if (parts.length < 3) return dateStr;
+function fmtDateTime(isoStr) {
+  if (!isoStr) return "";
+  const d = new Date(isoStr);
   const months = ["Jan","Feb","Mar","Apr","May","Jun",
                   "Jul","Aug","Sep","Oct","Nov","Dec"];
-  const m = parseInt(parts[1], 10);
-  const d = parseInt(parts[2], 10);
-  if (isNaN(m) || m < 1 || m > 12) return dateStr;
-  return `${months[m - 1]} ${d}`;
+  return `${months[d.getMonth()]} ${d.getDate()}, ${String(d.getHours()).padStart(2, "0")}:00`;
 }
 
-// ── SVG Bar Chart ──────────────────────────────────────────────────────────────
+function fmtXTick(isoStr) {
+  const d = new Date(isoStr);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun",
+                  "Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
 
-function HistoryChart({ data }) {
-  const [hovered, setHovered] = useState(null);
+// ── Chart ─────────────────────────────────────────────────────────────────────
 
-  if (!data || data.length === 0) return null;
-
-  const padL = 48, padT = 20, padR = 20, padB = 56;
-  const chartW = 660;
-  const chartH = 180;
-  const totalW = chartW + padL + padR;
-  const totalH = chartH + padT + padB;
-  const n = data.length;
-  const barSlot = chartW / n;
-  const barW = Math.min(64, Math.max(10, barSlot * 0.68));
-  const maxAqi = 500;
-  const yScale = (v) => chartH - (v / maxAqi) * chartH;
-  const gridLines = [100, 200, 300, 400];
-
+function renderDot(props) {
+  const { cx, cy, payload } = props;
+  if (cx == null || cy == null) return null;
   return (
-    <div className="tm-chart-wrap">
-      <svg viewBox={`0 0 ${totalW} ${totalH}`} style={{ width: "100%", overflow: "visible" }}>
+    <circle
+      key={`dot-${payload.timestamp}`}
+      cx={cx} cy={cy} r={2.5}
+      fill={aqiColor(payload.aqi)}
+    />
+  );
+}
 
-        {/* Grid lines + Y labels */}
-        {gridLines.map(v => (
-          <g key={v}>
-            <line
-              x1={padL} y1={padT + yScale(v)}
-              x2={padL + chartW} y2={padT + yScale(v)}
-              stroke="rgba(255,255,255,0.06)" strokeWidth="1"
-            />
-            <text
-              x={padL - 6} y={padT + yScale(v) + 4}
-              textAnchor="end" fontSize="10"
-              fill="rgba(255,255,255,0.35)"
-            >{v}</text>
-          </g>
-        ))}
-
-        {/* Y axis label */}
-        <text
-          x={12} y={padT + chartH / 2}
-          textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)"
-          transform={`rotate(-90, 12, ${padT + chartH / 2})`}
-        >AQI</text>
-
-        {/* Bars + date labels */}
-        {data.map((pt, i) => {
-          const bx = padL + i * barSlot + (barSlot - barW) / 2;
-          const rawH = (pt.aqi / maxAqi) * chartH;
-          const barH = Math.max(2, rawH);
-          const by = padT + chartH - barH;
-          const col = aqiColor(pt.aqi);
-          const isHov = hovered === i;
-          const labelX = padL + i * barSlot + barSlot / 2;
-          const labelY = padT + chartH + 14;
-
-          return (
-            <g
-              key={pt.date}
-              onMouseEnter={() => setHovered(i)}
-              onMouseLeave={() => setHovered(null)}
-              style={{ cursor: "pointer" }}
-            >
-              <rect
-                x={bx} y={by} width={barW} height={barH}
-                fill={col} opacity={isHov ? 1 : 0.72} rx="3"
-              />
-              {isHov && (
-                <text
-                  x={bx + barW / 2} y={by - 6}
-                  textAnchor="middle" fontSize="11"
-                  fontWeight="700" fill={col}
-                >{pt.aqi}</text>
-              )}
-              <text
-                x={labelX} y={labelY}
-                textAnchor="end" fontSize="9"
-                fill="rgba(255,255,255,0.45)"
-                transform={`rotate(-45, ${labelX}, ${labelY})`}
-              >{fmtDate(pt.date)}</text>
-            </g>
-          );
-        })}
-
-        {/* Hover tooltip */}
-        {hovered !== null && (() => {
-          const pt = data[hovered];
-          const col = aqiColor(pt.aqi);
-          const barH = Math.max(2, (pt.aqi / maxAqi) * chartH);
-          const barTopY = padT + chartH - barH;
-          const boxW = 120;
-          const boxH = pt.pm25_avg != null ? 50 : 36;
-          const cx = padL + hovered * barSlot + barSlot / 2;
-          const bx = Math.min(Math.max(cx - boxW / 2, padL), padL + chartW - boxW);
-          const by = Math.max(boxH + 8, barTopY - 10);
-          return (
-            <g pointerEvents="none">
-              <rect
-                x={bx} y={by - boxH} width={boxW} height={boxH}
-                fill="#0f1f3d" stroke={col} strokeWidth="1"
-                rx="4" opacity="0.97"
-              />
-              <text x={bx + 8} y={by - boxH + 13} fontSize="9" fill={col} fontWeight="700">
-                {pt.date}
-              </text>
-              <text x={bx + 8} y={by - boxH + 27} fontSize="11" fill="#fff" fontWeight="700">
-                AQI {pt.aqi} · {aqiCategory(pt.aqi)}
-              </text>
-              {pt.pm25_avg != null && (
-                <text x={bx + 8} y={by - boxH + 41} fontSize="9" fill="rgba(255,255,255,0.5)">
-                  PM2.5 avg: {pt.pm25_avg}
-                </text>
-              )}
-            </g>
-          );
-        })()}
-      </svg>
+function ChartTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const d   = payload[0].payload;
+  const col = aqiColor(d.aqi);
+  return (
+    <div style={{
+      background: "#0f172a",
+      border: `1px solid ${col}`,
+      borderRadius: 8,
+      padding: "10px 14px",
+      minWidth: 160,
+    }}>
+      <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, marginBottom: 4 }}>
+        {fmtDateTime(d.timestamp)}
+      </div>
+      <div style={{ color: col, fontSize: 18, fontWeight: 700, marginBottom: 2 }}>
+        AQI {d.aqi}
+      </div>
+      <div style={{ color: col, fontSize: 11, marginBottom: 6 }}>
+        {aqiCategory(d.aqi)}
+      </div>
+      {d.pm25 != null && (
+        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>PM2.5: {d.pm25} µg/m³</div>
+      )}
+      {d.pm10 != null && (
+        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>PM10: {d.pm10} µg/m³</div>
+      )}
     </div>
   );
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────────
+function HistoryLineChart({ readings }) {
+  const tickInterval = Math.max(1, Math.floor(readings.length / 8));
+  return (
+    <div className="tm-chart-wrap">
+      <ResponsiveContainer width="100%" height={280}>
+        <LineChart data={readings} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+          <XAxis
+            dataKey="timestamp"
+            tickFormatter={fmtXTick}
+            interval={tickInterval}
+            tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+            stroke="rgba(255,255,255,0.1)"
+          />
+          <YAxis
+            tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+            stroke="rgba(255,255,255,0.1)"
+            width={38}
+            label={{
+              value: "AQI", angle: -90, position: "insideLeft",
+              fill: "rgba(255,255,255,0.3)", fontSize: 11, dx: -2,
+            }}
+          />
+          <Tooltip content={<ChartTooltip />} />
+          <Line
+            type="monotone"
+            dataKey="aqi"
+            stroke="#f97316"
+            strokeWidth={2}
+            dot={renderDot}
+            activeDot={{ r: 5, fill: "#f97316", stroke: "#fff", strokeWidth: 1 }}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AQITimeMachinePage() {
-  const [city, setCity] = useState("Delhi");
-  const [result, setResult] = useState(null);
+  const [city,    setCity]    = useState("Delhi");
+  const [days,    setDays]    = useState(7);
+  const [result,  setResult]  = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error,   setError]   = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchHistory(city);
-      setResult(data);
-    } catch (e) {
-      setError(e.message || "Failed to fetch history");
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [city]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchDbHistory(city, days);
+        if (!cancelled) setResult(data);
+      } catch (e) {
+        if (!cancelled) {
+          setError(e.message || "Failed to fetch history");
+          setResult(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [city, days]);
+
+  const summary  = result?.summary;
+  const readings = result?.readings ?? [];
+  const hasData  = readings.length > 0;
 
   return (
     <div className="page tm-page">
 
       {/* Header */}
       <div className="tm-header">
-        <div className="mono tm-eyebrow">HISTORICAL DATA · WAQI</div>
+        <div className="mono tm-eyebrow">HISTORICAL DATA · DATABASE</div>
         <h1 className="tm-title">AQI Time Machine</h1>
         <p className="tm-sub">
-          Real air quality history direct from WAQI. No synthetic data — ever.
+          Real hourly air quality from our database — collected since May 13, 2026.
         </p>
       </div>
 
       {/* Controls */}
-      <div className="tm-controls">
+      <div className="tm-controls" style={{ gap: 12, flexWrap: "wrap" }}>
         <CityDropdown
           value={city}
-          onChange={c => { setCity(c); setResult(null); setError(null); }}
+          onChange={c => { setCity(c); setResult(null); }}
           cities={CITIES}
         />
-        <button className="tm-load-btn" onClick={load} disabled={loading}>
-          {loading ? "Loading…" : "Load Data"}
-        </button>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {DAYS_OPTIONS.map(d => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDays(d)}
+              style={{
+                padding: "7px 16px",
+                borderRadius: 8,
+                border: `1px solid ${days === d ? "#f97316" : "rgba(255,255,255,0.12)"}`,
+                background: days === d ? "rgba(249,115,22,0.15)" : "transparent",
+                color: days === d ? "#f97316" : "rgba(255,255,255,0.5)",
+                fontSize: 13,
+                fontWeight: days === d ? 700 : 400,
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >{d}d</button>
+          ))}
+        </div>
       </div>
 
       {/* Error */}
@@ -268,75 +279,51 @@ export default function AQITimeMachinePage() {
       {/* Loading skeleton */}
       {loading && (
         <div className="tm-skeleton-wrap">
-          <div className="skeleton" style={{ height: 80, borderRadius: 12, marginBottom: 12 }} />
-          <div className="skeleton" style={{ height: 260, borderRadius: 12, marginBottom: 12 }} />
+          <div className="skeleton" style={{ height: 48, borderRadius: 12, marginBottom: 12 }} />
+          <div className="skeleton" style={{ height: 280, borderRadius: 12, marginBottom: 12 }} />
           <div className="skeleton" style={{ height: 80, borderRadius: 12 }} />
         </div>
       )}
 
       {/* Results */}
       {!loading && result && (
-        <>
-          {/* Current reading */}
-          <div className="tm-current-card">
-            <div className="tm-current-left">
-              <div className="mono tm-eyebrow" style={{ color: "#22c55e", marginBottom: 4 }}>
-                CURRENT READING
-              </div>
-              <div className="tm-aqi-big" style={{ color: aqiColor(result.current_aqi) }}>
-                {result.current_aqi}
-              </div>
-              <div className="tm-cat" style={{ color: aqiColor(result.current_aqi) }}>
-                {aqiCategory(result.current_aqi)}
-              </div>
+        hasData ? (
+          <>
+            <div className="tm-section-head">
+              <span className="mono tm-eyebrow">HOURLY HISTORY</span>
+              <span className="tm-data-note">
+                {readings.length} readings · last {days} day{days !== 1 ? "s" : ""}
+              </span>
             </div>
-            <div className="tm-current-right">
-              <span className="tm-live-badge">● WAQI Live</span>
-              {result.current_time && (
-                <div className="mono" style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>
-                  Updated: {result.current_time}
-                </div>
-              )}
-              <div className="mono" style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
-                {result.city}
-              </div>
-            </div>
-          </div>
 
-          {/* Historical chart or honest no-data message */}
-          {result.data_available ? (
-            <>
-              <div className="tm-section-head">
-                <span className="mono tm-eyebrow">DAILY HISTORY</span>
-                <span className="tm-data-note">{result.history.length} days · WAQI pm25 forecast data</span>
-              </div>
+            <HistoryLineChart readings={readings} />
 
-              <HistoryChart data={result.history} />
-
-              {/* Summary stats */}
+            {summary && (
               <div className="tm-stats-grid">
                 {[
                   {
                     label: "AVG AQI",
-                    value: result.summary.avg_aqi,
-                    color: aqiColor(result.summary.avg_aqi),
+                    value: summary.avg_aqi,
+                    color: aqiColor(summary.avg_aqi),
+                    sub:   aqiCategory(summary.avg_aqi),
                   },
                   {
-                    label: "WORST DAY",
-                    value: fmtDate(result.summary.worst_day),
-                    sub: `AQI ${result.summary.max_aqi}`,
-                    color: aqiColor(result.summary.max_aqi),
+                    label: "HIGHEST AQI",
+                    value: summary.max_aqi,
+                    color: aqiColor(summary.max_aqi),
+                    sub:   fmtDateTime(summary.max_aqi_time),
                   },
                   {
-                    label: "BEST DAY",
-                    value: fmtDate(result.summary.best_day),
-                    sub: `AQI ${result.summary.min_aqi}`,
-                    color: aqiColor(result.summary.min_aqi),
+                    label: "LOWEST AQI",
+                    value: summary.min_aqi,
+                    color: aqiColor(summary.min_aqi),
+                    sub:   fmtDateTime(summary.min_aqi_time),
                   },
                   {
-                    label: "DAYS OF DATA",
-                    value: result.summary.days_available,
+                    label: "HOURS OF DATA",
+                    value: summary.total_readings,
                     color: "#94a3b8",
+                    sub:   `${days}-day window`,
                   },
                 ].map(s => (
                   <div key={s.label} className="tm-stat-box">
@@ -346,48 +333,24 @@ export default function AQITimeMachinePage() {
                   </div>
                 ))}
               </div>
-            </>
-          ) : (
-            <div className="tm-no-data">
-              <div className="tm-no-data-icon">📭</div>
-              <div className="tm-no-data-msg">
-                Historical daily breakdown not available for {result.city} from WAQI.
-              </div>
-              <div className="tm-no-data-sub">
-                Showing current reading only. WAQI historical coverage varies by city and monitoring station.
-              </div>
+            )}
+          </>
+        ) : (
+          <div className="tm-no-data">
+            <div className="tm-no-data-icon">📭</div>
+            <div className="tm-no-data-msg">No data available for {result.city}</div>
+            <div className="tm-no-data-sub">
+              No readings found in our database for this city in the last {days} day{days !== 1 ? "s" : ""}.
             </div>
-          )}
-        </>
+          </div>
+        )
       )}
 
-      {/* Empty state before first load */}
-      {!loading && !result && !error && (
-        <div className="tm-empty">
-          <div style={{ fontSize: 52, marginBottom: 12 }}>📅</div>
-          <div style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>
-            Select a city and click Load Data
-          </div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
-            Real data from WAQI only — no synthetic generation
-          </div>
-        </div>
-      )}
-
-      {/* Source attribution — always visible */}
+      {/* Source footer */}
       <div className="tm-source-footer">
-        <span>Data source: <strong>WAQI — World Air Quality Index</strong></span>
+        <span>Real data from our database.</span>
         <span className="tm-source-sep">·</span>
-        <a
-          href="https://waqi.info"
-          target="_blank"
-          rel="noreferrer"
-          className="tm-source-link"
-        >waqi.info</a>
-        <span className="tm-source-sep">·</span>
-        <span>Updated every hour</span>
-        <span className="tm-source-sep">·</span>
-        <span>Historical data availability varies by city and station</span>
+        <span>Collected hourly since May 13, 2026.</span>
       </div>
 
     </div>

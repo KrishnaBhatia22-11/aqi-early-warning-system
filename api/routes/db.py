@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from sqlalchemy import text, select
+from datetime import datetime, timezone, timedelta
 from api.database import AsyncSessionLocal
 from api.models import AQIReading
 from config.settings import CITY_COORDS
@@ -56,6 +57,65 @@ async def db_all():
             }
             for r in rows
         ]
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+@router.get("/db/history")
+async def db_history(
+    city: str = Query(default="Delhi"),
+    days: int = Query(default=7, ge=1, le=12),
+):
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        async with AsyncSessionLocal() as session:
+            rows = (await session.execute(
+                select(
+                    AQIReading.timestamp, AQIReading.aqi,
+                    AQIReading.pm25, AQIReading.pm10, AQIReading.no2,
+                    AQIReading.co, AQIReading.so2, AQIReading.o3,
+                )
+                .where(AQIReading.city == city, AQIReading.timestamp >= cutoff)
+                .order_by(AQIReading.timestamp.asc())
+            )).all()
+
+        if not rows:
+            return {"city": city, "days": days, "readings": [], "summary": None}
+
+        def _r(v, n=1):
+            return round(v, n) if v is not None else None
+
+        readings = [
+            {
+                "timestamp": r.timestamp.isoformat(),
+                "aqi":  round(r.aqi) if r.aqi is not None else None,
+                "pm25": _r(r.pm25),
+                "pm10": _r(r.pm10),
+                "no2":  _r(r.no2),
+                "co":   _r(r.co),
+                "so2":  _r(r.so2),
+                "o3":   _r(r.o3),
+            }
+            for r in rows
+        ]
+
+        aqis    = [rd["aqi"] for rd in readings if rd["aqi"] is not None]
+        max_row = max(rows, key=lambda r: r.aqi or 0)
+        min_row = min(rows, key=lambda r: r.aqi if r.aqi is not None else 9999)
+
+        return {
+            "city":     city,
+            "days":     days,
+            "readings": readings,
+            "summary":  {
+                "avg_aqi":        round(sum(aqis) / len(aqis)) if aqis else None,
+                "max_aqi":        round(max_row.aqi) if max_row.aqi is not None else None,
+                "min_aqi":        round(min_row.aqi) if min_row.aqi is not None else None,
+                "max_aqi_time":   max_row.timestamp.isoformat(),
+                "min_aqi_time":   min_row.timestamp.isoformat(),
+                "total_readings": len(readings),
+            },
+        }
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
