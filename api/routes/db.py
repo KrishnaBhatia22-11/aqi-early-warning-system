@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from sqlalchemy import text, select
 from api.database import AsyncSessionLocal
 from api.models import AQIReading
+from config.settings import CITY_COORDS
 
 router = APIRouter()
 
@@ -55,6 +56,52 @@ async def db_all():
             }
             for r in rows
         ]
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+@router.get("/db/audit")
+async def db_audit():
+    try:
+        async with AsyncSessionLocal() as session:
+            total = (await session.execute(
+                text("SELECT COUNT(*) FROM aqi_readings")
+            )).scalar()
+
+            date_row = (await session.execute(
+                text("SELECT MIN(timestamp), MAX(timestamp) FROM aqi_readings")
+            )).one()
+            earliest = date_row[0].isoformat() if date_row[0] else None
+            latest   = date_row[1].isoformat() if date_row[1] else None
+
+            per_city_rows = (await session.execute(
+                text("SELECT city, COUNT(*) FROM aqi_readings GROUP BY city")
+            )).all()
+            db_counts = {row[0]: row[1] for row in per_city_rows}
+
+            aqi_null     = (await session.execute(text("SELECT COUNT(*) FROM aqi_readings WHERE aqi IS NULL"))).scalar()
+            aqi_zero     = (await session.execute(text("SELECT COUNT(*) FROM aqi_readings WHERE aqi = 0"))).scalar()
+            aqi_too_low  = (await session.execute(text("SELECT COUNT(*) FROM aqi_readings WHERE aqi < 5"))).scalar()
+            aqi_too_high = (await session.execute(text("SELECT COUNT(*) FROM aqi_readings WHERE aqi > 500"))).scalar()
+
+        rows_per_city       = {city: db_counts.get(city, 0) for city in CITY_COORDS}
+        cities_with_no_data = [city for city, n in rows_per_city.items() if n == 0]
+
+        return {
+            "total_rows": total,
+            "date_range": {
+                "earliest": earliest,
+                "latest":   latest,
+            },
+            "rows_per_city": rows_per_city,
+            "suspicious_rows": {
+                "aqi_null":            aqi_null,
+                "aqi_zero":            aqi_zero,
+                "aqi_too_low":         aqi_too_low,
+                "aqi_too_high":        aqi_too_high,
+                "cities_with_no_data": cities_with_no_data,
+            },
+        }
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
