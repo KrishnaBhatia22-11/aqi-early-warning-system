@@ -3,18 +3,21 @@ import re
 import secrets
 
 import resend
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 
 from api.database import AsyncSessionLocal
 from api.models import AlertSubscription
+from config.settings import CITY_COORDS
+from api.limiter import limiter, _has_valid_api_key
 
-resend.api_key = os.environ.get("RESEND_API_KEY", "")
+resend.api_key = os.environ.get("RESEND_API_KEY", "")  # Render env var: RESEND_API_KEY
 
 router = APIRouter()
 
-_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+_EMAIL_RE     = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+_KNOWN_CITIES = set(CITY_COORDS.keys())
 _UNSUBSCRIBE_BASE = "https://aqi-api-y2qs.onrender.com/api/v1/alerts/unsubscribe"
 
 
@@ -25,9 +28,14 @@ class SubscribeRequest(BaseModel):
 
 
 @router.post("/alerts/subscribe")
-async def subscribe(req: SubscribeRequest):
+@limiter.limit("5/minute", exempt_when=_has_valid_api_key)
+async def subscribe(req: SubscribeRequest, request: Request):
     if not _EMAIL_RE.match(req.email):
         return {"success": False, "message": "Invalid email address"}
+    if req.city not in _KNOWN_CITIES:
+        return {"success": False, "message": f"Unknown city: {req.city}"}
+    if not (50 <= req.threshold <= 500):
+        return {"success": False, "message": "Threshold must be between 50 and 500"}
 
     try:
         async with AsyncSessionLocal() as session:

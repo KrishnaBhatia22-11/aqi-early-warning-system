@@ -4,7 +4,8 @@ import time
 import httpx
 import requests
 from datetime import datetime, date, timedelta, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from api.limiter import limiter, _has_valid_api_key
 from sqlalchemy import select, func
 
 from api.database import AsyncSessionLocal
@@ -256,7 +257,6 @@ async def _query_city_spikes(cities: list):
         return {}, str(e)
 
 
-@router.get("/cropburn/status")
 async def get_cropburn_status():
     cache_key = "cropburn"
     now = time.time()
@@ -426,3 +426,9 @@ async def get_cropburn_status():
 
     _cache[cache_key] = (now, result)
     return result
+
+
+@router.get("/cropburn/status")
+@limiter.limit("20/minute", exempt_when=_has_valid_api_key)
+async def cropburn_status_endpoint(request: Request):
+    return await get_cropburn_status()

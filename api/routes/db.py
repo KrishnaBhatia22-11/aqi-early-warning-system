@@ -1,15 +1,30 @@
-from fastapi import APIRouter, Query
+import re
+from fastapi import APIRouter, Query, Request, HTTPException
 from sqlalchemy import text, select
 from datetime import datetime, timezone, timedelta
 from api.database import AsyncSessionLocal
 from api.models import AQIReading
 from config.settings import CITY_COORDS
+from api.limiter import limiter, _has_valid_api_key
 
 router = APIRouter()
 
+_CITY_RE = re.compile(r'^[A-Za-z][A-Za-z \-]{0,49}$')
+
+
+def _validate_city(name: str):
+    if not name or len(name) > 50:
+        raise HTTPException(status_code=400, detail="City name must be 1–50 characters")
+    if not _CITY_RE.match(name):
+        raise HTTPException(
+            status_code=400,
+            detail="City name may only contain letters, spaces, and hyphens",
+        )
+
 
 @router.get("/db/status")
-async def db_status():
+@limiter.limit("10/minute", exempt_when=_has_valid_api_key)
+async def db_status(request: Request):
     try:
         async with AsyncSessionLocal() as session:
             result = await session.execute(text("SELECT COUNT(*) FROM aqi_readings"))
@@ -62,10 +77,13 @@ async def db_all():
 
 
 @router.get("/db/history")
+@limiter.limit("20/minute", exempt_when=_has_valid_api_key)
 async def db_history(
+    request: Request,
     city: str = Query(default="Delhi"),
     days: int = Query(default=7, ge=1, le=12),
 ):
+    _validate_city(city)
     try:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         async with AsyncSessionLocal() as session:

@@ -1,8 +1,17 @@
 import asyncio
 import os
-from fastapi import APIRouter
+import re
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
+from api.limiter import limiter, _has_valid_api_key
+
+_HTML_RE       = re.compile(r'<[^>]+>')
+_SUSPICION_RE  = re.compile(
+    r'(<script|javascript:|on\w+\s*=|eval\s*\(|exec\s*\(|__import__|DROP\s+TABLE|'
+    r'SELECT\s+\*|INSERT\s+INTO|UNION\s+SELECT)',
+    re.IGNORECASE,
+)
 
 router = APIRouter()
 
@@ -340,7 +349,14 @@ class ChatRequest(BaseModel):
 # ── Route ─────────────────────────────────────────────────────
 
 @router.post("/chat")
-async def chat_endpoint(req: ChatRequest):
+@limiter.limit("10/minute", exempt_when=_has_valid_api_key)
+async def chat_endpoint(req: ChatRequest, request: Request):
+    message = _HTML_RE.sub("", req.message).strip()
+    if len(message) > 500:
+        raise HTTPException(status_code=400, detail="Message must be 500 characters or fewer")
+    if _SUSPICION_RE.search(message):
+        raise HTTPException(status_code=400, detail="Message contains disallowed content")
+
     groq_key = os.environ.get("GROQ_API_KEY", "")
 
     if not groq_key:
@@ -366,7 +382,7 @@ async def chat_endpoint(req: ChatRequest):
             content = h.get("content") or h.get("text", "")
             if role in ("user", "assistant") and content:
                 messages.append({"role": role, "content": content})
-        messages.append({"role": "user", "content": req.message})
+        messages.append({"role": "user", "content": message})
 
         resp = client.chat.completions.create(
             model="llama-3.1-8b-instant",

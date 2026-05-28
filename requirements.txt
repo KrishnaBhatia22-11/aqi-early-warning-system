@@ -23,3 +23,4 @@ alembic
 apscheduler
 resend
 httpx
+slowapi
