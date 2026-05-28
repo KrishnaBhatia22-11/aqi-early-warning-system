@@ -3578,4 +3578,9 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   .forecast-chart-wrap    { max-width: 1760px; margin-left: auto; margin-right: auto; padding-left: 40px; padding-right: 40px; }
   .forecast-summary-strip { max-width: 1760px; margin-left: auto; margin-right: auto; padding-left: 40px; padding-right: 40px; }
   .forecast-table-wrap    { max-width: 1760px; margin-left: auto; margin-right: auto; padding-left: 40px; padding-right: 40px; }
+
+  /* ── Home page — hero, stats bar, map section (ticker stays full-width) ── */
+  .dynamic-hero      { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .dh-stat-strip     { max-width: 1760px; margin: 0 auto; padding-left: 40px; padding-right: 40px; }
+  .map-section-inner { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
 }
