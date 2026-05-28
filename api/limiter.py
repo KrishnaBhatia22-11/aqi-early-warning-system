@@ -1,14 +1,14 @@
 import os
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from starlette.requests import Request
 
 limiter = Limiter(key_func=get_remote_address)
 
 
-def _has_valid_api_key(request) -> bool:
-    """Return True when the request carries a valid API key, exempting it from rate limits."""
-    key = request.headers.get("x-api-key")
-    if not key:
+def _has_valid_api_key(request: Request) -> bool:
+    api_key = request.headers.get("X-API-Key")
+    valid_keys = os.environ.get("VALID_API_KEYS", "")
+    if not valid_keys:
         return False
-    valid = os.environ.get("VALID_API_KEYS", "")
-    return key in {k.strip() for k in valid.split(",") if k.strip()}
+    return api_key in valid_keys.split(",")
