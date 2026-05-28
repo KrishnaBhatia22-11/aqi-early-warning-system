@@ -3546,9 +3546,14 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   /* ── Weather — lift the 900px cap ── */
   .wx-page { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
 
+  /* ── About / API / Alerts — outermost wrappers that don't use .page ── */
+  .about-page  { max-width: 1760px; margin: 0 auto; padding-left: 40px; padding-right: 40px; }
+  .api-page    { max-width: 1760px; margin: 0 auto; padding-left: 40px; padding-right: 40px; }
+  .alerts-page { max-width: 1760px; margin: 0 auto; padding-left: 40px; padding-right: 40px; }
+
   /* ── Predict page ── */
   .predict-hero    { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
-  .predict-layout  { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .predict-layout  { max-width: 1760px; padding-left: 40px; padding-right: 40px; grid-template-columns: 1fr 380px; gap: 40px; }
   .predict-history { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
   .ha-section      { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
   /* History cards: grid so they spread evenly instead of left-clustering */
