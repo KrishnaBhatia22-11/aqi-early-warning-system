@@ -14,6 +14,9 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
         body: ['Inter', 'sans-serif'],
       },
+      screens: {
+        '3xl': '1920px',
+      },
     },
   },
   plugins: [],

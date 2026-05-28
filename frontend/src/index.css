@@ -846,7 +846,7 @@ input[type="range"].aqi-slider::-webkit-slider-thumb:hover { transform: scale(1.
 .shap-bar.neg { right: 50%; }
 .shap-value { font-size: 13px; text-align: right; font-weight: 600; }
 .shap-base { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-faint); display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; }
-.predict-history { margin-top: 18px; padding: 20px 24px; }
+.predict-history { max-width: 1400px; margin: 18px auto 0; padding: 20px 24px; }
 .ph-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .ph-card { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-faint); border-radius: 10px; cursor: pointer; transition: all 160ms ease; min-width: 90px; }
 .ph-card:hover { border-color: var(--orange); transform: translateY(-2px); }
@@ -3532,4 +3532,43 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   font-weight: 700;
   cursor: pointer;
   margin-top: 8px;
+}
+
+/* ══════════════════════════════════════
+   1920px (3XL) LAYOUT FIXES
+   Expand containers and fix narrow sections at ultra-wide viewports.
+   Mobile (375px), tablet, 1280px, 1440px: all unchanged.
+══════════════════════════════════════ */
+@media (min-width: 1920px) {
+  /* ── Global page container ── */
+  .page { max-width: 1760px; }
+
+  /* ── Weather — lift the 900px cap ── */
+  .wx-page { max-width: 1760px; }
+
+  /* ── Predict page ── */
+  .predict-hero    { max-width: 1760px; }
+  .predict-layout  { max-width: 1760px; }
+  .predict-history { max-width: 1760px; }
+  .ha-section      { max-width: 1760px; }
+  /* History cards: grid so they spread evenly instead of left-clustering */
+  .ph-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+
+  /* ── Chatbot ── */
+  .chat-hero   { max-width: 1760px; }
+  .chat-layout { max-width: 1760px; grid-template-columns: 1fr 380px; gap: 24px; }
+
+  /* ── Crop Burn ── */
+  .cb-page-header    { max-width: 1760px; }
+  .cb-section        { max-width: 1760px; }
+  .cb-health-section { max-width: 1760px; }
+  .cb-edu-section    { max-width: 1760px; }
+  /* 4 signal cards in one row at ultra-wide */
+  .cb-signals-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  /* Fact cards: keep 3 columns, widen gap */
+  .cb-fact-grid { gap: 24px; }
 }
