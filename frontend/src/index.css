@@ -3541,16 +3541,16 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
 ══════════════════════════════════════ */
 @media (min-width: 1920px) {
   /* ── Global page container ── */
-  .page { max-width: 1760px; }
+  .page { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
 
   /* ── Weather — lift the 900px cap ── */
-  .wx-page { max-width: 1760px; }
+  .wx-page { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
 
   /* ── Predict page ── */
-  .predict-hero    { max-width: 1760px; }
-  .predict-layout  { max-width: 1760px; }
-  .predict-history { max-width: 1760px; }
-  .ha-section      { max-width: 1760px; }
+  .predict-hero    { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .predict-layout  { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .predict-history { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .ha-section      { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
   /* History cards: grid so they spread evenly instead of left-clustering */
   .ph-row {
     display: grid;
@@ -3559,16 +3559,23 @@ body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; m
   }
 
   /* ── Chatbot ── */
-  .chat-hero   { max-width: 1760px; }
-  .chat-layout { max-width: 1760px; grid-template-columns: 1fr 380px; gap: 24px; }
+  .chat-hero   { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .chat-layout { max-width: 1760px; padding-left: 40px; padding-right: 40px; grid-template-columns: 1fr 380px; gap: 24px; }
 
   /* ── Crop Burn ── */
-  .cb-page-header    { max-width: 1760px; }
-  .cb-section        { max-width: 1760px; }
-  .cb-health-section { max-width: 1760px; }
-  .cb-edu-section    { max-width: 1760px; }
+  .cb-page-header    { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .cb-section        { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .cb-health-section { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .cb-edu-section    { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
   /* 4 signal cards in one row at ultra-wide */
   .cb-signals-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
   /* Fact cards: keep 3 columns, widen gap */
   .cb-fact-grid { gap: 24px; }
+
+  /* ── Forecast — expand and centre the fixed-margin containers ── */
+  .forecast-hero          { max-width: 1760px; padding-left: 40px; padding-right: 40px; }
+  .forecast-city-bar      { max-width: 1760px; margin-left: auto; margin-right: auto; padding-left: 40px; padding-right: 40px; }
+  .forecast-chart-wrap    { max-width: 1760px; margin-left: auto; margin-right: auto; padding-left: 40px; padding-right: 40px; }
+  .forecast-summary-strip { max-width: 1760px; margin-left: auto; margin-right: auto; padding-left: 40px; padding-right: 40px; }
+  .forecast-table-wrap    { max-width: 1760px; margin-left: auto; margin-right: auto; padding-left: 40px; padding-right: 40px; }
 }
