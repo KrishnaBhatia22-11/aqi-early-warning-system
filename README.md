@@ -264,7 +264,7 @@ VALID_API_KEYS
 
 **Krishna Bhatia** — Full Stack ML Engineer  
 Manav Rachna International Institute of Research and Studies, Faridabad, India  
-[LinkedIn](https://linkedin.com/in/krishnabhatia) · [GitHub](https://github.com/KrishnaBhatia22-11) · krishnabhatia09@gmail.com
+[LinkedIn](https://linkedin.com/in/krishnabhatia09/) · [GitHub](https://github.com/KrishnaBhatia22-11) · krishnabhatia09@gmail.com
 
 > Every line of code — the XGBoost ML model, FastAPI backend, React frontend,  
 > PostgreSQL database, NASA FIRMS satellite integration, and email alert system —  
