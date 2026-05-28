@@ -4,7 +4,7 @@ import re
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from api.limiter import limiter, _has_valid_api_key
+from api.limiter import limiter
 
 _HTML_RE       = re.compile(r'<[^>]+>')
 _SUSPICION_RE  = re.compile(
@@ -349,7 +349,7 @@ class ChatRequest(BaseModel):
 # ── Route ─────────────────────────────────────────────────────
 
 @router.post("/chat")
-@limiter.limit("10/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("10/minute")
 async def chat_endpoint(req: ChatRequest, request: Request):
     message = _HTML_RE.sub("", req.message).strip()
     if len(message) > 500:

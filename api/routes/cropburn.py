@@ -5,7 +5,7 @@ import httpx
 import requests
 from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter, Request
-from api.limiter import limiter, _has_valid_api_key
+from api.limiter import limiter
 from sqlalchemy import select, func
 
 from api.database import AsyncSessionLocal
@@ -429,6 +429,6 @@ async def get_cropburn_status():
 
 
 @router.get("/cropburn/status")
-@limiter.limit("20/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("20/minute")
 async def cropburn_status_endpoint(request: Request):
     return await get_cropburn_status()

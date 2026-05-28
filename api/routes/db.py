@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from api.database import AsyncSessionLocal
 from api.models import AQIReading
 from config.settings import CITY_COORDS
-from api.limiter import limiter, _has_valid_api_key
+from api.limiter import limiter
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ def _validate_city(name: str):
 
 
 @router.get("/db/status")
-@limiter.limit("10/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("10/minute")
 async def db_status(request: Request):
     try:
         async with AsyncSessionLocal() as session:
@@ -77,7 +77,7 @@ async def db_all():
 
 
 @router.get("/db/history")
-@limiter.limit("20/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("20/minute")
 async def db_history(
     request: Request,
     city: str = Query(default="Delhi"),

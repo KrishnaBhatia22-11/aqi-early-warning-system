@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from api.limiter import limiter, _has_valid_api_key
+from api.limiter import limiter
 
 router = APIRouter()
 
@@ -91,7 +91,7 @@ class ForecastRequest(BaseModel):
 
 
 @router.post("/forecast")
-@limiter.limit("20/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("20/minute")
 def forecast_aqi(req: ForecastRequest, request: Request):
     city_input = req.city.strip()
     norm_city = CITY_NORM.get(city_input.lower(), city_input)

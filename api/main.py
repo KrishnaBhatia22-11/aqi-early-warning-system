@@ -48,8 +48,6 @@ async def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded)
 
 # ── API key dependency ────────────────────────────────────────────────────────
 # Set VALID_API_KEYS on Render as a comma-separated string, e.g. "key1,key2"
-# Requests with a valid key are exempt from rate limits (via _has_valid_api_key
-# in api/limiter.py) and receive authenticated access status.
 
 def get_api_key(x_api_key: str = Header(None)):
     if x_api_key is None:

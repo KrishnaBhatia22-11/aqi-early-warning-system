@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from src.data.waqi_client import fetch_city_aqi, fetch_all_cities
 from src.analytics.health_score import get_health_advisory, get_general_precautions
 from config.settings import CITY_COORDS
-from api.limiter import limiter, _has_valid_api_key
+from api.limiter import limiter
 
 router = APIRouter()
 
@@ -31,7 +31,7 @@ def _validate_city(name: str):
 # GET /city/{city_name} — live data for one city
 # ─────────────────────────────────────────────
 @router.get("/city/{city_name}")
-@limiter.limit("60/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("60/minute")
 def get_city_aqi(request: Request, city_name: str):
     _validate_city(city_name)
     try:
@@ -61,7 +61,7 @@ def get_city_aqi(request: Request, city_name: str):
 # GET /cities — live data for ALL cities on map
 # ─────────────────────────────────────────────
 @router.get("/cities")
-@limiter.limit("30/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("30/minute")
 async def get_all_cities(request: Request):
     loop = asyncio.get_event_loop()
 

@@ -10,7 +10,7 @@ from sqlalchemy import select
 from api.database import AsyncSessionLocal
 from api.models import AlertSubscription
 from config.settings import CITY_COORDS
-from api.limiter import limiter, _has_valid_api_key
+from api.limiter import limiter
 
 resend.api_key = os.environ.get("RESEND_API_KEY", "")  # Render env var: RESEND_API_KEY
 
@@ -28,7 +28,7 @@ class SubscribeRequest(BaseModel):
 
 
 @router.post("/alerts/subscribe")
-@limiter.limit("5/minute", exempt_when=_has_valid_api_key)
+@limiter.limit("5/minute")
 async def subscribe(req: SubscribeRequest, request: Request):
     if not _EMAIL_RE.match(req.email):
         return {"success": False, "message": "Invalid email address"}
