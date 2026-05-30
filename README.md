@@ -8,7 +8,6 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 > Real-time AI-powered air quality monitoring, prediction, and early warning for 37 Indian cities.  
-> Built solo by a 20-year-old CS student from Faridabad. Free forever. For 1.4 billion Indians.
 
 ---
 
