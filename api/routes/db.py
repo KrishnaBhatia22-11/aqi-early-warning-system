@@ -214,7 +214,7 @@ async def db_cleanup():
                 text("DELETE FROM aqi_readings WHERE city = 'Aurangabad'")
             )
             r_invalid_aqi = await session.execute(
-                text("DELETE FROM aqi_readings WHERE aqi > 500")
+                text("DELETE FROM aqi_readings WHERE aqi > 500 OR pm25 >= 500 OR pm10 >= 500")
             )
             await session.commit()
 

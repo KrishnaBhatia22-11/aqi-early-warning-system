@@ -423,6 +423,13 @@ def _fetch_waqi_multi(city_name, search_keyword=None):
                 'o3':      iaqi.get('o3',   {}).get('v'),
             })
 
+        # Exclude stations with physically impossible PM readings (e.g. Vile Parle West, Mumbai)
+        station_data = [
+            s for s in station_data
+            if not ((s['pm25'] is not None and s['pm25'] >= 500)
+                    or (s['pm10'] is not None and s['pm10'] >= 500))
+        ]
+
         if not station_data:
             # Return None so fetch_city_aqi falls through to CPCB and single-station layers.
             # A truthy dict here would short-circuit the `or` chain and block all fallbacks.
