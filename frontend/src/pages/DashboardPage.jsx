@@ -3,6 +3,7 @@ import SparkLine from "../components/SparkLine";
 import { aqiCategory } from "../utils/aqiCategory";
 import { TREND_7D, CALENDAR_30D, POLLUTANT_BREAKDOWN } from "../data/index";
 import AnomalyBanner from "../components/AnomalyBanner";
+import ShareButton from "../components/ShareButton";
 import { detectAnomaly } from "../utils/api";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
@@ -97,6 +98,13 @@ export default function DashboardPage({ cities, initialCity }) {
     dismissedRef.current = null;
   }, [selectedCity]);
 
+  // If a deep-linked ?city= isn't a city we have live data for, fall back to default.
+  useEffect(() => {
+    if (cities.length && !cities.some(c => c.name === selectedCity)) {
+      setSelectedCity(cities[0].name);
+    }
+  }, [cities, selectedCity]);
+
   // Detect anomaly on every cities refresh
   useEffect(() => {
     const cityData = cities?.find(c => c.name === selectedCity);
@@ -144,6 +152,9 @@ export default function DashboardPage({ cities, initialCity }) {
       <div className="dashboard-hero">
         <div className="mono dashboard-eyebrow">CITY INTELLIGENCE DASHBOARD</div>
         <h1 className="display dashboard-title">Air Quality Analytics</h1>
+        <div style={{ marginTop: 18, display: "flex", justifyContent: "center" }}>
+          <ShareButton city={selectedCity} />
+        </div>
       </div>
 
       <AnomalyBanner

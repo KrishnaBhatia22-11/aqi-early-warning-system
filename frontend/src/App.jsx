@@ -90,12 +90,28 @@ class AppBoundary extends Component {
 
 const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "compare", "alerts", "chat", "about", "login", "register", "api", "history", "weather", "cropburn"];
 
+// Deep-link support: a shared link like /cities?city=Delhi opens the City
+// Intelligence Dashboard pre-selected to that city. Vercel rewrites every path to
+// index.html, so we read window.location ourselves on boot.
+function readInitialNav() {
+  try {
+    const raw = (new URLSearchParams(window.location.search).get("city") || "").trim();
+    const wantsCities = /^\/cities\/?$/i.test(window.location.pathname || "") || !!raw;
+    // City names are single tokens — normalize so ?city=delhi matches "Delhi".
+    const city = raw ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase() : null;
+    return { page: wantsCities ? "cities" : null, city };
+  } catch {
+    return { page: null, city: null };
+  }
+}
+const INITIAL_NAV = readInitialNav();
+
 function AppInner() {
   const { user } = useAuth();
   const [showIntro, setShowIntro] = useState(() => {
     try { return !sessionStorage.getItem("intro_done"); } catch { return false; }
   });
-  const [page, setPage] = useState("map");
+  const [page, setPage] = useState(INITIAL_NAV.page || "map");
   const [cities, setCities] = useState([]);
   const [apiOnline, setApiOnline] = useState(false);
   const [lastSync, setLastSync] = useState(null);
@@ -105,7 +121,7 @@ function AppInner() {
   const [isWaking, setIsWaking] = useState(false);
   const [zoomCity, setZoomCity] = useState(null);
   const [a11y, setA11y] = useState(false);
-  const [citiesInitialCity, setCitiesInitialCity] = useState(null);
+  const [citiesInitialCity, setCitiesInitialCity] = useState(INITIAL_NAV.city);
   const [alertsInitialCity, setAlertsInitialCity] = useState(null);
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
