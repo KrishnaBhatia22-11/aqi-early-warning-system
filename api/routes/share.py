@@ -37,6 +37,12 @@ router = APIRouter()
 BACKEND  = "https://aqi-api-y2qs.onrender.com"
 FRONTEND = "https://aqi-early-warning-system.vercel.app"
 
+# Public-facing count of cities with LIVE monitoring data. CITY_COORDS has 53 entries
+# but ~16 are NO_DATA (no nearby station). Counting live cities at render time needs a
+# network sweep (and is unreliable while the cache warms), so this is fixed — bump it
+# if station coverage changes.
+LIVE_CITY_COUNT = 37
+
 # ── Card design tokens ──────────────────────────────────────────────────────────
 W, H   = 1200, 630
 MARGIN = 72
@@ -191,7 +197,7 @@ def _render_default():
            font=_load_font(26, bold=True), fill=ACCENT, anchor="la")
     hf = _fit_font(d, "India's Air, Live.", W - 2 * MARGIN, 116, bold=True, min_size=60)
     d.text((MARGIN, 150), "India's Air, Live.", font=hf, fill=INK, anchor="la")
-    sub = f"Real-time AQI for {len(CITY_COORDS)} cities · Free forever"
+    sub = f"Real-time AQI for {LIVE_CITY_COUNT} cities · Free forever"
     sf = _fit_font(d, sub, W - 2 * MARGIN, 44, min_size=28)
     d.text((MARGIN, 322), sub, font=sf, fill="#d7d2c9", anchor="la")
     d.text((MARGIN, 386), "ML forecasts · Health impact · Anomaly alerts",
