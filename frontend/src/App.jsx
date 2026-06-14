@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, Component } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { fetchHealth } from "./utils/api";
+import { pathToPage, pageToPath, applySeo } from "./utils/seo";
 
 import CinematicIntro from "./components/CinematicIntro";
 import Navbar from "./components/Navbar";
@@ -90,16 +91,18 @@ class AppBoundary extends Component {
 
 const VALID_PAGES = ["map", "predict", "health", "forecast", "models", "cities", "compare", "alerts", "chat", "about", "login", "register", "api", "history", "weather", "cropburn"];
 
-// Deep-link support: a shared link like /cities?city=Delhi opens the City
-// Intelligence Dashboard pre-selected to that city. Vercel rewrites every path to
-// index.html, so we read window.location ourselves on boot.
+// Boot-time routing: Vercel rewrites every path to index.html, so we read
+// window.location ourselves and map the pathname (/predict, /forecast, /chatbot,
+// …) to the internal page key. A ?city= param is a shared deep link that always
+// opens the City Intelligence Dashboard pre-selected to that city. Unknown paths
+// resolve to null and fall back to the home map below.
 function readInitialNav() {
   try {
     const raw = (new URLSearchParams(window.location.search).get("city") || "").trim();
-    const wantsCities = /^\/cities\/?$/i.test(window.location.pathname || "") || !!raw;
     // City names are single tokens — normalize so ?city=delhi matches "Delhi".
     const city = raw ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase() : null;
-    return { page: wantsCities ? "cities" : null, city };
+    const page = raw ? "cities" : pathToPage(window.location.pathname);
+    return { page, city };
   } catch {
     return { page: null, city: null };
   }
@@ -212,6 +215,21 @@ function AppInner() {
       clearInterval(citiesInterval);
     };
   }, [checkHealth, fetchCities, refreshCities]);
+
+  // Keep the address bar + document <head> in sync with the active page so every
+  // page has a real, shareable URL (good for SEO) without a router. The ?city=
+  // deep link is preserved while on the cities dashboard.
+  useEffect(() => {
+    const path = pageToPath(page);
+    const search = (page === "cities" && citiesInitialCity)
+      ? `?city=${encodeURIComponent(citiesInitialCity)}`
+      : "";
+    const target = path + search;
+    if (target !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", target);
+    }
+    applySeo(page);
+  }, [page, citiesInitialCity]);
 
   const handleIntroDone = useCallback(() => {
     try { sessionStorage.setItem("intro_done", "1"); } catch {}

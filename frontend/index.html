@@ -3,25 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AQI Early Warning System — India</title>
-  <meta name="description" content="Live, real-time air quality (AQI) for 50+ Indian cities. ML-powered forecasts, health impact, SHAP explainability and anomaly alerts — free forever.">
+  <title>AQI Early Warning System — Live Air Quality for 37 Indian Cities</title>
+  <meta name="description" content="Live, real-time air quality (AQI) for 37 Indian cities. ML-powered 24-hour forecasts, health impact, SHAP explainability and email alerts on real CPCB data — free.">
+  <meta name="keywords" content="air quality india, AQI, AQI delhi, PM2.5, PM10, air pollution forecast, air quality index, real-time AQI, CPCB air quality, India pollution, stubble burning, air quality monitor">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Krishna Bhatia">
+  <link rel="canonical" href="https://aqi-early-warning-system.vercel.app/" />
 
   <!-- Open Graph / social share (per-city cards are served live from the backend) -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="AQI Early Warning System" />
   <meta property="og:title" content="AQI Early Warning System — India's Air, Live" />
-  <meta property="og:description" content="Live, real-time air quality for 50+ Indian cities. ML forecasts, health impact, free forever." />
+  <meta property="og:description" content="Live, real-time air quality for 37 Indian cities. ML forecasts, health impact, free and real-time." />
   <meta property="og:url" content="https://aqi-early-warning-system.vercel.app/" />
   <meta property="og:image" content="https://aqi-api-y2qs.onrender.com/api/v1/og/default.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="India's air, live — real-time AQI for 50+ cities" />
+  <meta property="og:image:alt" content="India's air, live — real-time AQI for 37 cities" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="AQI Early Warning System — India's Air, Live" />
-  <meta name="twitter:description" content="Live, real-time air quality for 50+ Indian cities. ML forecasts, health impact, free forever." />
+  <meta name="twitter:description" content="Live, real-time air quality for 37 Indian cities. ML forecasts, health impact, free and real-time." />
   <meta name="twitter:image" content="https://aqi-api-y2qs.onrender.com/api/v1/og/default.png" />
+
+  <!-- Structured data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "AQI Early Warning System",
+    "url": "https://aqi-early-warning-system.vercel.app/",
+    "description": "Live, real-time air quality (AQI) for 37 Indian cities with ML-powered 24-hour forecasts, health impact analysis and email alerts, built on real CPCB and WAQI data.",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AQI Early Warning System",
+    "url": "https://aqi-early-warning-system.vercel.app/",
+    "logo": "https://aqi-early-warning-system.vercel.app/logo.svg",
+    "founder": {
+      "@type": "Person",
+      "name": "Krishna Bhatia"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Real-time and Historical Air Quality Data for Indian Cities",
+    "description": "Real-time and historical Air Quality Index (AQI), PM2.5, PM10, NO2, SO2, CO and O3 readings for 37 Indian cities, sourced from CPCB and WAQI monitoring stations.",
+    "creator": {
+      "@type": "Organization",
+      "name": "AQI Early Warning System"
+    },
+    "spatialCoverage": "India",
+    "keywords": ["air quality", "AQI", "PM2.5", "PM10", "India", "air pollution", "CPCB"],
+    "isAccessibleForFree": true
+  }
+  </script>
 
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
   <link rel="manifest" href="/manifest.json" />
