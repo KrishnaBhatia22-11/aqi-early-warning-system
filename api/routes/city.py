@@ -31,7 +31,11 @@ router = APIRouter()
 #
 # Fix: a dedicated pool sized for I/O fan-out (these calls are network-bound,
 # not CPU-bound) plus a semaphore acquired BEFORE the timer starts.
-_MAX_CONCURRENT_CITIES = 16
+#
+# Sized to share the 512MB box with the warmup and the scheduler: these 8
+# threads each fan out to at most _STATION_FETCH_WORKERS more, and every
+# resulting request still passes through waqi_client's process-wide gate.
+_MAX_CONCURRENT_CITIES = 8
 
 # Matching the semaphore to the pool size means a permit-holder never waits on a
 # worker, so the per-city timeout only ever measures real fetch time.

@@ -104,15 +104,42 @@ app.include_router(db_router,        prefix="/api/v1", tags=["Database"])
 app.include_router(alerts_router,    prefix="/api/v1", tags=["Alerts"])
 
 
+# How long after boot the first AQI snapshot runs. Long enough for the batched
+# warmup to have filled most of the cache, so the snapshot mostly reads memory
+# instead of opening a second wave of upstream connections.
+_FIRST_SNAPSHOT_DELAY_SECONDS = 120
+
+
 @app.on_event("startup")
 async def startup_event():
     import api.models  # noqa: F401 — registers models with Base.metadata
     from api.database import init_db
     await init_db()
 
-    await save_hourly_snapshot()
-    scheduler.add_job(save_hourly_snapshot, "interval", minutes=60)
+    # save_hourly_snapshot() used to be awaited here, which fetched all 53
+    # cities before the server could accept traffic — a second concurrent burst
+    # on top of the import-time warmup, and the pair of them exhausted the
+    # 512MB container. It is now just another scheduled run, the first one
+    # shortly after boot rather than during it.
+    from datetime import datetime, timedelta, timezone
+    scheduler.add_job(
+        save_hourly_snapshot,
+        "interval",
+        minutes=60,
+        next_run_time=datetime.now(timezone.utc)
+        + timedelta(seconds=_FIRST_SNAPSHOT_DELAY_SECONDS),
+        max_instances=1,      # an overrunning fetch must not stack on the next
+        coalesce=True,        # if runs pile up, collapse them into one
+    )
     scheduler.start()
+
+    # Best-effort cache fill on a daemon thread — batched, bounded, and fully
+    # wrapped so a warmup failure can never reach the startup path.
+    try:
+        from src.data.waqi_client import start_warmup
+        start_warmup()
+    except Exception as e:
+        print(f"[Startup] Could not start cache warmup: {e}")
 
 
 @app.on_event("startup")

@@ -18,6 +18,40 @@ AQI_STANDARD   = "US AQI (EPA)"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Concurrency budget — sized for Render's 512MB free tier
+# ─────────────────────────────────────────────────────────────────────────────
+# Boot used to open ~440 threads at once: the import-time warmup ran
+# fetch_all_cities() with 20 city workers, each fanning out to 10 station
+# threads (~220), while main.py's startup event awaited save_hourly_snapshot()
+# — a second full fetch_all_cities() (~220 more). ~400 concurrent TLS sockets
+# plus their thread stacks exhausted the 512MB container and the process was
+# killed ("Exited with status 3"). Because it died, the 15-minute cache never
+# refreshed and the app served months-old entries that the 48h staleness filter
+# then (correctly) rejected — which is why every city showed "no data".
+#
+# The pool sizes below cap threads; the gate below caps sockets.
+_CITY_FETCH_WORKERS    = 4   # cities fetched at once by fetch_all_cities/warmup
+_STATION_FETCH_WORKERS = 4   # stations fetched at once within ONE city
+
+# Hard ceiling on WAQI requests in flight across the WHOLE process — warmup,
+# /cities, the scheduler and /chat all share this one budget, so overlapping
+# callers can no longer multiply into a burst. Assumes a single uvicorn worker.
+_WAQI_MAX_CONCURRENT_REQUESTS = 12
+_waqi_gate = threading.BoundedSemaphore(_WAQI_MAX_CONCURRENT_REQUESTS)
+
+
+def _waqi_get(url, timeout):
+    """Single choke point for outbound WAQI traffic.
+
+    The permit is held only for the HTTP call itself — never across spawning a
+    nested pool — so a city thread waiting on its own station threads cannot
+    deadlock against them.
+    """
+    with _waqi_gate:
+        return requests.get(url, timeout=timeout)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Bounding boxes — prevent picking up stations from neighbouring cities
 # Format: (lat_min, lat_max, lon_min, lon_max)
 # Tight custom boxes for NCR and other densely-packed regions;
@@ -253,7 +287,7 @@ def fetch_all_cities():
         result['lon'] = CITY_COORDS[city]['lon']
         return result
 
-    with ThreadPoolExecutor(max_workers=20) as executor:
+    with ThreadPoolExecutor(max_workers=_CITY_FETCH_WORKERS) as executor:
         results = list(executor.map(fetch_one, cities_list))
 
     return results   # includes no-data cities so frontend can mark them
@@ -267,7 +301,7 @@ def _fetch_waqi_multi(city_name, search_keyword=None):
     try:
         keyword    = search_keyword or city_name
         search_url = f"https://api.waqi.info/search/?token={WAQI_API_KEY}&keyword={keyword}"
-        resp = requests.get(search_url, timeout=10)
+        resp = _waqi_get(search_url, timeout=10)
         data = resp.json()
 
         if data.get('status') != 'ok' or not data.get('data'):
@@ -315,7 +349,7 @@ def _fetch_waqi_multi(city_name, search_keyword=None):
         # Fetch all stations in parallel
         def fetch_uid(uid):
             try:
-                r = requests.get(
+                r = _waqi_get(
                     f"https://api.waqi.info/feed/@{uid}/?token={WAQI_API_KEY}",
                     timeout=8,
                 )
@@ -327,7 +361,9 @@ def _fetch_waqi_multi(city_name, search_keyword=None):
             return uid, None
 
         now_unix = time.time()
-        with ThreadPoolExecutor(max_workers=min(len(relevant_uids), 10)) as ex:
+        with ThreadPoolExecutor(
+            max_workers=min(len(relevant_uids), _STATION_FETCH_WORKERS)
+        ) as ex:
             raw_results = list(ex.map(fetch_uid, relevant_uids))
 
         # Parse with freshness weighting
@@ -579,7 +615,7 @@ def _fetch_cpcb(city_name):
 
 def _fetch_waqi_single(city_name):
     try:
-        resp = requests.get(
+        resp = _waqi_get(
             f"https://api.waqi.info/feed/{city_name}/?token={WAQI_API_KEY}",
             timeout=10,
         )
@@ -692,9 +728,48 @@ def aqi_color(aqi):
 # Background cache warmup
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _warmup():
-    print("[Cache] Background warmup starting for all cities…")
-    fetch_all_cities()
-    print("[Cache] Background warmup complete.")
+def _warm_one(city):
+    """Warm a single city. Never raises — a bad city must not stop the sweep."""
+    try:
+        result = fetch_city_aqi(city)
+        return bool(result and result.get("success"))
+    except Exception as e:
+        print(f"[Cache] Warmup failed for {city}: {e}")
+        return False
 
-threading.Thread(target=_warmup, daemon=True).start()
+
+def _warmup(batch_size=_CITY_FETCH_WORKERS, pause=1.0):
+    """Fill the cache in small batches instead of one big burst.
+
+    A fresh pool per batch keeps live threads at exactly batch_size and lets
+    them be reclaimed between batches, so warmup holds a flat, tiny footprint
+    for its whole run rather than peaking at boot.
+    """
+    try:
+        cities = list(CITY_COORDS.keys())
+        print(
+            f"[Cache] Warmup starting — {len(cities)} cities, {batch_size} at a "
+            f"time, max {_WAQI_MAX_CONCURRENT_REQUESTS} upstream requests in flight."
+        )
+        warmed = 0
+        for i in range(0, len(cities), batch_size):
+            batch = cities[i:i + batch_size]
+            with ThreadPoolExecutor(max_workers=batch_size) as ex:
+                warmed += sum(ex.map(_warm_one, batch))
+            time.sleep(pause)   # let sockets close before the next batch
+        print(f"[Cache] Warmup complete — {warmed}/{len(cities)} cities cached.")
+    except Exception as e:
+        # Warmup is best-effort. It runs on a daemon thread, but swallow here
+        # too so nothing can ever escape and take the process down with it.
+        print(f"[Cache] Warmup aborted: {e}")
+
+
+def start_warmup():
+    """Kick off the batched warmup on a daemon thread. Never blocks the caller.
+
+    Deliberately NOT started at import — that burst was what killed the process
+    on a 512MB instance. api/main.py starts it after startup completes.
+    """
+    thread = threading.Thread(target=_warmup, name="cache-warmup", daemon=True)
+    thread.start()
+    return thread
