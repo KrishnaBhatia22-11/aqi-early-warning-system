@@ -4,6 +4,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import { fetchDbHistory } from "../utils/api";
+import { aqiCategory as aqiCategoryName, catColor } from "../utils/aqiCategory";
 
 // ── City Dropdown ─────────────────────────────────────────────────────────────
 
@@ -75,24 +76,16 @@ const DAYS_OPTIONS = [1, 3, 7, 12];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Both delegate to the shared India CPCB band table, so a stored reading is
+// labelled and coloured exactly as the live map labels the same number.
 function aqiColor(aqi) {
   if (!aqi) return "#94a3b8";
-  if (aqi <= 50)  return "#10b981";
-  if (aqi <= 100) return "#84cc16";
-  if (aqi <= 200) return "#f97316";
-  if (aqi <= 300) return "#ef4444";
-  if (aqi <= 400) return "#7c3aed";
-  return "#475569";
+  return catColor(aqiCategoryName(aqi).name);
 }
 
 function aqiCategory(aqi) {
   if (!aqi) return "Unknown";
-  if (aqi <= 50)  return "Good";
-  if (aqi <= 100) return "Satisfactory";
-  if (aqi <= 200) return "Moderate";
-  if (aqi <= 300) return "Poor";
-  if (aqi <= 400) return "Very Poor";
-  return "Severe";
+  return aqiCategoryName(aqi).name;
 }
 
 function fmtDateTime(isoStr) {

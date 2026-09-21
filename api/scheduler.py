@@ -8,7 +8,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import select
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.data.waqi_client import fetch_all_cities
+from src.data.cpcb_client import fetch_all_cities, refresh_cache
+from src.data.india_aqi import categorize_aqi, CATEGORY_COLORS
 from api.database import AsyncSessionLocal
 from api.models import AQIReading, AlertSubscription
 
@@ -20,31 +21,36 @@ _UNSUBSCRIBE_BASE = "https://aqi-api-y2qs.onrender.com/api/v1/alerts/unsubscribe
 
 
 def _aqi_category(aqi: float) -> tuple[str, str]:
-    """Returns (category_name, hex_color)."""
-    if aqi <= 50:   return ("Good",         "#22c55e")
-    if aqi <= 100:  return ("Satisfactory",  "#84cc16")
-    if aqi <= 200:  return ("Moderate",      "#eab308")
-    if aqi <= 300:  return ("Poor",          "#f97316")
-    if aqi <= 400:  return ("Very Poor",     "#ef4444")
-    return              ("Severe",           "#7c3aed")
+    """Returns (category_name, hex_color), on the India CPCB scale.
+
+    Both come from india_aqi so an alert email can never show a different
+    category or colour than the site does for the same number.
+    """
+    name = categorize_aqi(aqi)
+    return (name, CATEGORY_COLORS.get(name, "#94a3b8"))
+
+
+# Advice keyed to the CPCB category name, so the wording always matches the
+# category shown beside it.
+_ADVICE = {
+    "Good":         "Air quality is good. Enjoy outdoor activities.",
+    "Satisfactory": "Air quality is acceptable. Sensitive individuals should reduce prolonged outdoor exertion.",
+    "Moderate":     "Unhealthy for sensitive groups. People with respiratory or heart conditions should limit outdoor activities.",
+    "Poor":         "Everyone should reduce prolonged outdoor exertion. Wear a mask when outside.",
+    "Very Poor":    "Very unhealthy. Avoid all outdoor activities. Wear an N95 mask if you must go out.",
+    "Severe":       "Hazardous. Stay indoors. Seal windows and doors. Use an air purifier if available.",
+}
 
 
 def _health_advice(aqi: float) -> str:
-    if aqi <= 50:
-        return "Air quality is good. Enjoy outdoor activities."
-    if aqi <= 100:
-        return "Air quality is acceptable. Sensitive individuals should reduce prolonged outdoor exertion."
-    if aqi <= 200:
-        return "Unhealthy for sensitive groups. People with respiratory or heart conditions should limit outdoor activities."
-    if aqi <= 300:
-        return "Everyone should reduce prolonged outdoor exertion. Wear a mask when outside."
-    if aqi <= 400:
-        return "Very unhealthy. Avoid all outdoor activities. Wear an N95 mask if you must go out."
-    return "Hazardous. Stay indoors. Seal windows and doors. Use an air purifier if available."
+    return _ADVICE.get(categorize_aqi(aqi), _ADVICE["Moderate"])
 
 
 async def save_hourly_snapshot():
     try:
+        # Force a refresh so the hourly snapshot is a genuinely new reading
+        # rather than a replay of the cache entry the last run already wrote.
+        await asyncio.to_thread(refresh_cache)
         cities_data = await asyncio.to_thread(fetch_all_cities)
 
         rows = []
@@ -62,7 +68,7 @@ async def save_hourly_snapshot():
                 so2=city.get("so2"),
                 o3=city.get("o3"),
                 station_count=city.get("station_count"),
-                source="WAQI",
+                source="CPCB",
             ))
 
         if rows:

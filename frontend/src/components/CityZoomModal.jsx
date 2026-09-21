@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { aqiCategory } from "../utils/aqiCategory";
+import { aqiCategory, AQI_STANDARD_LABEL } from "../utils/aqiCategory";
 import CountUp from "./CountUp";
 import { TREND_7D } from "../data/index";
 
@@ -247,13 +247,13 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
               <div className="zp-hint mono">Press ESC or click ✕ to return to map</div>
             )}
             <div className="mono zp-coords">
-              {city.source ?? "WAQI"} · {city.data_quality ?? "LIVE"}
+              {city.source ?? "CPCB"} · {city.data_quality ?? "LIVE"}
             </div>
           </div>
           <div className="zp-aqi-block" style={{ color: cat.color }}>
             <div className="display zp-aqi-num"><CountUp to={city.aqi} duration={1200}/></div>
             <span className={`badge ${cat.klass}`} style={{ fontSize: 13, padding: "6px 14px" }}>{cat.name.toUpperCase()}</span>
-            <div className="mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>US AQI (EPA)</div>
+            <div className="mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>{AQI_STANDARD_LABEL}</div>
           </div>
         </div>
 

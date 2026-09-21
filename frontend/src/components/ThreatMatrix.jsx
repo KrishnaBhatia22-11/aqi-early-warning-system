@@ -1,4 +1,4 @@
-import { aqiCategory } from "../utils/aqiCategory";
+import { aqiCategory, AQI_STANDARD_LABEL } from "../utils/aqiCategory";
 
 export default function ThreatMatrix({ cities, onCitySelect }) {
   const withData    = cities.filter(c => c.data_available !== false && c.aqi != null);
@@ -19,7 +19,7 @@ export default function ThreatMatrix({ cities, onCitySelect }) {
           <span className="panel-title mono">THREAT MATRIX</span>
           <div className="display threat-title">{sorted.length} Cities Ranked</div>
         </div>
-        <span className="mono threat-meta">US AQI · DESC</span>
+        <span className="mono threat-meta">{AQI_STANDARD_LABEL} · DESC</span>
       </div>
       <div className="threat-list">
         {sorted.map((c, i) => {

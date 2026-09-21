@@ -7,7 +7,8 @@ const RISK = {
   AVOID:     { label: "AVOID OUTDOORS", bg: "rgba(194,0,42,0.22)",    color: "#ff6c79", border: "rgba(194,0,42,0.65)",    pulse: true  },
 };
 
-// tiers: 0=Good  1=Satisfactory  2=Moderate  3=Poor  4=Severe  5=Hazardous
+// India CPCB tiers: 0=Good 1=Satisfactory 2=Moderate 3=Poor 4=Very Poor 5=Severe
+// (thresholds in getTier below; CPCB has no "Hazardous" band)
 const GROUPS = [
   {
     icon: "👶", label: "Children (under 12)",
@@ -106,7 +107,7 @@ export default function HealthAdvisory({ aqi, idle }) {
         <div className="panel-header">
           <span className="mono panel-title">HEALTH ADVISORY BY GROUP</span>
           <span className="mono panel-meta">
-            {idle ? "AWAITING PREDICTION" : `AQI ${aqi} · ${["GOOD","SATISFACTORY","MODERATE","POOR","SEVERE","HAZARDOUS"][tier]}`}
+            {idle ? "AWAITING PREDICTION" : `AQI ${aqi} · ${["GOOD","SATISFACTORY","MODERATE","POOR","VERY POOR","SEVERE"][tier]}`}
           </span>
         </div>
 

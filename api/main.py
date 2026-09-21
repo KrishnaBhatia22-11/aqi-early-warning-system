@@ -104,9 +104,9 @@ app.include_router(db_router,        prefix="/api/v1", tags=["Database"])
 app.include_router(alerts_router,    prefix="/api/v1", tags=["Alerts"])
 
 
-# How long after boot the first AQI snapshot runs. Long enough for the batched
-# warmup to have filled most of the cache, so the snapshot mostly reads memory
-# instead of opening a second wave of upstream connections.
+# How long after boot the first AQI snapshot runs. Long enough for the warmup's
+# national CPCB pull to have landed, so the snapshot reads the cache instead of
+# racing the warmup for the same pages.
 _FIRST_SNAPSHOT_DELAY_SECONDS = 120
 
 
@@ -133,10 +133,11 @@ async def startup_event():
     )
     scheduler.start()
 
-    # Best-effort cache fill on a daemon thread — batched, bounded, and fully
-    # wrapped so a warmup failure can never reach the startup path.
+    # Best-effort cache fill on a daemon thread, fully wrapped so a warmup
+    # failure can never reach the startup path. Under CPCB this is a handful of
+    # HTTP pages rather than a 53-city fan-out, so it costs almost nothing.
     try:
-        from src.data.waqi_client import start_warmup
+        from src.data.cpcb_client import start_warmup
         start_warmup()
     except Exception as e:
         print(f"[Startup] Could not start cache warmup: {e}")

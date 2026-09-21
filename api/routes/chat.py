@@ -46,7 +46,7 @@ TECH STACK:
 - Frontend: React + Tailwind + Vite on Vercel
 - Database: PostgreSQL — stores real hourly AQI readings
 - AI Chatbot: Groq LLaMA (that's you)
-- Live AQI: WAQI API with multi-station averaging
+- Live AQI: official CPCB feed (data.gov.in), multi-station averaging, India CPCB National AQI
 - Weather: OpenWeatherMap API
 - Satellite fires: NASA FIRMS VIIRS satellite
 - Auth: JWT in sessionStorage
@@ -80,12 +80,12 @@ DATA ARCHITECTURE:
 - 53 Indian cities covered
 - Delhi: 16 CPCB stations averaged (not just 1)
 - Multi-station averaging with outlier removal
-- Weighted average by data freshness
+- Stations older than 48h are dropped, never shown as current
 - Every reading shows station count and data quality
 - NEVER shows fake or synthetic data
 - Database: 1500+ real hourly readings and growing
 - Scheduler saves all 53 cities every 60 minutes
-- AQI standard: US EPA (Indian NAQI coming soon)
+- AQI standard: India CPCB National AQI (NOT US EPA)
 
 CROP BURNING SYSTEM:
 - Signal 1: Punjab cities AQI spike vs 7-day DB baseline
@@ -97,13 +97,20 @@ CROP BURNING SYSTEM:
 - Confidence 0-100: 25=season only, 65+=active burning,
   85+=peak event
 
-AQI CATEGORIES (US EPA):
+AQI CATEGORIES (India CPCB National AQI — the ONLY scale this app uses):
 0-50: Good — green
-51-100: Moderate — yellow
-101-150: Unhealthy for Sensitive Groups — orange
-151-200: Unhealthy — red
-201-300: Very Unhealthy — purple
-301+: Hazardous — maroon
+51-100: Satisfactory — light green
+101-200: Moderate — yellow
+201-300: Poor — orange
+301-400: Very Poor — red
+401-500: Severe — maroon
+
+Never describe these numbers on the US EPA scale. The same concentration gives a
+different number on each scale, so a US category name against a CPCB value would
+be wrong. CPCB has no "Hazardous" or "Unhealthy for Sensitive Groups" band.
+The AQI is the MAXIMUM of the per-pollutant sub-indices, not an average, and
+CPCB requires at least 3 pollutants including PM2.5 or PM10 before publishing
+one — which is why some cities honestly show NO DATA.
 
 HEALTH FACTS YOU KNOW:
 - 1 cigarette = ~22 μg/m³ PM2.5 exposure over 24h
@@ -189,7 +196,7 @@ async def _fetch_cities_ctx() -> str:
         import sys as _sys
         import os as _os
         _sys.path.append(_os.path.join(_os.path.dirname(__file__), '..', '..'))
-        from src.data.waqi_client import fetch_all_cities
+        from src.data.cpcb_client import fetch_all_cities
         from api.routes.anomaly import detect_anomaly, AnomalyRequest
 
         cities = await asyncio.to_thread(fetch_all_cities)

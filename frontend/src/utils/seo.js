@@ -93,7 +93,7 @@ export const SEO = {
   about: {
     title: "About — How the AQI Early Warning System Works | India Air Quality",
     description:
-      "Learn how the AQI Early Warning System uses CPCB and WAQI data, machine learning and SHAP explainability to track and forecast air quality across India.",
+      "Learn how the AQI Early Warning System uses official CPCB data, machine learning and SHAP explainability to track and forecast air quality across India.",
   },
   login: {
     title: "Sign In | AQI Early Warning System",

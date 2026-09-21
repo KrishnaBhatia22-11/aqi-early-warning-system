@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchForecast } from "../utils/api";
+import { aqiCategory, catColor, AQI_BANDS, AQI_STANDARD_LABEL } from "../utils/aqiCategory";
 
 const BASE = "https://aqi-api-y2qs.onrender.com";
 
@@ -16,22 +17,11 @@ const ALL_CITIES = [
   "Tiruchirappalli",
 ];
 
-const CAT_COLORS = {
-  Good: "#22c55e", Satisfactory: "#84cc16", Moderate: "#f59e0b",
-  Poor: "#FF6B00", "Very Poor": "#ef3a4d", Severe: "#c2002a",
-};
-const CAT_ORDER = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"];
+// India CPCB bands, from the shared table — this page must rank and colour
+// cities on exactly the scale the AQI numbers were computed with.
+const CAT_ORDER = AQI_BANDS.map((b) => b.name);
 
-function catColor(cat) { return CAT_COLORS[cat] ?? "#FF6B00"; }
-
-function catFromAqi(aqi) {
-  if (aqi <= 50)  return "Good";
-  if (aqi <= 100) return "Satisfactory";
-  if (aqi <= 200) return "Moderate";
-  if (aqi <= 300) return "Poor";
-  if (aqi <= 400) return "Very Poor";
-  return "Severe";
-}
+function catFromAqi(aqi) { return aqiCategory(aqi).name; }
 
 function healthCalc(aqi, hours = 2) {
   const pm25 = aqi * 0.6;
@@ -416,7 +406,7 @@ export default function CityComparisonPage({ cities = [] }) {
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi1} <span style={{ fontSize: 9, opacity: 0.6 }}>US AQI</span></span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi1} <span style={{ fontSize: 9, opacity: 0.6 }}>{AQI_STANDARD_LABEL}</span></span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
                   {src1 && <span className="mono" style={{ fontSize: 10, opacity: 0.45, display: "block", marginTop: 2 }}>{src1}</span>}
                 </div>
@@ -443,7 +433,7 @@ export default function CityComparisonPage({ cities = [] }) {
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi2} <span style={{ fontSize: 9, opacity: 0.6 }}>US AQI</span></span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi2} <span style={{ fontSize: 9, opacity: 0.6 }}>{AQI_STANDARD_LABEL}</span></span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
                   {src2 && <span className="mono" style={{ fontSize: 10, opacity: 0.45, display: "block", marginTop: 2 }}>{src2}</span>}
                 </div>

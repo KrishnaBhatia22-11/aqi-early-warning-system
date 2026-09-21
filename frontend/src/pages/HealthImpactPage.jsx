@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { calculateHealthImpact } from "../utils/api";
+import { AQI_STANDARD_LABEL } from "../utils/aqiCategory";
 
 const RISK_COLORS = {
   "Minimal Risk":    "#22c55e",
@@ -220,7 +221,7 @@ export default function HealthImpactPage({ cities = [] }) {
                   return (
                     <span className="health-live-badge">
                       <span className="hlb-dot" />
-                      LIVE {liveAqi} US AQI
+                      LIVE {liveAqi} {AQI_STANDARD_LABEL}
                       {stnName && <span style={{ opacity: 0.6, marginLeft: 5, fontSize: 10 }}>· {stnName}</span>}
                     </span>
                   );

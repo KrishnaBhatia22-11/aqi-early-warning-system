@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
-import { aqiCategory } from "../utils/aqiCategory";
+import { aqiCategory, AQI_STANDARD_LABEL } from "../utils/aqiCategory";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconRetinaUrl: null, iconUrl: null, shadowUrl: null });
@@ -183,7 +183,7 @@ export default function IndiaMap({ cities, selected, onSelect, onCityClick }) {
                 <div className="ct-name mono">{city.name.toUpperCase()}</div>
                 {hasData ? (
                   <>
-                    <div className="ct-aqi" style={{ color: cat.color }}>{city.aqi} <span style={{ fontSize: 9, opacity: 0.6 }}>US AQI</span></div>
+                    <div className="ct-aqi" style={{ color: cat.color }}>{city.aqi} <span style={{ fontSize: 9, opacity: 0.6 }}>{AQI_STANDARD_LABEL}</span></div>
                     <div className="ct-cat" style={{ color: cat.color }}>{cat.name.toUpperCase()}</div>
                     {stationLabel && (
                       <div className="ct-stations mono" style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>

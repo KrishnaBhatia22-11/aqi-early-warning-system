@@ -75,14 +75,17 @@ body {
   font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
   padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.08em;
 }
+/* India CPCB bands. `.very-poor` is 301-400 and `.severe` is 401-500 (CPCB's
+   top band); `.hazardous` is kept only so any stale markup still renders. */
 .badge.good        { background: rgba(52,210,122,0.12); color: #6dec9f; border: 1px solid rgba(52,210,122,0.35); }
-.badge.satisfactory{ background: rgba(245,209,66,0.12); color: #ffe07a; border: 1px solid rgba(245,209,66,0.35); }
-.badge.moderate    { background: rgba(255,179,0,0.12); color: #ffd166; border: 1px solid rgba(255,179,0,0.4); }
+.badge.satisfactory{ background: rgba(163,209,58,0.12); color: #cdec7a; border: 1px solid rgba(163,209,58,0.35); }
+.badge.moderate    { background: rgba(245,209,66,0.12); color: #ffe07a; border: 1px solid rgba(245,209,66,0.4); }
 .badge.poor        { background: rgba(255,107,0,0.14); color: #ffb38a; border: 1px solid rgba(255,107,0,0.45); }
-.badge.severe      { background: rgba(239,58,77,0.16); color: #ff8893; border: 1px solid rgba(239,58,77,0.5); }
-.badge.hazardous   { background: rgba(194,0,42,0.18); color: #ff6c79; border: 1px solid rgba(194,0,42,0.6); animation: pulse-red 1.6s infinite; }
+.badge.very-poor   { background: rgba(239,58,77,0.16); color: #ff8893; border: 1px solid rgba(239,58,77,0.5); }
+.badge.severe,
+.badge.hazardous   { background: rgba(126,0,35,0.28); color: #ff6c79; border: 1px solid rgba(126,0,35,0.7); animation: pulse-red 1.6s infinite; }
 
-@keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(194,0,42,0.6);} 50%{box-shadow:0 0 0 6px rgba(194,0,42,0);} }
+@keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(126,0,35,0.7);} 50%{box-shadow:0 0 0 6px rgba(126,0,35,0);} }
 
 /* Section eyebrow */
 .section-eyebrow {
@@ -1135,7 +1138,8 @@ body.a11y-mode .badge.good::after        { content: " ✓"; font-weight: 700; ma
 body.a11y-mode .badge.satisfactory::after { content: " ○"; font-weight: 700; margin-left: 4px; }
 body.a11y-mode .badge.moderate::after     { content: " !"; font-weight: 700; margin-left: 4px; }
 body.a11y-mode .badge.poor::after         { content: " ✗"; font-weight: 700; margin-left: 4px; }
-body.a11y-mode .badge.severe::after       { content: " ✕"; font-weight: 700; margin-left: 4px; }
+body.a11y-mode .badge.very-poor::after    { content: " ✕"; font-weight: 700; margin-left: 4px; }
+body.a11y-mode .badge.severe::after       { content: " ☠"; font-weight: 700; margin-left: 4px; }
 body.a11y-mode .badge.hazardous::after    { content: " ☠"; font-weight: 700; margin-left: 4px; }
 
 /* ══════════════════════════════════════

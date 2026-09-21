@@ -18,7 +18,7 @@ class AQIReading(Base):
     so2           = Column(Float, nullable=True)
     o3            = Column(Float, nullable=True)
     station_count = Column(Integer, nullable=True)
-    source        = Column(String(32), default="WAQI")
+    source        = Column(String(32), default="CPCB")
     timestamp     = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     __table_args__ = (

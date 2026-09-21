@@ -36,7 +36,7 @@ SEASONAL = {
 # Day-of-week multiplier (0=Mon … 6=Sun)
 DOW = {0: 1.02, 1: 1.02, 2: 1.02, 3: 1.02, 4: 1.05, 5: 0.92, 6: 0.85}
 
-# Summer 2026 researched baseline AQI — used when WAQI live data is unavailable
+# Summer 2026 researched baseline AQI — used when live CPCB data is unavailable
 CITY_DEFAULTS = {
     "Delhi": 185, "Mumbai": 95, "Kolkata": 140, "Chennai": 75,
     "Bengaluru": 85, "Hyderabad": 90, "Ahmedabad": 130, "Jaipur": 145,
@@ -108,7 +108,7 @@ def forecast_aqi(req: ForecastRequest, request: Request):
     # Determine base AQI and source label
     if req.base_aqi and 1.0 <= req.base_aqi <= 500.0:
         base = float(req.base_aqi)
-        base_aqi_source = "live_waqi"
+        base_aqi_source = "live_cpcb"
     else:
         base = float(CITY_DEFAULTS.get(norm_city, 150))
         base_aqi_source = "seasonal_estimate"

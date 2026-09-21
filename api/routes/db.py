@@ -213,8 +213,18 @@ async def db_cleanup():
             r_aurangabad = await session.execute(
                 text("DELETE FROM aqi_readings WHERE city = 'Aurangabad'")
             )
+            # Only the AQI has a hard 0-500 ceiling. The pm25/pm10 columns hold
+            # CONCENTRATIONS now (µg/m³, from the CPCB feed), where 500+ PM10 is
+            # a real Delhi winter day, not a broken sensor — the old
+            # "pm25 >= 500 OR pm10 >= 500" rule made sense only while those
+            # columns held 0-500 sub-indices from WAQI, and would now delete
+            # valid readings. Concentration ceilings are set where physical
+            # plausibility actually ends.
             r_invalid_aqi = await session.execute(
-                text("DELETE FROM aqi_readings WHERE aqi > 500 OR pm25 >= 500 OR pm10 >= 500")
+                text(
+                    "DELETE FROM aqi_readings "
+                    "WHERE aqi > 500 OR aqi < 0 OR pm25 >= 1000 OR pm10 >= 1000"
+                )
             )
             await session.commit()
 

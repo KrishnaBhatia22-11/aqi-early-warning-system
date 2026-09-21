@@ -2,12 +2,11 @@ import re
 import asyncio
 import sys
 import os
-from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter, HTTPException, Request
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from src.data.waqi_client import fetch_city_aqi, fetch_all_cities
+from src.data.cpcb_client import fetch_city_aqi, fetch_all_cities
 from src.analytics.health_score import get_health_advisory, get_general_precautions
 from config.settings import CITY_COORDS
 from api.limiter import limiter
@@ -15,55 +14,23 @@ from api.limiter import limiter
 router = APIRouter()
 
 # ─────────────────────────────────────────────
-# Concurrency budget for /cities
+# /cities no longer fans out
 # ─────────────────────────────────────────────
-# /cities fans out to ~53 cities. Two things used to sink it:
+# This endpoint used to open one upstream search plus a station fan-out for each
+# of 53 cities, behind a dedicated thread pool, a per-city timeout, a per-request
+# semaphore and a global deadline — all of it machinery for surviving 53
+# simultaneous network calls on a 512MB box.
 #
-#   1. It submitted to asyncio's DEFAULT executor (run_in_executor(None, ...)),
-#      which is shared with every other asyncio.to_thread() in the app — the
-#      scheduler and /chat both push fetch_all_cities() through it. When they
-#      overlap, /cities queues behind them instead of running.
-#   2. The per-city asyncio.wait_for() timer started when the coroutine was
-#      created, not when the thread actually picked the job up. Cities sitting
-#      in the executor queue burned their whole timeout before fetching a byte,
-#      and cancelling a run_in_executor future does NOT stop the thread — so the
-#      abandoned work kept holding a worker while the endpoint reported no-data.
+# The CPCB resource publishes the whole country in a few thousand records, so
+# cpcb_client pulls it once and caches it for 15 minutes. Both endpoints here
+# now read that one snapshot. There is no fan-out left to bound, so the pool,
+# the semaphore and both timeouts are gone with it.
 #
-# Fix: a dedicated pool sized for I/O fan-out (these calls are network-bound,
-# not CPU-bound) plus a semaphore acquired BEFORE the timer starts.
-#
-# Sized to share the 512MB box with the warmup and the scheduler: these 8
-# threads each fan out to at most _STATION_FETCH_WORKERS more, and every
-# resulting request still passes through waqi_client's process-wide gate.
-_MAX_CONCURRENT_CITIES = 8
-
-# Matching the semaphore to the pool size means a permit-holder never waits on a
-# worker, so the per-city timeout only ever measures real fetch time.
-_city_pool = ThreadPoolExecutor(
-    max_workers=_MAX_CONCURRENT_CITIES,
-    thread_name_prefix="cities",
-)
-
-# The semaphore is built PER REQUEST, deliberately not at module level.
-#
-# A module-level asyncio.Semaphore binds itself to an event loop the first time
-# a task actually has to wait on it, and from then on raises
-# "is bound to a different event loop" for any other loop. Once that happened,
-# every /cities call returned real data for at most _MAX_CONCURRENT_CITIES
-# cities — the ones that took the uncontended fast path and never touched the
-# loop — and no_data for all the rest, permanently. A per-request semaphore
-# cannot outlive its loop, so the failure mode is structurally impossible.
-#
-# The app-wide ceiling does not depend on this: waqi_client's _waqi_gate is a
-# threading primitive, loop-agnostic, and caps real upstream requests process
-# wide however many /cities calls overlap.
-
-# Each city may internally do a search call plus a station fan-out, so give it
-# more headroom than a single HTTP timeout while staying far under the global cap.
-_PER_CITY_TIMEOUT = 15.0
-
-# Leaves room to still serialise a full response inside the 30s budget.
-_GLOBAL_TIMEOUT = 25.0
+# The single remaining concern is the cold path: the very first request after a
+# deploy has to wait for that national pull. asyncio.to_thread keeps it off the
+# event loop, and _COLD_FETCH_TIMEOUT caps it so a slow upstream degrades to
+# no-data markers rather than hanging the whole map to Render's 30s limit.
+_COLD_FETCH_TIMEOUT = 25.0
 
 # Letters, spaces, hyphens only — max 50 chars — blocks SQL/script injection
 _CITY_RE = re.compile(r'^[A-Za-z][A-Za-z \-]{0,49}$')
@@ -84,22 +51,39 @@ def _validate_city(name: str):
 # ─────────────────────────────────────────────
 @router.get("/city/{city_name}")
 @limiter.limit("60/minute")
-def get_city_aqi(request: Request, city_name: str):
+async def get_city_aqi(request: Request, city_name: str):
     _validate_city(city_name)
     try:
-        data = fetch_city_aqi(city_name)
-
-        if not data['success']:
+        try:
+            data = await asyncio.wait_for(
+                asyncio.to_thread(fetch_city_aqi, city_name),
+                timeout=_COLD_FETCH_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
             raise HTTPException(
-                status_code=404,
-                detail=f"Could not fetch data for {city_name}: {data.get('error')}"
+                status_code=503,
+                detail="Live CPCB data is still loading — please retry in a moment",
             )
 
+        if not data or not data.get('success'):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Could not fetch data for {city_name}: {(data or {}).get('error')}"
+            )
+
+        # Advisory keys off the CPCB category name, so the advice shown always
+        # matches the category shown.
         advisory    = get_health_advisory(data['category'])
         precautions = get_general_precautions(data['category'])
 
+        data = dict(data)
         data['health_advisory']     = advisory
         data['general_precautions'] = precautions
+
+        coords = CITY_COORDS.get(city_name)
+        if coords:
+            data['lat'] = coords['lat']
+            data['lon'] = coords['lon']
 
         return data
 
@@ -128,49 +112,28 @@ def _no_data_city(city):
 @router.get("/cities")
 @limiter.limit("30/minute")
 async def get_all_cities(request: Request):
-    loop = asyncio.get_running_loop()
-    cities = list(CITY_COORDS.keys())
-    sem = asyncio.Semaphore(_MAX_CONCURRENT_CITIES)
-
-    async def fetch_one_async(city):
-        # The try wraps the acquire as well as the fetch. Anything that goes
-        # wrong here — upstream error, timeout, or a problem with the lock
-        # itself — must cost exactly one city, never escape and take the batch
-        # down with it.
-        try:
-            # Hold a permit for the whole fetch, and only start the clock once
-            # we have one — time spent waiting for a turn is not this city's
-            # fault.
-            async with sem:
-                result = await asyncio.wait_for(
-                    loop.run_in_executor(_city_pool, fetch_city_aqi, city),
-                    timeout=_PER_CITY_TIMEOUT,
-                )
-        except Exception:
-            return _no_data_city(city)
-
-        if not result:
-            return _no_data_city(city)
-
-        result = dict(result)
-        result["lat"] = CITY_COORDS[city]["lat"]
-        result["lon"] = CITY_COORDS[city]["lon"]
-        return result
-
     try:
-        tasks = [asyncio.ensure_future(fetch_one_async(city)) for city in cities]
+        try:
+            cities_data = await asyncio.wait_for(
+                asyncio.to_thread(fetch_all_cities),
+                timeout=_COLD_FETCH_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            # Still answer with the full set of markers. A map of grey pins that
+            # arrives beats a 504 that does not, and the next request will find
+            # the cache warm.
+            print("[Cities] Cold CPCB fetch exceeded the deadline — returning no-data markers")
+            cities_data = []
 
-        # asyncio.wait never raises on timeout, so a slow tail degrades to
-        # partial data instead of 504-ing the whole map.
-        await asyncio.wait(tasks, timeout=_GLOBAL_TIMEOUT)
-
-        cities_data = []
-        for city, task in zip(cities, tasks):
-            if task.done() and not task.cancelled() and task.exception() is None:
-                cities_data.append(task.result())
-            else:
-                task.cancel()
-                cities_data.append(_no_data_city(city))
+        if not cities_data:
+            cities_data = [_no_data_city(city) for city in CITY_COORDS]
+        else:
+            # A city the feed does not cover comes back with success=False; give
+            # it the explicit no_data flag the frontend keys its grey marker off.
+            cities_data = [
+                row if row.get("success") else {**row, "no_data": True}
+                for row in cities_data
+            ]
 
         return {
             "success": True,

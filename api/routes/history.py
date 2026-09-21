@@ -1,32 +1,39 @@
-from fastapi import APIRouter, HTTPException, Query
-import requests
+"""
+Per-city AQI history.
+
+This used to read WAQI's `forecast.daily.pm25` block and present it as history —
+which was never quite what it claimed: those entries are WAQI's own daily PM2.5
+summaries, and the PM2.5 average was returned directly in the `aqi` field, so a
+US-scale sub-index and a raw µg/m³ concentration were being shown as one number.
+
+Now that CPCB (data.gov.in) is the live source, there is no upstream history to
+read at all: the feed publishes the current hour only. The app's own
+`aqi_readings` table is the history — the scheduler has been writing an hourly
+snapshot per city into it all along — so this endpoint reads that, on the India
+CPCB scale, and says plainly when a city has not accumulated readings yet.
+
+/db/history serves the same table in a richer per-reading shape for the Time
+Machine; this endpoint keeps its original day-summary shape for API consumers.
+"""
+
+import re
+import sys
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy import select
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from api.database import AsyncSessionLocal
+from api.models import AQIReading
+from src.data.india_aqi import AQI_STANDARD, categorize_aqi
 
 router = APIRouter()
 
-WAQI_TOKEN = os.getenv("WAQI_TOKEN", "")
+SOURCE_LABEL = "CPCB — Central Pollution Control Board (data.gov.in), via hourly snapshots"
 
-CITY_SLUGS = {
-    "Delhi": "delhi",
-    "Mumbai": "mumbai",
-    "Bangalore": "bangalore",
-    "Chennai": "chennai",
-    "Kolkata": "kolkata",
-    "Hyderabad": "hyderabad",
-    "Ahmedabad": "ahmedabad",
-    "Pune": "pune",
-    "Jaipur": "jaipur",
-    "Lucknow": "lucknow",
-    "Kanpur": "kanpur",
-    "Patna": "patna",
-    "Bhopal": "bhopal",
-    "Nagpur": "nagpur",
-    "Surat": "surat",
-    "Visakhapatnam": "visakhapatnam",
-    "Chandigarh": "chandigarh",
-    "Indore": "indore",
-}
+_CITY_RE = re.compile(r'^[A-Za-z][A-Za-z \-]{0,49}$')
 
 
 @router.get("/history/{city}")
@@ -34,82 +41,84 @@ async def get_history(
     city: str,
     days: int = Query(default=7, ge=1, le=30),
 ):
-    if not WAQI_TOKEN:
-        raise HTTPException(status_code=503, detail="WAQI API key not configured")
+    if not _CITY_RE.match(city or ""):
+        raise HTTPException(
+            status_code=400,
+            detail="City name may only contain letters, spaces, and hyphens",
+        )
 
-    slug = CITY_SLUGS.get(city, city.lower())
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
     try:
-        url = f"https://api.waqi.info/feed/{slug}/?token={WAQI_TOKEN}"
-        response = requests.get(url, timeout=10)
-        data = response.json()
+        async with AsyncSessionLocal() as session:
+            rows = (await session.execute(
+                select(AQIReading.timestamp, AQIReading.aqi, AQIReading.pm25)
+                .where(AQIReading.city == city, AQIReading.timestamp >= cutoff)
+                .order_by(AQIReading.timestamp.asc())
+            )).all()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {e}")
 
-        if data.get("status") != "ok":
-            raise HTTPException(status_code=404, detail=f"No data available for {city}")
+    # Fold the hourly snapshots into one entry per day.
+    by_day = {}
+    for row in rows:
+        if row.aqi is None:
+            continue
+        day = row.timestamp.strftime("%Y-%m-%d")
+        bucket = by_day.setdefault(day, {"aqi": [], "pm25": []})
+        bucket["aqi"].append(row.aqi)
+        if row.pm25 is not None:
+            bucket["pm25"].append(row.pm25)
 
-        city_data = data["data"]
-        current_aqi = city_data.get("aqi", 0)
-        current_time = city_data.get("time", {}).get("s", "")
+    history_points = [
+        {
+            "date":     day,
+            "aqi":      round(sum(v["aqi"]) / len(v["aqi"])),
+            "aqi_min":  round(min(v["aqi"])),
+            "aqi_max":  round(max(v["aqi"])),
+            "pm25_avg": round(sum(v["pm25"]) / len(v["pm25"]), 1) if v["pm25"] else None,
+            "source":   "CPCB",
+            "is_forecast": False,
+        }
+        for day, v in sorted(by_day.items())
+    ]
 
-        forecast = city_data.get("forecast", {})
-        daily = forecast.get("daily", {})
-        pm25_daily = daily.get("pm25", [])
+    latest      = rows[-1] if rows else None
+    current_aqi = round(latest.aqi) if latest and latest.aqi is not None else None
+    current_time = latest.timestamp.isoformat() if latest else ""
 
-        history_points = []
-        for entry in pm25_daily:
-            day = entry.get("day", "")
-            avg = entry.get("avg")
-            min_val = entry.get("min")
-            max_val = entry.get("max")
-
-            if avg is not None:
-                aqi_approx = int(avg)
-                history_points.append({
-                    "date": day,
-                    "aqi": min(aqi_approx, 500),
-                    "aqi_min": int(min_val) if min_val is not None else None,
-                    "aqi_max": int(max_val) if max_val is not None else None,
-                    "pm25_avg": avg,
-                    "source": "WAQI",
-                    "is_forecast": False,
-                })
-
-        history_points.sort(key=lambda x: x["date"])
-
-        today = datetime.utcnow().strftime("%Y-%m-%d")
-        past_points = [p for p in history_points if p["date"] <= today]
-
-        if not past_points:
-            return {
-                "city": city,
-                "message": "Historical breakdown not available from WAQI for this city. Showing current reading only.",
-                "current_aqi": current_aqi,
-                "current_time": current_time,
-                "history": [],
-                "source": "WAQI",
-                "data_available": False,
-            }
-
-        aqi_values = [p["aqi"] for p in past_points]
-
+    if not history_points:
         return {
             "city": city,
-            "history": past_points,
-            "current_aqi": current_aqi,
+            "message": (
+                "No stored readings for this city yet. History is built from the "
+                "app's own hourly CPCB snapshots, so it fills in over time."
+            ),
+            "current_aqi":  current_aqi,
             "current_time": current_time,
-            "summary": {
-                "avg_aqi": round(sum(aqi_values) / len(aqi_values)),
-                "max_aqi": max(aqi_values),
-                "min_aqi": min(aqi_values),
-                "days_available": len(past_points),
-                "worst_day": past_points[aqi_values.index(max(aqi_values))]["date"],
-                "best_day": past_points[aqi_values.index(min(aqi_values))]["date"],
-            },
-            "source": "WAQI — World Air Quality Index",
-            "data_available": True,
+            "history": [],
+            "source": SOURCE_LABEL,
+            "aqi_standard": AQI_STANDARD,
+            "data_available": False,
         }
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
+    aqi_values = [p["aqi"] for p in history_points]
+
+    return {
+        "city":         city,
+        "history":      history_points,
+        "current_aqi":  current_aqi,
+        "current_time": current_time,
+        "current_category": categorize_aqi(current_aqi),
+        "summary": {
+            "avg_aqi":        round(sum(aqi_values) / len(aqi_values)),
+            "max_aqi":        max(aqi_values),
+            "min_aqi":        min(aqi_values),
+            "days_available": len(history_points),
+            "worst_day":      history_points[aqi_values.index(max(aqi_values))]["date"],
+            "best_day":       history_points[aqi_values.index(min(aqi_values))]["date"],
+        },
+        "source":         SOURCE_LABEL,
+        "aqi_standard":   AQI_STANDARD,
+        "data_available": True,
+    }

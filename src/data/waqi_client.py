@@ -1,3 +1,26 @@
+"""
+DORMANT — retired 2026-09-21. Nothing in the running app imports this module.
+
+WAQI's CPCB mirror froze on 2026-06-23 for every city except Delhi (confirmed on
+WAQI's own site), so this client served months-old readings that its own 48h
+staleness filter then correctly rejected — which is why the map went dark.
+
+Live data now comes from the official CPCB resource on data.gov.in:
+
+    src/data/cpcb_client.py   national pull, station grouping, filters, cache
+    src/data/india_aqi.py     India CPCB National AQI (this file used US EPA)
+
+The file is kept for reference because its filtering rules — the 48h staleness
+cutoff, the bad-sensor and outlier checks, the station-count data_quality tiers
+— were carried forward into cpcb_client, and its output shape is the contract
+cpcb_client reproduces field for field.
+
+Do not re-import it. Importing it opens two thread pools at module scope, and
+any AQI it produced would be on the US EPA scale and therefore incomparable to
+every other number in the app. If WAQI is ever needed again, take the numbers as
+a cross-check only, never as a source.
+"""
+
 import math
 import re
 import requests

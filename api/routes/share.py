@@ -8,9 +8,9 @@ is a real PNG rendered here from the SAME live data the rest of the API serves.
   GET /api/v1/og/{slug}.png   → 1200x630 PNG card (Pillow), 15-min in-memory cache
   GET /api/v1/share/{slug}    → minimal HTML with per-city OG/Twitter tags + redirect
 
-Category thresholds + labels come ONLY from waqi_client.categorize_aqi — this file
-never re-defines AQI bands. _CATEGORY_COLORS just maps those category names to a
-hex tuned for the dark card.
+Category thresholds + labels come ONLY from india_aqi.categorize_aqi (the India
+CPCB National AQI) — this file never re-defines AQI bands. _CATEGORY_COLORS just
+maps those category names to a hex tuned for the dark card.
 """
 
 import io
@@ -28,7 +28,8 @@ from fastapi.responses import Response, HTMLResponse
 from PIL import Image, ImageDraw, ImageFont
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from src.data.waqi_client import fetch_city_aqi, categorize_aqi
+from src.data.cpcb_client import fetch_city_aqi, cache_status
+from src.data.india_aqi import categorize_aqi
 from config.settings import CITY_COORDS
 
 router = APIRouter()
@@ -37,11 +38,23 @@ router = APIRouter()
 BACKEND  = "https://aqi-api-y2qs.onrender.com"
 FRONTEND = "https://aqi-early-warning-system.vercel.app"
 
-# Public-facing count of cities with LIVE monitoring data. CITY_COORDS has 53 entries
-# but ~16 are NO_DATA (no nearby station). Counting live cities at render time needs a
-# network sweep (and is unreliable while the cache warms), so this is fixed — bump it
-# if station coverage changes.
+# Public-facing count of cities with LIVE monitoring data. CITY_COORDS has 53
+# entries and the rest are honest NO_DATA (no CPCB station, or none reporting the
+# pollutants CPCB requires).
+#
+# Under WAQI this had to be a hardcoded guess, because counting meant a 53-city
+# network sweep. CPCB's cache already holds the whole country, so the real count
+# is free to read — _live_city_count() uses it whenever the cache is warm and
+# falls back to this figure only on a cold card render.
 LIVE_CITY_COUNT = 37
+
+
+def _live_city_count() -> int:
+    try:
+        live = cache_status().get("cities_live") or 0
+        return live or LIVE_CITY_COUNT
+    except Exception:
+        return LIVE_CITY_COUNT
 
 # ── Card design tokens ──────────────────────────────────────────────────────────
 W, H   = 1200, 630
@@ -197,7 +210,7 @@ def _render_default():
            font=_load_font(26, bold=True), fill=ACCENT, anchor="la")
     hf = _fit_font(d, "India's Air, Live.", W - 2 * MARGIN, 116, bold=True, min_size=60)
     d.text((MARGIN, 150), "India's Air, Live.", font=hf, fill=INK, anchor="la")
-    sub = f"Real-time AQI for {LIVE_CITY_COUNT} cities · Free forever"
+    sub = f"Real-time AQI for {_live_city_count()} cities · Free forever"
     sf = _fit_font(d, sub, W - 2 * MARGIN, 44, min_size=28)
     d.text((MARGIN, 322), sub, font=sf, fill="#d7d2c9", anchor="la")
     d.text((MARGIN, 386), "ML forecasts · Health impact · Anomaly alerts",

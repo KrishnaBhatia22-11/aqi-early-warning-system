@@ -106,7 +106,7 @@ export default function ForecastPage({ cities }) {
         <div className="mono forecast-eyebrow">DIURNAL AI MODEL · 24-HOUR FORECAST · UPDATED HOURLY</div>
         <h1 className="display forecast-title">AQI Forecast</h1>
         <p className="forecast-sub">
-          Physics-informed model anchored to live WAQI data.
+          Physics-informed model anchored to live CPCB data.
           Peaks at morning rush (07–09) and evening (17–19).
         </p>
       </div>
@@ -195,8 +195,8 @@ export default function ForecastPage({ cities }) {
           <div className="fss-sep" />
           <div className="fss-item">
             <span className="mono fss-label">DATA SOURCE</span>
-            <span className={`mono fss-source ${data.base_aqi_source === "live_waqi" ? "live" : "est"}`}>
-              {data.base_aqi_source === "live_waqi" ? "● LIVE WAQI" : "◎ SEASONAL EST."}
+            <span className={`mono fss-source ${data.base_aqi_source === "live_cpcb" ? "live" : "est"}`}>
+              {data.base_aqi_source === "live_cpcb" ? "● LIVE CPCB" : "◎ SEASONAL EST."}
             </span>
           </div>
         </div>

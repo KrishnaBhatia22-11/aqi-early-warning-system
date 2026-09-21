@@ -1,13 +1,17 @@
 import { useState } from "react";
+import { AQI_BANDS } from "../utils/aqiCategory";
 
-const CATS = [
-  { c:"#34d27a", n:"Good",         r:"0–50",    d:"Air is clean. Safe for everyone."              },
-  { c:"#f5d142", n:"Satisfactory", r:"51–100",  d:"Minor issues for sensitive groups."            },
-  { c:"#FFB300", n:"Moderate",     r:"101–200", d:"Children and elderly take care."               },
-  { c:"#FF6B00", n:"Poor",         r:"201–300", d:"Health effects for all. Limit outdoor."        },
-  { c:"#ef3a4d", n:"Very Poor",    r:"301–400", d:"Serious effects. Stay indoors."                },
-  { c:"#c2002a", n:"Severe",       r:"401–500", d:"Emergency conditions. Hazardous."              },
-];
+// India CPCB National AQI bands. Colours and ranges come from the shared band
+// table so this legend can never describe a scale the app is not using.
+const CAT_COPY = {
+  "Good":         "Air is clean. Safe for everyone.",
+  "Satisfactory": "Minor issues for sensitive groups.",
+  "Moderate":     "Children and elderly take care.",
+  "Poor":         "Health effects for all. Limit outdoor.",
+  "Very Poor":    "Serious effects. Stay indoors.",
+  "Severe":       "Emergency conditions. Hazardous.",
+};
+const CATS = AQI_BANDS.map((b) => ({ c: b.color, n: b.name, r: b.range, d: CAT_COPY[b.name] }));
 const POLS = [
   { n:"PM2.5", d:"Tiny particles that enter the bloodstream"         },
   { n:"PM10",  d:"Coarser dust, affects the respiratory tract"       },

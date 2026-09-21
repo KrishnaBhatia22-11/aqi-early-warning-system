@@ -257,7 +257,7 @@ export default function CropBurnPage({ setPage }) {
                 }
               >
                 {!data.aqi_data_available ? (
-                  "AQI data unavailable — WAQI API not responding. Season calendar still active."
+                  "AQI data unavailable — CPCB feed not responding. Season calendar still active."
                 ) : sortedCities.length === 0 ? (
                   "No live AQI data available for monitored cities."
                 ) : (
@@ -455,7 +455,7 @@ export default function CropBurnPage({ setPage }) {
 
           {/* Source footer */}
           <div className="cb-source-footer">
-            {data.data_source ?? "Own DB + WAQI live + seasonal calendar + NASA FIRMS VIIRS satellite"}
+            {data.data_source ?? "Own DB + CPCB live (data.gov.in) + seasonal calendar + NASA FIRMS VIIRS satellite"}
             &nbsp;·&nbsp;
             Last updated: {new Date(data.last_updated + "Z").toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })} IST
           </div>

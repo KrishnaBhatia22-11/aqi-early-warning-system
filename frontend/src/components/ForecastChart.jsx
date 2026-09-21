@@ -196,9 +196,9 @@ export default function ForecastChart({ forecastData, loading, slowLoad, error, 
             <span style={{ color: tc.color, fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{tc.icon}</span>
             <span className="mono" style={{ color: tc.color, fontSize: 11, letterSpacing: "0.12em" }}>{trend}</span>
           </div>
-          <div className={`fc-source-badge ${base_aqi_source === "live_waqi" ? "live" : "est"}`}>
+          <div className={`fc-source-badge ${base_aqi_source === "live_cpcb" ? "live" : "est"}`}>
             <span className="fc-source-dot" />
-            <span className="mono">{base_aqi_source === "live_waqi" ? "LIVE WAQI" : "SEASONAL ESTIMATE"}</span>
+            <span className="mono">{base_aqi_source === "live_cpcb" ? "LIVE CPCB" : "SEASONAL ESTIMATE"}</span>
           </div>
         </div>
       </div>

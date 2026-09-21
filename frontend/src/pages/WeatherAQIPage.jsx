@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { fetchWeather, fetchCities } from "../utils/api";
+import { AQI_STANDARD_LABEL } from "../utils/aqiCategory";
 
 // ── Dark city dropdown (reuses cmp-dd-* CSS) ──────────────────────────────────
 
@@ -302,13 +303,13 @@ export default function WeatherAQIPage() {
                   </div>
                   <span className="wx-source-badge">
                     ● {cityAqi.primary_station
-                      ? `WAQI — ${cityAqi.primary_station.split(',')[0]}`
-                      : "WAQI Live"}
+                      ? `CPCB — ${cityAqi.primary_station.split(',')[0]}`
+                      : "CPCB Live"}
                   </span>
                 </div>
                 <div className="wx-aqi-big" style={{ color: aqiColor(cityAqi.aqi) }}>
                   {cityAqi.aqi}
-                  <span style={{ fontSize: 12, opacity: 0.5, marginLeft: 6, fontFamily: "JetBrains Mono, monospace" }}>US AQI</span>
+                  <span style={{ fontSize: 12, opacity: 0.5, marginLeft: 6, fontFamily: "JetBrains Mono, monospace" }}>{AQI_STANDARD_LABEL}</span>
                 </div>
                 <div className="wx-cat-badge" style={{ color: aqiColor(cityAqi.aqi), borderColor: aqiColor(cityAqi.aqi) + "40" }}>
                   {aqiCategory(cityAqi.aqi)}
@@ -395,7 +396,7 @@ export default function WeatherAQIPage() {
             Select a city and click Load Data
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
-            Weather + AQI fetched in parallel from OpenWeatherMap and WAQI
+            Weather + AQI fetched in parallel from OpenWeatherMap and CPCB
           </div>
         </div>
       )}
@@ -404,7 +405,7 @@ export default function WeatherAQIPage() {
       <div className="wx-source-footer">
         <span>Weather: <strong>OpenWeatherMap</strong> · updated every 10 min</span>
         <span className="wx-sep">·</span>
-        <span>AQI: <strong>WAQI — World Air Quality Index</strong> · updated every hour</span>
+        <span>AQI: <strong>CPCB — Central Pollution Control Board (data.gov.in)</strong> · updated every hour</span>
         <span className="wx-sep">·</span>
         <span>Correlation insights based on atmospheric science research</span>
       </div>

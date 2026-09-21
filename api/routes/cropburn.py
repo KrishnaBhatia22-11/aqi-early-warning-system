@@ -13,8 +13,11 @@ from api.models import AQIReading
 
 router = APIRouter()
 
-WAQI_TOKEN = os.getenv("WAQI_TOKEN", "")
-OWM_KEY    = os.getenv("OPENWEATHER_API_KEY", "")
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+from src.data.cpcb_client import fetch_city_aqi
+
+OWM_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
 _cache = {}
 _CACHE_TTL = 300  # 5 min
@@ -43,21 +46,6 @@ SEASONS = {
 PUNJAB_CITIES   = ["Amritsar", "Ludhiana", "Jalandhar", "Chandigarh", "Patiala"]
 DOWNWIND_CITIES = ["Delhi", "Lucknow", "Kanpur", "Agra", "Noida", "Ghaziabad"]
 ALL_MONITOR     = PUNJAB_CITIES + DOWNWIND_CITIES
-
-CITY_SLUGS = {
-    "Amritsar":   "amritsar",
-    "Chandigarh": "chandigarh",
-    "Ludhiana":   "ludhiana",
-    "Jalandhar":  "jalandhar",
-    "Patiala":    "patiala",
-    "Delhi":      "delhi",
-    "Lucknow":    "lucknow",
-    "Kanpur":     "kanpur",
-    "Agra":       "agra",
-    "Noida":      "noida",
-    "Ghaziabad":  "ghaziabad",
-}
-
 
 def _season_info(month, day):
     cur = month * 100 + day
@@ -100,19 +88,16 @@ def _season_info(month, day):
 
 
 def _fetch_aqi(city):
-    if not WAQI_TOKEN:
-        return None
-    slug = CITY_SLUGS.get(city, city.lower())
+    """Live CPCB AQI for one city, or None.
+
+    Reads the shared 15-minute national cache, so calling this once per monitored
+    city costs one upstream fetch for the whole set rather than one each.
+    """
     try:
-        resp = requests.get(
-            f"https://api.waqi.info/feed/{slug}/?token={WAQI_TOKEN}",
-            timeout=8
-        )
-        d = resp.json()
-        if d.get("status") == "ok":
-            aqi = d["data"].get("aqi")
-            if isinstance(aqi, (int, float)) and aqi > 0:
-                return int(aqi)
+        result = fetch_city_aqi(city) or {}
+        aqi = result.get("aqi")
+        if result.get("success") and isinstance(aqi, (int, float)) and aqi > 0:
+            return int(aqi)
     except Exception:
         pass
     return None
@@ -313,7 +298,7 @@ async def get_cropburn_status():
     elif confidence >= 20: conf_level = "LOW"
     else:                  conf_level = "NONE"
 
-    # ── Fetch live WAQI AQI for display ───────────────────────
+    # ── Fetch live CPCB AQI for display ───────────────────────
     city_aqi_raw = {c: _fetch_aqi(c) for c in ALL_MONITOR}
     aqi_available = any(v is not None for v in city_aqi_raw.values())
 
@@ -420,7 +405,7 @@ async def get_cropburn_status():
         "nasa_fire_count":    nasa_data["count"],
         "nasa_fire_level":    nasa_data["level"],
         "signal4_nasa_active": signal4_active,
-        "data_source":        "Own DB + WAQI live + seasonal calendar + NASA FIRMS VIIRS satellite",
+        "data_source":        "Own DB + CPCB live (data.gov.in) + seasonal calendar + NASA FIRMS VIIRS satellite",
         "last_updated":    datetime.utcnow().isoformat(),
     }
 

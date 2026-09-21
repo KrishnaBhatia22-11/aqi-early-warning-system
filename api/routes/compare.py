@@ -5,7 +5,10 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from src.data.waqi_client import fetch_city_aqi
+from src.data.cpcb_client import fetch_city_aqi
+# India CPCB bands, re-exported from the calculator so this file can never
+# drift from the thresholds the AQI numbers were produced with.
+from src.data.india_aqi import categorize_aqi as _cat
 
 router = APIRouter()
 
@@ -37,24 +40,17 @@ _cache: dict = {}
 _CACHE_TTL = 300  # 5 minutes
 
 
-def _cat(aqi: float) -> str:
-    if aqi <= 50:  return "Good"
-    if aqi <= 100: return "Satisfactory"
-    if aqi <= 200: return "Moderate"
-    if aqi <= 300: return "Poor"
-    if aqi <= 400: return "Very Poor"
-    return "Severe"
-
-
 def _resolve(city: str) -> dict:
-    """Try WAQI; fall back to seasonal default if unavailable."""
-    result = fetch_city_aqi(city)
+    """Try live CPCB; fall back to seasonal default if unavailable."""
+    result = fetch_city_aqi(city) or {}
     if result.get("success") and result.get("aqi"):
         return {
             "name":               city,
             "aqi":                int(result["aqi"]),
             "category":           _cat(int(result["aqi"])),
-            "dominant_pollutant": _DOMINANT.get(city, "PM2.5"),
+            # The live feed names the pollutant that actually drove this AQI;
+            # the static table is only a fallback for the estimate path.
+            "dominant_pollutant": result.get("dominant_pollutant") or _DOMINANT.get(city, "PM2.5"),
             "population":         _POPULATIONS.get(city, 0),
             "source":             "live",
         }
@@ -83,7 +79,7 @@ def compare_cities(
     if city1.lower() == city2.lower():
         raise HTTPException(400, detail="city1 and city2 must be different cities")
 
-    # If caller passes both AQI values already on-screen, skip WAQI fetch entirely
+    # If caller passes both AQI values already on-screen, skip the live fetch entirely
     _provided = aqi1 is not None and aqi2 is not None
     cache_key = f"{city1.lower()}:{city2.lower()}"
     now = time.time()

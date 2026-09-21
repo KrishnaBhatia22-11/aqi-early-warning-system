@@ -3,6 +3,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Official CPCB live feed (data.gov.in). This is the app's ONLY live source.
+DATA_GOV_API_KEY      = os.getenv("DATA_GOV_API_KEY")
+
+# Retired: WAQI's CPCB mirror froze on 2026-06-23 for every city but Delhi.
+# waqi_client.py is kept on disk for reference but nothing in the app imports it.
 WAQI_API_KEY          = os.getenv("WAQI_API_KEY")
 GROQ_API_KEY          = os.getenv("GROQ_API_KEY")
 OPENWEATHER_API_KEY   = os.getenv("OPENWEATHER_API_KEY")
@@ -12,6 +17,8 @@ DATA_RAW       = os.path.join(BASE_DIR, "data", "raw", "city_day.csv")
 DATA_PROCESSED = os.path.join(BASE_DIR, "data", "processed", "clean_data.csv")
 MODEL_DIR      = os.path.join(BASE_DIR, "models")
 
+# India CPCB National AQI bands (NOT US EPA — the same concentration maps to a
+# different number on each scale, so values from the two must never be mixed).
 AQI_CATEGORIES = {
     (0, 50):    "Good",
     (51, 100):  "Satisfactory",

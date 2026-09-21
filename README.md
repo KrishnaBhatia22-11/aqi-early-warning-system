@@ -31,11 +31,12 @@ This project was built to change that. One student, one laptop, Faridabad.
 
 ## What Makes This Different
 
-- **Real data only** — live CPCB station readings via WAQI API, multi-station averaged, bad sensors filtered
+- **Real data only** — live CPCB station readings straight from the government feed (data.gov.in), multi-station averaged, bad sensors filtered
 - **NASA satellite** — actual FIRMS VIIRS fire detection for crop burning alerts, not estimates
 - **XGBoost + SHAP** — every prediction is explainable, showing exactly which pollutant drives the AQI
 - **Real database** — 16,000+ hourly readings collected since May 13, 2026, growing every hour
-- **Honest** — cities with no WAQI coverage are shown as NO_DATA, never faked
+- **Honest** — cities with no CPCB station coverage are shown as NO_DATA, never faked. Readings older than 48h are dropped rather than shown as current, and CPCB's own rule (3+ pollutants, at least one particulate) is enforced before any AQI is published
+- **India CPCB National AQI** — the official Indian scale (Good / Satisfactory / Moderate / Poor / Very Poor / Severe), not the US EPA scale
 
 ---
 
@@ -87,9 +88,9 @@ This project was built to change that. One student, one laptop, Faridabad.
          ┌────────────────────────────────┼──────────────────────┐
          ▼                                ▼                      ▼
 ┌─────────────────┐        ┌─────────────────────┐   ┌──────────────────┐
-│  PostgreSQL DB  │        │   WAQI API          │   │  XGBoost Model   │
-│  16,000+ rows   │        │   CPCB stations     │   │  R²=0.932        │
-│  Hourly cron    │        │   37 live cities    │   │  SHAP explainer  │
+│  PostgreSQL DB  │        │  CPCB / data.gov.in │   │  XGBoost Model   │
+│  16,000+ rows   │        │  1 national pull    │   │  R²=0.932        │
+│  Hourly cron    │        │  15-min cache       │   │  SHAP explainer  │
 └─────────────────┘        └─────────────────────┘   └──────────────────┘
          │
 ┌─────────────────┐        ┌─────────────────────┐
@@ -103,12 +104,23 @@ This project was built to change that. One student, one laptop, Faridabad.
 
 ## City Coverage
 
-**37 cities with live CPCB data:**
+**45 cities with CPCB station coverage** (verified against the live feed, 2026-09-21):
 
-Delhi (15 stn) · Mumbai (11 stn) · Bengaluru (5 stn) · Chennai (6 stn) · Kolkata (7 stn) · Hyderabad (4 stn) · Ahmedabad (6 stn) · Jaipur (3 stn) · Lucknow (6 stn) · Kanpur (2 stn) · Patna (5 stn) · Bhopal (2 stn) · Nagpur (1 stn) · Indore (1 stn) · Visakhapatnam (1 stn) · Chandigarh (3 stn) · Coimbatore (1 stn) · Agra (4 stn) · Varanasi (4 stn) · Amritsar (1 stn) · Jodhpur (1 stn) · Udaipur (1 stn) · Mysuru (1 stn) · Pondicherry (1 stn) · Ghaziabad (3 stn) · Noida (4 stn) · Faridabad (2 stn) · Gurugram (1 stn) · Meerut (3 stn) · Moradabad (6 stn) · Ludhiana (1 stn) · Jalandhar (1 stn) · Guwahati (1 stn) · Srinagar (1 stn) · Thiruvananthapuram (1 stn) · Dehradun (1 stn) · Nashik (1 stn)
+Delhi · Mumbai · Bengaluru · Chennai · Kolkata · Hyderabad · Ahmedabad · Pune · Jaipur · Lucknow · Kanpur · Patna · Bhopal · Nagpur · Surat · Indore · Visakhapatnam · Chandigarh · Agra · Varanasi · Amritsar · Jodhpur · Udaipur · Mysuru · Pondicherry · Ghaziabad · Noida · Faridabad · Gurugram · Meerut · Moradabad · Ludhiana · Jalandhar · Bhubaneswar · Guwahati · Raipur · Dehradun · Srinagar · Thiruvananthapuram · Vijayawada · Nashik · Aurangabad · Kolhapur · Solapur · Guntur
 
-**16 cities honestly shown as NO_DATA** (no WAQI/CPCB station coverage):
-Pune · Surat · Kochi · Bhubaneswar · Ranchi · Raipur · Shimla · Jammu · Madurai · Vijayawada · Aurangabad · Kolhapur · Solapur · Warangal · Guntur · Tiruchirappalli
+**8 cities honestly shown as NO_DATA** (no station in the CPCB feed):
+Coimbatore · Kochi · Ranchi · Shimla · Jammu · Madurai · Warangal · Tiruchirappalli
+
+Coverage went up with the move to the official feed — Pune, Surat, Raipur,
+Nashik, Aurangabad, Kolhapur, Solapur, Guntur, Vijayawada and Bhubaneswar all
+have live stations now that WAQI never surfaced.
+
+The number actually showing a reading at any given hour is a little lower than
+45, and that is deliberate: CPCB will not publish an AQI for a station
+reporting fewer than three pollutants, or none of PM2.5/PM10, and this app
+enforces the same rule rather than computing a flattering number from whatever
+happens to be reporting. A station whose last reading is over 48h old is
+dropped outright. /api/v1/cpcb/status shows the live count right now.
 
 ---
 
@@ -211,7 +223,8 @@ aqi-early-warning-system/
 ├── config/
 │   └── settings.py             # 37 cities config, coordinates, station lists
 ├── src/data/
-│   └── waqi_client.py          # Multi-station fetcher, bad sensor filter, averaging
+│   ├── cpcb_client.py          # National CPCB pull, station grouping, filters, cache
+│   └── india_aqi.py            # India CPCB National AQI: breakpoints, sub-indices, categories
 ├── frontend/                   # React 18 + Vite 5
 │   └── src/
 │       ├── components/         # Navbar, Map, Charts, Cards, Ticker, etc.
@@ -233,7 +246,7 @@ aqi-early-warning-system/
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL database
-- API keys: WAQI · Groq · NASA FIRMS · Resend · OpenWeatherMap
+- API keys: data.gov.in · Groq · NASA FIRMS · Resend · OpenWeatherMap
 
 ### Backend
 
@@ -251,7 +264,7 @@ pip install -r requirements.txt
 Create `.env` in root:
 ```
 DATABASE_URL=your_postgresql_url
-WAQI_API_KEY=your_key
+DATA_GOV_API_KEY=your_key      # register free at https://data.gov.in
 GROQ_API_KEY=your_key
 NASA_FIRMS_API_KEY=your_key
 RESEND_API_KEY=your_key
@@ -307,7 +320,7 @@ Open `http://localhost:5173`
 
 **AI** — Groq LLaMA 3.1 8B Instant
 
-**Data Sources** — WAQI API · CPCB India · NASA FIRMS VIIRS · OpenWeatherMap · Resend
+**Data Sources** — CPCB India via data.gov.in · NASA FIRMS VIIRS · OpenWeatherMap · Resend
 
 **Infra** — Vercel · Render · GitHub
 
