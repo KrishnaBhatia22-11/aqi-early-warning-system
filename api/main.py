@@ -142,12 +142,6 @@ async def startup_event():
         print(f"[Startup] Could not start cache warmup: {e}")
 
 
-@app.on_event("startup")
-async def print_routes():
-    for route in app.routes:
-        print(route.path)
-
-
 @app.get("/")
 def root():
     return {
