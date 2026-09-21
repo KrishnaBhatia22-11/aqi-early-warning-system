@@ -30,14 +30,65 @@ AQI_STANDARD   = "US AQI (EPA)"
 # then (correctly) rejected — which is why every city showed "no data".
 #
 # The pool sizes below cap threads; the gate below caps sockets.
-_CITY_FETCH_WORKERS    = 4   # cities fetched at once by fetch_all_cities/warmup
-_STATION_FETCH_WORKERS = 4   # stations fetched at once within ONE city
+_CITY_FETCH_WORKERS    = 4    # cities fetched at once by fetch_all_cities/warmup
+_STATION_FETCH_WORKERS = 20   # station feeds in flight across ALL cities at once
 
 # Hard ceiling on WAQI requests in flight across the WHOLE process — warmup,
 # /cities, the scheduler and /chat all share this one budget, so overlapping
 # callers can no longer multiply into a burst. Assumes a single uvicorn worker.
-_WAQI_MAX_CONCURRENT_REQUESTS = 12
+#
+# Was 12, which throttled a cold /cities to ~20s against its 25s cap — one slow
+# upstream moment away from timing the whole map out. 20 sockets is still two
+# orders of magnitude below the ~400 that exhausted the container.
+_WAQI_MAX_CONCURRENT_REQUESTS = 20
 _waqi_gate = threading.BoundedSemaphore(_WAQI_MAX_CONCURRENT_REQUESTS)
+
+# Long-lived pools, created once and never shut down.
+#
+# These replace per-call `with ThreadPoolExecutor(...)` blocks. Building a pool
+# per call also meant that once concurrent.futures sets its module-level
+# shutdown flag (which happens while the interpreter is tearing down), every
+# subsequent fetch died with "cannot schedule new futures after interpreter
+# shutdown" — a whole batch lost to a process that was on its way out anyway.
+#
+# INVARIANT: the station pool must stay distinct from the city pool. City
+# threads block waiting on station futures, so sharing one pool would let the
+# city work starve the station work it is waiting for.
+_station_pool = ThreadPoolExecutor(
+    max_workers=_STATION_FETCH_WORKERS, thread_name_prefix="waqi-station"
+)
+_city_pool = ThreadPoolExecutor(
+    max_workers=_CITY_FETCH_WORKERS, thread_name_prefix="waqi-city"
+)
+
+
+def _pool_map(pool, fn, items):
+    """Map fn over items on a long-lived pool, in order, draining every future.
+
+    Every future is resolved before returning, so no work outlives this call.
+    If the pool can no longer accept work — interpreter shutting down — the
+    remaining items run inline, so a dying process degrades to slow-but-correct
+    instead of silently losing the batch.
+    """
+    items = list(items)
+    results = [None] * len(items)
+    submitted, inline = [], []
+
+    for i, item in enumerate(items):
+        try:
+            submitted.append((i, pool.submit(fn, item)))
+        except RuntimeError:
+            inline.append((i, item))
+
+    for i, future in submitted:
+        results[i] = future.result()
+
+    if inline:
+        print(f"[Pool] executor unavailable — running {len(inline)} item(s) inline")
+        for i, item in inline:
+            results[i] = fn(item)
+
+    return results
 
 
 def _waqi_get(url, timeout):
@@ -287,8 +338,8 @@ def fetch_all_cities():
         result['lon'] = CITY_COORDS[city]['lon']
         return result
 
-    with ThreadPoolExecutor(max_workers=_CITY_FETCH_WORKERS) as executor:
-        results = list(executor.map(fetch_one, cities_list))
+    # Never call this from a _city_pool thread — it waits on that pool.
+    results = _pool_map(_city_pool, fetch_one, cities_list)
 
     return results   # includes no-data cities so frontend can mark them
 
@@ -361,10 +412,7 @@ def _fetch_waqi_multi(city_name, search_keyword=None):
             return uid, None
 
         now_unix = time.time()
-        with ThreadPoolExecutor(
-            max_workers=min(len(relevant_uids), _STATION_FETCH_WORKERS)
-        ) as ex:
-            raw_results = list(ex.map(fetch_uid, relevant_uids))
+        raw_results = _pool_map(_station_pool, fetch_uid, relevant_uids)
 
         # Parse with freshness weighting
         station_data = []
@@ -741,9 +789,9 @@ def _warm_one(city):
 def _warmup(batch_size=_CITY_FETCH_WORKERS, pause=1.0):
     """Fill the cache in small batches instead of one big burst.
 
-    A fresh pool per batch keeps live threads at exactly batch_size and lets
-    them be reclaimed between batches, so warmup holds a flat, tiny footprint
-    for its whole run rather than peaking at boot.
+    Batching keeps the sweep gentle on a small box; the shared long-lived pool
+    means it costs no thread churn, and each batch fully drains before the next
+    one starts.
     """
     try:
         cities = list(CITY_COORDS.keys())
@@ -754,8 +802,7 @@ def _warmup(batch_size=_CITY_FETCH_WORKERS, pause=1.0):
         warmed = 0
         for i in range(0, len(cities), batch_size):
             batch = cities[i:i + batch_size]
-            with ThreadPoolExecutor(max_workers=batch_size) as ex:
-                warmed += sum(ex.map(_warm_one, batch))
+            warmed += sum(_pool_map(_city_pool, _warm_one, batch))
             time.sleep(pause)   # let sockets close before the next batch
         print(f"[Cache] Warmup complete — {warmed}/{len(cities)} cities cached.")
     except Exception as e:

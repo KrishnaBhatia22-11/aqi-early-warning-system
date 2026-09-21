@@ -44,14 +44,23 @@ _city_pool = ThreadPoolExecutor(
     thread_name_prefix="cities",
 )
 
-# Module-level so overlapping /cities requests share one budget and WAQI sees a
-# bounded request rate. Safe to build at import on 3.10+ — Semaphore no longer
-# binds an event loop at construction.
-_city_sem = asyncio.Semaphore(_MAX_CONCURRENT_CITIES)
+# The semaphore is built PER REQUEST, deliberately not at module level.
+#
+# A module-level asyncio.Semaphore binds itself to an event loop the first time
+# a task actually has to wait on it, and from then on raises
+# "is bound to a different event loop" for any other loop. Once that happened,
+# every /cities call returned real data for at most _MAX_CONCURRENT_CITIES
+# cities — the ones that took the uncontended fast path and never touched the
+# loop — and no_data for all the rest, permanently. A per-request semaphore
+# cannot outlive its loop, so the failure mode is structurally impossible.
+#
+# The app-wide ceiling does not depend on this: waqi_client's _waqi_gate is a
+# threading primitive, loop-agnostic, and caps real upstream requests process
+# wide however many /cities calls overlap.
 
 # Each city may internally do a search call plus a station fan-out, so give it
 # more headroom than a single HTTP timeout while staying far under the global cap.
-_PER_CITY_TIMEOUT = 12.0
+_PER_CITY_TIMEOUT = 15.0
 
 # Leaves room to still serialise a full response inside the 30s budget.
 _GLOBAL_TIMEOUT = 25.0
@@ -121,19 +130,24 @@ def _no_data_city(city):
 async def get_all_cities(request: Request):
     loop = asyncio.get_running_loop()
     cities = list(CITY_COORDS.keys())
+    sem = asyncio.Semaphore(_MAX_CONCURRENT_CITIES)
 
     async def fetch_one_async(city):
-        # Hold a permit for the whole fetch, and only start the clock once we
-        # have one — time spent waiting for a turn is not this city's fault.
-        async with _city_sem:
-            try:
+        # The try wraps the acquire as well as the fetch. Anything that goes
+        # wrong here — upstream error, timeout, or a problem with the lock
+        # itself — must cost exactly one city, never escape and take the batch
+        # down with it.
+        try:
+            # Hold a permit for the whole fetch, and only start the clock once
+            # we have one — time spent waiting for a turn is not this city's
+            # fault.
+            async with sem:
                 result = await asyncio.wait_for(
                     loop.run_in_executor(_city_pool, fetch_city_aqi, city),
                     timeout=_PER_CITY_TIMEOUT,
                 )
-            except Exception:
-                # Timeout or upstream error — one city must never sink the batch.
-                return _no_data_city(city)
+        except Exception:
+            return _no_data_city(city)
 
         if not result:
             return _no_data_city(city)
