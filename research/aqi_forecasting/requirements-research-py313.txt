@@ -1,0 +1,12 @@
+# Verified run environment: CPython 3.13.3 on Windows.
+# Python 3.11 compatibility is not verified; see README.md.
+numpy==2.4.4
+pandas==2.3.3
+scikit-learn==1.8.0
+scipy==1.17.1
+joblib==1.5.3
+threadpoolctl==3.6.0
+python-dateutil==2.9.0.post0
+pytz==2026.1.post1
+tzdata==2026.2
+six==1.17.0

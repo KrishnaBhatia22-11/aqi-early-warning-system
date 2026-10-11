@@ -1,0 +1,41 @@
+{
+  "status": "planned_order; affiliations and identifiers unconfirmed",
+  "authors": [
+    {
+      "order": 1,
+      "name": "Poonam Tanwar",
+      "planned_role": "Mentor; first author",
+      "email": "[to be confirmed]",
+      "affiliation": "[to be confirmed]",
+      "academic_title": "[to be confirmed]",
+      "orcid": "[to be confirmed]"
+    },
+    {
+      "order": 2,
+      "name": "Krishna Bhatia",
+      "planned_role": "Second author",
+      "email": "[to be confirmed]",
+      "affiliation": "[to be confirmed]",
+      "academic_title": "[to be confirmed]",
+      "orcid": "[to be confirmed]"
+    },
+    {
+      "order": 3,
+      "name": "Prateek Singh",
+      "planned_role": "Third author",
+      "email": "[to be confirmed]",
+      "affiliation": "[to be confirmed]",
+      "academic_title": "[to be confirmed]",
+      "orcid": "[to be confirmed]"
+    },
+    {
+      "order": 4,
+      "name": "Snehaal Mukherjee",
+      "planned_role": "Fourth author",
+      "email": "[to be confirmed]",
+      "affiliation": "[to be confirmed]",
+      "academic_title": "[to be confirmed]",
+      "orcid": "[to be confirmed]"
+    }
+  ]
+}
