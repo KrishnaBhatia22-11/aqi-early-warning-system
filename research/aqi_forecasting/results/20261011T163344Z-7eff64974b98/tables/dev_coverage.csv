@@ -1,0 +1,35 @@
+policy,horizon_days,partition,method,valid_target_cases,predicted_valid_target_cases,unavailable_valid_target_cases,native_coverage,unavailable_reasons
+exclude,1,validation,annual_seasonal_naive,6915,5252,1663,0.7595083152566884,"{""invalid_annual_observation_above_500"": 129, ""missing_annual_observation"": 1534}"
+exclude,1,validation,city_month_climatology,6915,6915,0,1.0,{}
+exclude,1,validation,persistence,6915,6741,174,0.9748373101952278,"{""invalid_aqi_lag_origin_above_500"": 70, ""missing_origin_aqi"": 104}"
+exclude,1,validation,regularized_linear,6915,6331,584,0.9155459146782358,"{""missing_or_invalid_primary_feature"": 584}"
+exclude,1,validation,weekly_seasonal_naive,6915,6583,332,0.9519884309472162,"{""invalid_weekly_observation_above_500"": 102, ""missing_weekly_observation"": 230}"
+exclude,1,validation,xgboost,6915,6331,584,0.9155459146782358,"{""missing_or_invalid_primary_feature"": 584}"
+exclude,3,validation,annual_seasonal_naive,6915,5252,1663,0.7595083152566884,"{""invalid_annual_observation_above_500"": 129, ""missing_annual_observation"": 1534}"
+exclude,3,validation,city_month_climatology,6915,6915,0,1.0,{}
+exclude,3,validation,persistence,6915,6642,273,0.9605206073752711,"{""invalid_aqi_lag_origin_above_500"": 96, ""missing_origin_aqi"": 177}"
+exclude,3,validation,regularized_linear,6915,6264,651,0.9058568329718004,"{""missing_or_invalid_primary_feature"": 651}"
+exclude,3,validation,weekly_seasonal_naive,6915,6583,332,0.9519884309472162,"{""invalid_weekly_observation_above_500"": 102, ""missing_weekly_observation"": 230}"
+exclude,3,validation,xgboost,6915,6264,651,0.9058568329718004,"{""missing_or_invalid_primary_feature"": 651}"
+exclude,7,validation,annual_seasonal_naive,6915,5252,1663,0.7595083152566884,"{""invalid_annual_observation_above_500"": 129, ""missing_annual_observation"": 1534}"
+exclude,7,validation,city_month_climatology,6915,6915,0,1.0,{}
+exclude,7,validation,persistence,6915,6583,332,0.9519884309472162,"{""invalid_aqi_lag_origin_above_500"": 102, ""missing_origin_aqi"": 230}"
+exclude,7,validation,regularized_linear,6915,6199,716,0.8964569775849602,"{""missing_or_invalid_primary_feature"": 716}"
+exclude,7,validation,xgboost,6915,6199,716,0.8964569775849602,"{""missing_or_invalid_primary_feature"": 716}"
+cap,1,validation,annual_seasonal_naive,7071,5528,1543,0.7817847546315938,"{""missing_annual_observation"": 1543}"
+cap,1,validation,city_month_climatology,7071,7071,0,1.0,{}
+cap,1,validation,persistence,7071,6963,108,0.9847263470513364,"{""missing_origin_aqi"": 108}"
+cap,1,validation,regularized_linear,7071,6659,412,0.9417338424550983,"{""missing_or_invalid_primary_feature"": 412}"
+cap,1,validation,weekly_seasonal_naive,7071,6834,237,0.9664828171404327,"{""missing_weekly_observation"": 237}"
+cap,1,validation,xgboost,7071,6659,412,0.9417338424550983,"{""missing_or_invalid_primary_feature"": 412}"
+cap,3,validation,annual_seasonal_naive,7071,5528,1543,0.7817847546315938,"{""missing_annual_observation"": 1543}"
+cap,3,validation,city_month_climatology,7071,7071,0,1.0,{}
+cap,3,validation,persistence,7071,6889,182,0.9742610663272522,"{""missing_origin_aqi"": 182}"
+cap,3,validation,regularized_linear,7071,6601,470,0.933531325130816,"{""missing_or_invalid_primary_feature"": 470}"
+cap,3,validation,weekly_seasonal_naive,7071,6834,237,0.9664828171404327,"{""missing_weekly_observation"": 237}"
+cap,3,validation,xgboost,7071,6601,470,0.933531325130816,"{""missing_or_invalid_primary_feature"": 470}"
+cap,7,validation,annual_seasonal_naive,7071,5528,1543,0.7817847546315938,"{""missing_annual_observation"": 1543}"
+cap,7,validation,city_month_climatology,7071,7071,0,1.0,{}
+cap,7,validation,persistence,7071,6834,237,0.9664828171404327,"{""missing_origin_aqi"": 237}"
+cap,7,validation,regularized_linear,7071,6543,528,0.9253288078065337,"{""missing_or_invalid_primary_feature"": 528}"
+cap,7,validation,xgboost,7071,6543,528,0.9253288078065337,"{""missing_or_invalid_primary_feature"": 528}"

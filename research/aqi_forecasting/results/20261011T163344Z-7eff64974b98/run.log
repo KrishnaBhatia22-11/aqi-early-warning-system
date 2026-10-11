@@ -1,0 +1,23 @@
+run_id: 20261011T163344Z-7eff64974b98
+stage: xgboost_comparator_and_locked_final_test
+started_at_utc: 2026-10-11T16:33:44.446358+00:00
+completed_at_utc: 2026-10-11T16:34:44.784711+00:00
+run_command: C:\Users\krish\Desktop\aqi-early-warning-system\venv\Scripts\python.exe -m research.aqi_forecasting.run_final_test
+final_test_scoring_events: 1
+structured_record: C:\Users\krish\Desktop\aqi-early-warning-system\research\aqi_forecasting\results\20261011T163344Z-7eff64974b98\run_record.json
+
+--- captured stdout ---
+[dev] policy=exclude horizon=1
+[test] policy=exclude horizon=1
+[dev] policy=exclude horizon=3
+[test] policy=exclude horizon=3
+[dev] policy=exclude horizon=7
+[test] policy=exclude horizon=7
+[dev] policy=cap horizon=1
+[test] policy=cap horizon=1
+[dev] policy=cap horizon=3
+[test] policy=cap horizon=3
+[dev] policy=cap horizon=7
+[test] policy=cap horizon=7
+
+--- captured stderr ---
