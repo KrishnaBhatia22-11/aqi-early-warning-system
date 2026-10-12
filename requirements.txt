@@ -25,3 +25,4 @@ resend
 httpx
 slowapi
 Pillow
+numba
