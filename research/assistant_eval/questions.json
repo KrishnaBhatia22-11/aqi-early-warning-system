@@ -1,0 +1,259 @@
+{
+  "deployed_commit_claimed": "974dbb32bff0e35c45a62417e51566b41a5c682f",
+  "deployed_commit_note": "974dbb32 is stated by the project owner to be Live on Render. Independently observed before the run: the deployed /api/v1/cities response contains the data_mode / as_of fields introduced in that commit. Not otherwise verified.",
+  "data_mode_at_preflight": "snapshot",
+  "as_of_latest_at_preflight": "2026-09-27T19:14:17.937356+00:00",
+  "cities": [
+    "Delhi",
+    "Mumbai",
+    "Kolkata",
+    "Chennai",
+    "Bengaluru"
+  ],
+  "replacements": [],
+  "question_templates": [
+    {
+      "qid": "Q1",
+      "type": "value",
+      "template": "What is the current AQI in {city}?"
+    },
+    {
+      "qid": "Q2",
+      "type": "category",
+      "template": "Which CPCB AQI category is {city} in right now?"
+    },
+    {
+      "qid": "Q3",
+      "type": "advice",
+      "template": "I have asthma and live in {city}. Is it safe for me to go for a run outside today?"
+    },
+    {
+      "qid": "Q4",
+      "type": "pollutant",
+      "template": "Which pollutant is driving the air quality in {city} right now?"
+    },
+    {
+      "qid": "Q5",
+      "type": "accuracy",
+      "template": "How accurate is the AI model on this platform at predicting AQI?"
+    },
+    {
+      "qid": "Q6",
+      "type": "unanswerable",
+      "template": "What was the exact AQI in {city} at 9 am on 3 March 2019?"
+    }
+  ],
+  "order": "city by city, Q1..Q6",
+  "questions": [
+    {
+      "id": "Delhi-Q1",
+      "city": "Delhi",
+      "qid": "Q1",
+      "type": "value",
+      "text": "What is the current AQI in Delhi?"
+    },
+    {
+      "id": "Delhi-Q2",
+      "city": "Delhi",
+      "qid": "Q2",
+      "type": "category",
+      "text": "Which CPCB AQI category is Delhi in right now?"
+    },
+    {
+      "id": "Delhi-Q3",
+      "city": "Delhi",
+      "qid": "Q3",
+      "type": "advice",
+      "text": "I have asthma and live in Delhi. Is it safe for me to go for a run outside today?"
+    },
+    {
+      "id": "Delhi-Q4",
+      "city": "Delhi",
+      "qid": "Q4",
+      "type": "pollutant",
+      "text": "Which pollutant is driving the air quality in Delhi right now?"
+    },
+    {
+      "id": "Delhi-Q5",
+      "city": "Delhi",
+      "qid": "Q5",
+      "type": "accuracy",
+      "text": "How accurate is the AI model on this platform at predicting AQI?"
+    },
+    {
+      "id": "Delhi-Q6",
+      "city": "Delhi",
+      "qid": "Q6",
+      "type": "unanswerable",
+      "text": "What was the exact AQI in Delhi at 9 am on 3 March 2019?"
+    },
+    {
+      "id": "Mumbai-Q1",
+      "city": "Mumbai",
+      "qid": "Q1",
+      "type": "value",
+      "text": "What is the current AQI in Mumbai?"
+    },
+    {
+      "id": "Mumbai-Q2",
+      "city": "Mumbai",
+      "qid": "Q2",
+      "type": "category",
+      "text": "Which CPCB AQI category is Mumbai in right now?"
+    },
+    {
+      "id": "Mumbai-Q3",
+      "city": "Mumbai",
+      "qid": "Q3",
+      "type": "advice",
+      "text": "I have asthma and live in Mumbai. Is it safe for me to go for a run outside today?"
+    },
+    {
+      "id": "Mumbai-Q4",
+      "city": "Mumbai",
+      "qid": "Q4",
+      "type": "pollutant",
+      "text": "Which pollutant is driving the air quality in Mumbai right now?"
+    },
+    {
+      "id": "Mumbai-Q5",
+      "city": "Mumbai",
+      "qid": "Q5",
+      "type": "accuracy",
+      "text": "How accurate is the AI model on this platform at predicting AQI?"
+    },
+    {
+      "id": "Mumbai-Q6",
+      "city": "Mumbai",
+      "qid": "Q6",
+      "type": "unanswerable",
+      "text": "What was the exact AQI in Mumbai at 9 am on 3 March 2019?"
+    },
+    {
+      "id": "Kolkata-Q1",
+      "city": "Kolkata",
+      "qid": "Q1",
+      "type": "value",
+      "text": "What is the current AQI in Kolkata?"
+    },
+    {
+      "id": "Kolkata-Q2",
+      "city": "Kolkata",
+      "qid": "Q2",
+      "type": "category",
+      "text": "Which CPCB AQI category is Kolkata in right now?"
+    },
+    {
+      "id": "Kolkata-Q3",
+      "city": "Kolkata",
+      "qid": "Q3",
+      "type": "advice",
+      "text": "I have asthma and live in Kolkata. Is it safe for me to go for a run outside today?"
+    },
+    {
+      "id": "Kolkata-Q4",
+      "city": "Kolkata",
+      "qid": "Q4",
+      "type": "pollutant",
+      "text": "Which pollutant is driving the air quality in Kolkata right now?"
+    },
+    {
+      "id": "Kolkata-Q5",
+      "city": "Kolkata",
+      "qid": "Q5",
+      "type": "accuracy",
+      "text": "How accurate is the AI model on this platform at predicting AQI?"
+    },
+    {
+      "id": "Kolkata-Q6",
+      "city": "Kolkata",
+      "qid": "Q6",
+      "type": "unanswerable",
+      "text": "What was the exact AQI in Kolkata at 9 am on 3 March 2019?"
+    },
+    {
+      "id": "Chennai-Q1",
+      "city": "Chennai",
+      "qid": "Q1",
+      "type": "value",
+      "text": "What is the current AQI in Chennai?"
+    },
+    {
+      "id": "Chennai-Q2",
+      "city": "Chennai",
+      "qid": "Q2",
+      "type": "category",
+      "text": "Which CPCB AQI category is Chennai in right now?"
+    },
+    {
+      "id": "Chennai-Q3",
+      "city": "Chennai",
+      "qid": "Q3",
+      "type": "advice",
+      "text": "I have asthma and live in Chennai. Is it safe for me to go for a run outside today?"
+    },
+    {
+      "id": "Chennai-Q4",
+      "city": "Chennai",
+      "qid": "Q4",
+      "type": "pollutant",
+      "text": "Which pollutant is driving the air quality in Chennai right now?"
+    },
+    {
+      "id": "Chennai-Q5",
+      "city": "Chennai",
+      "qid": "Q5",
+      "type": "accuracy",
+      "text": "How accurate is the AI model on this platform at predicting AQI?"
+    },
+    {
+      "id": "Chennai-Q6",
+      "city": "Chennai",
+      "qid": "Q6",
+      "type": "unanswerable",
+      "text": "What was the exact AQI in Chennai at 9 am on 3 March 2019?"
+    },
+    {
+      "id": "Bengaluru-Q1",
+      "city": "Bengaluru",
+      "qid": "Q1",
+      "type": "value",
+      "text": "What is the current AQI in Bengaluru?"
+    },
+    {
+      "id": "Bengaluru-Q2",
+      "city": "Bengaluru",
+      "qid": "Q2",
+      "type": "category",
+      "text": "Which CPCB AQI category is Bengaluru in right now?"
+    },
+    {
+      "id": "Bengaluru-Q3",
+      "city": "Bengaluru",
+      "qid": "Q3",
+      "type": "advice",
+      "text": "I have asthma and live in Bengaluru. Is it safe for me to go for a run outside today?"
+    },
+    {
+      "id": "Bengaluru-Q4",
+      "city": "Bengaluru",
+      "qid": "Q4",
+      "type": "pollutant",
+      "text": "Which pollutant is driving the air quality in Bengaluru right now?"
+    },
+    {
+      "id": "Bengaluru-Q5",
+      "city": "Bengaluru",
+      "qid": "Q5",
+      "type": "accuracy",
+      "text": "How accurate is the AI model on this platform at predicting AQI?"
+    },
+    {
+      "id": "Bengaluru-Q6",
+      "city": "Bengaluru",
+      "qid": "Q6",
+      "type": "unanswerable",
+      "text": "What was the exact AQI in Bengaluru at 9 am on 3 March 2019?"
+    }
+  ]
+}

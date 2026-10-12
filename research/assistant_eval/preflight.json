@@ -1,0 +1,446 @@
+{
+  "utc": "2026-10-12T15:24:01.621662Z",
+  "git_head": "974dbb32bff0e35c45a62417e51566b41a5c682f",
+  "deployed_commit_claimed": "974dbb32bff0e35c45a62417e51566b41a5c682f",
+  "attempts": 1,
+  "data_mode": "snapshot",
+  "as_of_latest": "2026-09-27T19:14:17.937356+00:00",
+  "cities_live": 0,
+  "cities_snapshot": 45,
+  "cities_with_value": 45,
+  "total_rows": 53,
+  "chosen_cities": [
+    "Delhi",
+    "Mumbai",
+    "Kolkata",
+    "Chennai",
+    "Bengaluru"
+  ],
+  "replacements": [],
+  "per_city": {
+    "Delhi": {
+      "aqi": 76,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 42
+    },
+    "Mumbai": {
+      "aqi": 52,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 21
+    },
+    "Bengaluru": {
+      "aqi": 52,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 7
+    },
+    "Chennai": {
+      "aqi": 76,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 7
+    },
+    "Kolkata": {
+      "aqi": 37,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 7
+    },
+    "Hyderabad": {
+      "aqi": 61,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 14
+    },
+    "Ahmedabad": {
+      "aqi": 112,
+      "category": "Moderate",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 8
+    },
+    "Pune": {
+      "aqi": 86,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 6
+    },
+    "Jaipur": {
+      "aqi": 75,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 4
+    },
+    "Lucknow": {
+      "aqi": 37,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 6
+    },
+    "Kanpur": {
+      "aqi": 32,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Patna": {
+      "aqi": 65,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 5
+    },
+    "Bhopal": {
+      "aqi": 42,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 3
+    },
+    "Nagpur": {
+      "aqi": 23,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 4
+    },
+    "Surat": {
+      "aqi": 72,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Indore": {
+      "aqi": 49,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 5
+    },
+    "Visakhapatnam": {
+      "aqi": 83,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Chandigarh": {
+      "aqi": 47,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 3
+    },
+    "Coimbatore": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    },
+    "Kochi": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    },
+    "Agra": {
+      "aqi": 44,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 5
+    },
+    "Varanasi": {
+      "aqi": 40,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 4
+    },
+    "Amritsar": {
+      "aqi": 93,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Jodhpur": {
+      "aqi": 113,
+      "category": "Moderate",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 5
+    },
+    "Udaipur": {
+      "aqi": 142,
+      "category": "Moderate",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Mysuru": {
+      "aqi": 65,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-23T11:13:39.728016+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Pondicherry": {
+      "aqi": 32,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Ghaziabad": {
+      "aqi": 72,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 6
+    },
+    "Noida": {
+      "aqi": 79,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 4
+    },
+    "Faridabad": {
+      "aqi": 92,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 3
+    },
+    "Gurugram": {
+      "aqi": 77,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 3
+    },
+    "Meerut": {
+      "aqi": 73,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 4
+    },
+    "Moradabad": {
+      "aqi": 46,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 6
+    },
+    "Ludhiana": {
+      "aqi": 101,
+      "category": "Moderate",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Jalandhar": {
+      "aqi": 83,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Bhubaneswar": {
+      "aqi": 48,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Guwahati": {
+      "aqi": 57,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 4
+    },
+    "Ranchi": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    },
+    "Raipur": {
+      "aqi": 27,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Dehradun": {
+      "aqi": 37,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Shimla": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    },
+    "Jammu": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    },
+    "Srinagar": {
+      "aqi": 49,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Thiruvananthapuram": {
+      "aqi": 59,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Madurai": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    },
+    "Vijayawada": {
+      "aqi": 47,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Nashik": {
+      "aqi": 68,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 4
+    },
+    "Aurangabad": {
+      "aqi": 74,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 3
+    },
+    "Kolhapur": {
+      "aqi": 38,
+      "category": "Good",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Solapur": {
+      "aqi": 72,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 2
+    },
+    "Warangal": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    },
+    "Guntur": {
+      "aqi": 52,
+      "category": "Satisfactory",
+      "data_mode": "snapshot",
+      "as_of": "2026-09-27T19:14:17.937356+00:00",
+      "dominant_pollutant": null,
+      "station_count": 1
+    },
+    "Tiruchirappalli": {
+      "aqi": null,
+      "category": null,
+      "data_mode": "none",
+      "as_of": null,
+      "dominant_pollutant": null,
+      "station_count": null
+    }
+  }
+}
