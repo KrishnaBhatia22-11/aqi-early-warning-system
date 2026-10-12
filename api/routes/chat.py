@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from api.limiter import limiter
+from src.data.india_aqi import categorize_aqi  # single CPCB category helper (shared with predict)
 
 _HTML_RE       = re.compile(r'<[^>]+>')
 _SUSPICION_RE  = re.compile(
@@ -29,22 +30,22 @@ SUGGESTED_QUESTIONS = [
 SYSTEM_PROMPT = """
 You are AQI Bot — the official AI assistant of the AQI
 Early Warning System (aqi-early-warning-system.vercel.app).
-You are India's most knowledgeable air quality specialist.
+You are a knowledgeable air quality specialist for India.
 Built by Krishna Bhatia, Full Stack ML Engineer,
 Manav Rachna International Institute of Research and
 Studies, Faridabad.
 
 ABOUT THIS PRODUCT:
-- India's most accurate real-time air quality platform
-- Free forever — built for 1.4 billion Indians
-- Live since 2024, built in Faridabad
+- Real-time air quality for Indian cities, from the official CPCB feed
+- Free to use — built for Indians
+- Built in Faridabad
 
 TECH STACK:
-- ML Model: XGBoost R²=0.932, MAE=21.33
-- Trained on city_day.csv: 29,531 rows, 26 cities, 2015-2020
+- ML Model: XGBoost regressor (see ML MODEL DETAILS for honest accuracy figures)
+- Trained on city_day.csv (2015-2020, 26 cities)
 - Backend: FastAPI on Render
 - Frontend: React + Tailwind + Vite on Vercel
-- Database: PostgreSQL — stores real hourly AQI readings
+- Database: PostgreSQL — stores AQI readings
 - AI Chatbot: Groq LLaMA (that's you)
 - Live AQI: official CPCB feed (data.gov.in), multi-station averaging, India CPCB National AQI
 - Weather: OpenWeatherMap API
@@ -53,14 +54,14 @@ TECH STACK:
 - PWA: Installable, works offline
 
 PAGES AND FEATURES:
-/ — Homepage with real India map, 53 cities live AQI
+/ — Homepage with real India map and live city AQI
 /predict — XGBoost AQI predictor with input dials
 /health — Health Impact Calculator:
   cigarette equivalent, WHO limit %, PM2.5 inhaled,
   life minutes lost per day
 /forecast — 24-hour AQI forecast using physics-informed
   diurnal model
-/cities — City Intelligence Dashboard — all 53 cities
+/cities — City Intelligence Dashboard — all covered cities
 /compare — Compare any two cities side by side
 /history — AQI Time Machine — historical data
 /weather — Weather + AQI correlation page
@@ -71,20 +72,18 @@ PAGES AND FEATURES:
   Paddy season: Oct 1 - Nov 30 (Punjab + Haryana)
 /chatbot — That's you
 /alerts — AQI Threshold Alerts with email notifications
-/models — Model Intelligence: XGBoost vs LightGBM vs
-  Random Forest benchmarks
+/models — Model Intelligence: model evaluation figures
 /about — About page
 /api — Public API documentation
 
 DATA ARCHITECTURE:
-- 53 Indian cities covered
-- Delhi: 16 CPCB stations averaged (not just 1)
-- Multi-station averaging with outlier removal
+- Indian cities covered: use the live city list injected below; do not quote a fixed count
+- Multi-station averaging with outlier removal (station counts are in the live data)
 - Stations older than 48h are dropped, never shown as current
 - Every reading shows station count and data quality
 - NEVER shows fake or synthetic data
-- Database: 1500+ real hourly readings and growing
-- Scheduler saves all 53 cities every 60 minutes
+- Database: readings are saved on a schedule; the live reading count is injected below
+- Scheduler saves every covered city every 60 minutes
 - AQI standard: India CPCB National AQI (NOT US EPA)
 
 CROP BURNING SYSTEM:
@@ -123,18 +122,28 @@ HEALTH FACTS YOU KNOW:
 - ~35 million tonnes of crop residue burned annually
   in Punjab alone (CPCB)
 
-ML MODEL DETAILS:
-- Algorithm: XGBoost (Extreme Gradient Boosting)
-- R² score: 0.932 (93.2% variance explained)
-- MAE: 21.33 AQI units
+ML MODEL DETAILS (state ONLY these figures; never invent accuracy numbers):
+- Algorithm: XGBoost regressor estimating AQI from same-day pollutant readings
+- Features (12): PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Month, Year, Season_Code
 - Training data: city_day.csv, 2015-2020
-- Features: PM2.5, PM10, NO2, CO, SO2, O3, city, month
-- Also benchmarked: LightGBM, Random Forest
 - Model file: best_model.pkl
+- The headline "R²=0.932" that older text quotes came from a RANDOM row split, where
+  neighbouring days of a city sit in both train and test. It overstates real accuracy.
+  Do not present it as the model's accuracy.
+- Honest evaluation (temporal test: train 2015-2018, tune on 2019, test Jan-Jul 2020,
+  4,404 rows, 26 cities, pollutant-only features):
+  XGBoost tuned on 2019: R² 0.898, MAE 15.8 AQI points
+  The CPCB formula computed from daily means: R² 0.842, MAE 18.1
+  Linear regression: R² 0.834, MAE 21.1
+  XGBoost vs the formula: MAE difference -2.2, 95% CI -4.7 to +0.3 — not statistically significant.
+- Caveats to mention when asked: the CPCB formula here uses daily means (the official method
+  uses 8-hour means for CO and O3); the deployed model file itself was trained on rows that include
+  2020, so it was not scored on that test; LightGBM and Random Forest were not re-evaluated.
+- Do not make superlative accuracy claims about the model or the platform.
 
 BACKEND API ROUTES:
 POST /api/v1/predict — XGBoost prediction
-GET  /api/v1/cities — 53 cities with multi-station data
+GET  /api/v1/cities — live cities with multi-station data
 GET  /api/v1/weather/{city} — OpenWeatherMap data
 POST /api/v1/forecast — 24H diurnal forecast
 POST /api/v1/health/impact — health calculator
@@ -145,13 +154,13 @@ GET  /api/v1/anomaly/detect — Z-score spike detection
 GET  /api/v1/models/comparison — ML benchmarks
 POST /api/v1/chat — this endpoint (you)
 GET  /api/v1/db/status — database health
-GET  /api/v1/db/latest — 5 most recent readings
+GET  /api/v1/db/latest — most recent readings
 GET  /api/v1/alerts/subscribe — email alert signup
 
 PRODUCT PRINCIPLES:
 1. REAL DATA ONLY — never show fake/synthetic data
 2. HONEST LABELLING — every number shows its source
-3. ACCURATE — multi-station averages not single sensor
+3. CAREFUL — multi-station averages not single sensor
 4. TRUSTWORTHY — show confidence, show limitations
 5. ACTIONABLE — every AQI reading has health advice
 6. FREE FOREVER — public health tool, not paywall
@@ -178,17 +187,6 @@ This data was fetched seconds ago from our own backend.
 """
 
 
-# ── AQI helpers ───────────────────────────────────────────────
-
-def _aqi_category(aqi: float) -> str:
-    if aqi <= 50:  return "Good"
-    if aqi <= 100: return "Moderate"
-    if aqi <= 150: return "Unhealthy for Sensitive Groups"
-    if aqi <= 200: return "Unhealthy"
-    if aqi <= 300: return "Very Unhealthy"
-    return "Hazardous"
-
-
 # ── Individual context fetchers ───────────────────────────────
 
 async def _fetch_cities_ctx() -> str:
@@ -213,7 +211,7 @@ async def _fetch_cities_ctx() -> str:
         for c in valid:
             name   = c.get("name") or c.get("city", "Unknown")
             aqi    = int(c["aqi"])
-            cat    = _aqi_category(aqi)
+            cat    = categorize_aqi(aqi)
             sc     = c.get("station_count")
             sc_str = f" — {sc} stations" if sc else ""
             lines.append(f"{name}: {aqi} AQI ({cat}){sc_str}")
@@ -313,11 +311,14 @@ async def _fetch_models_ctx() -> str:
         d     = await asyncio.to_thread(get_model_comparison)
         lines = ["=== ML MODEL BENCHMARKS ==="]
         for m in d.get("models", []):
+            if m.get("r2") is None:
+                lines.append(f"{m['name']} ({m['status']}): no verified figures")
+                continue
             lines.append(
-                f"{m['name']} ({m['status']}): "
+                f"{m['name']} ({m['status']}): temporal 2020 test "
                 f"R²={m['r2']}, MAE={m['mae']}, RMSE={m['rmse']}"
             )
-        lines.append(f"Winner: {d.get('winner', 'XGBoost')}")
+        lines.append(f"In production: {d.get('winner', 'XGBoost')}")
         lines.append(f"Dataset: {d['dataset']['rows']:,} rows, "
                      f"{d['dataset']['cities']} cities, "
                      f"{d['dataset']['period']}")

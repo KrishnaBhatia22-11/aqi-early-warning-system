@@ -679,7 +679,7 @@ with st.sidebar:
             ● Live · API connected
         </div>
         <div>10 cities · WAQI sensors</div>
-        <div>Model: XGBoost R²=0.932</div>
+        <div>Model: XGBoost (2020 test R²=0.898)</div>
         <div>SHAP: TreeExplainer</div>
     </div>
     """, unsafe_allow_html=True)
@@ -940,7 +940,7 @@ elif "chatbot" in page:
     if "messages" not in st.session_state:
         st.session_state.messages = [{
             "role": "assistant",
-            "content": "Hello! I'm your AI air quality assistant powered by Gemini. Ask me anything about pollution, AQI levels, health impacts, or specific Indian cities."
+            "content": "Hello! I'm your AI air quality assistant powered by Groq. Ask me anything about pollution, AQI levels, health impacts, or specific Indian cities."
         }]
 
     for msg in st.session_state.messages:
@@ -1021,7 +1021,7 @@ elif "About" in page:
             <div>
                 <div style="color:#444;font-size:10px;text-transform:uppercase;
                 letter-spacing:0.08em;margin-bottom:4px">ML Model</div>
-                <div style="color:#fff;font-weight:600">XGBoost · R² = 0.932</div>
+                <div style="color:#fff;font-weight:600">XGBoost · 2020 test R² = 0.898</div>
             </div>
             <div>
                 <div style="color:#444;font-size:10px;text-transform:uppercase;
@@ -1058,19 +1058,19 @@ elif "About" in page:
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
             <div class="stat-mini">
                 <div style="font-size:24px;font-weight:800;
-                color:#ff6b00">0.932</div>
-                <div style="font-size:10px;color:#444;margin-top:2px">R² Score</div>
+                color:#ff6b00">0.898</div>
+                <div style="font-size:10px;color:#444;margin-top:2px">R² (2020 temporal test)</div>
             </div>
             <div class="stat-mini">
                 <div style="font-size:24px;font-weight:800;
-                color:#ffaa00">17.9</div>
+                color:#ffaa00">15.8</div>
                 <div style="font-size:10px;color:#444;margin-top:2px">MAE (AQI pts)</div>
             </div>
             <div class="stat-mini">
                 <div style="font-size:24px;font-weight:800;
-                color:#ff6b00">5-fold</div>
+                color:#ff6b00">2020</div>
                 <div style="font-size:10px;color:#444;margin-top:2px">
-                    Cross-validated
+                    Held-out test (Jan–Jul)
                 </div>
             </div>
         </div>

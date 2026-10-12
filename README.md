@@ -3,7 +3,7 @@
 [![Live Demo](https://img.shields.io/badge/Live-aqi--early--warning--system.vercel.app-orange?style=for-the-badge)](https://aqi-early-warning-system.vercel.app)
 [![API](https://img.shields.io/badge/API-Render-46E3B7?style=for-the-badge&logo=render)](https://aqi-api-y2qs.onrender.com/docs)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python)](https://python.org)
-[![XGBoost](https://img.shields.io/badge/XGBoost-R²%3D0.932-FF6600?style=for-the-badge)](https://xgboost.readthedocs.io)
+[![XGBoost](https://img.shields.io/badge/XGBoost-2020%20test%20R²%3D0.898-FF6600?style=for-the-badge)](https://xgboost.readthedocs.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16K%2B%20rows-336791?style=for-the-badge&logo=postgresql)](https://render.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
@@ -51,11 +51,11 @@ This project was built to change that. One student, one laptop, Faridabad.
 - Live ticker — scrolling city AQI feed across the top
 
 ### AI & ML
-- XGBoost prediction — R²=0.932, MAE=21.33, trained on 29,531 rows across 26 Indian cities (2015–2020)
+- XGBoost prediction — temporal 2020 test R²≈0.90, MAE≈15.8 AQI points (see ML Pipeline), trained on city_day.csv across 26 Indian cities (2015–2020)
 - SHAP TreeExplainer — shows which pollutant drives each prediction
 - 24h diurnal forecast — physics-informed model anchored to live AQI, peaks at morning rush (07–09) and evening (17–19)
 - Anomaly detection — Z-score spike flagging with city baseline comparison
-- Model benchmarks — XGBoost vs LightGBM vs Random Forest, side by side
+- Model benchmarks — XGBoost temporal-test results; LightGBM and Random Forest not re-evaluated
 - AI chatbot — Groq LLaMA 3.1 8B Instant with live city AQI injected as context per query
 
 ### Unique Features
@@ -89,7 +89,7 @@ This project was built to change that. One student, one laptop, Faridabad.
          ▼                                ▼                      ▼
 ┌─────────────────┐        ┌─────────────────────┐   ┌──────────────────┐
 │  PostgreSQL DB  │        │  CPCB / data.gov.in │   │  XGBoost Model   │
-│  16,000+ rows   │        │  1 national pull    │   │  R²=0.932        │
+│  AQI readings   │        │  1 national pull    │   │  R²=0.898 (2020) │
 │  Hourly cron    │        │  15-min cache       │   │  SHAP explainer  │
 └─────────────────┘        └─────────────────────┘   └──────────────────┘
          │
@@ -128,15 +128,17 @@ dropped outright. /api/v1/cpcb/status shows the live count right now.
 
 | Item | Detail |
 |---|---|
-| Dataset | CPCB India city_day.csv — 29,531 rows, 26 cities, 2015–2020 |
-| Features | PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Benzene, Toluene, Xylene, City, Month |
-| Model | XGBoost Regressor |
-| R² Score | **0.932** |
-| MAE | **21.33 AQI units** |
-| CV | 5-fold cross-validation mean R²=0.931 |
+| Dataset | CPCB India city_day.csv — 29,531 raw rows; 24,850 with a recorded AQI, 26 cities, 2015–2020 |
+| Features (deployed model) | PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Month, Year, Season_Code |
+| Model | XGBoost Regressor (depth 8, 200 trees, lr 0.1, subsample 0.8) |
+| Temporal 2020 test (train 2015–2018, tune 2019, test Jan–Jul 2020; pollutant-only features) | XGBoost tuned on 2019: R² **0.898**, MAE **15.8**; deployed hyperparameters: R² 0.870, MAE 17.9; CPCB formula on daily means: R² 0.842, MAE 18.1; linear: R² 0.834, MAE 21.1 |
+| Earlier R²=0.932 | Random 80/20 row split (MAE 17.9); overstates real-world accuracy — not a forecast/estimation guarantee |
+| Cross-validation | None reported |
 | Explainability | SHAP TreeExplainer |
 | Tracking | MLflow |
-| Benchmarked | XGBoost · LightGBM · Random Forest |
+| Benchmarked | XGBoost re-evaluated; LightGBM and Random Forest not re-evaluated |
+
+Source: `research/aqi_estimation/results/20261012T135944Z-6e220f0c/RESULTS_SUMMARY.md`.
 
 ---
 

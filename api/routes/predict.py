@@ -7,6 +7,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from config.settings import MODEL_DIR
+from src.data.india_aqi import categorize_aqi  # single CPCB category helper (shared with chat)
 from src.explainability.shap_explainer import (
     explain_single_prediction,
     human_readable_explanation
@@ -46,18 +47,6 @@ class PredictionRequest(BaseModel):
 
     class Config:
         populate_by_name = True
-
-
-# ─────────────────────────────────────────────
-# AQI category helper
-# ─────────────────────────────────────────────
-def categorize_aqi(aqi):
-    if aqi <= 50:   return "Good"
-    if aqi <= 100:  return "Satisfactory"
-    if aqi <= 200:  return "Moderate"
-    if aqi <= 300:  return "Poor"
-    if aqi <= 400:  return "Very Poor"
-    return "Severe"
 
 
 # ─────────────────────────────────────────────

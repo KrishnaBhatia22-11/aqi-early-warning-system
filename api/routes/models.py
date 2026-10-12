@@ -2,6 +2,12 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
+# Source of every number below:
+#   research/aqi_estimation/results/20261012T135944Z-6e220f0c/RESULTS_SUMMARY.md
+# Temporal re-evaluation: train 2015-2018, tune on 2019, test 2020-01-01..2020-07-01
+# (4,404 rows, 26 cities), 9 pollutant features, rows with recorded AQI in 0-500.
+# The old R2=0.932 came from a random row split and is not reported here.
+
 
 @router.get("/models/comparison")
 def get_model_comparison():
@@ -10,66 +16,65 @@ def get_model_comparison():
             {
                 "name": "XGBoost",
                 "status": "PRODUCTION",
-                "r2": 0.932,
-                "mae": 21.33,
-                "rmse": 31.2,
-                "train_time_seconds": 14,
-                "inference_ms": 1.8,
-                "description": "Gradient boosted trees with L1/L2 regularization",
+                "r2": 0.898,
+                "mae": 15.8,
+                "rmse": 22.5,
+                "train_time_seconds": None,
+                "inference_ms": None,
+                "description": (
+                    "Gradient boosted trees (depth 5, 200 trees, learning rate 0.05, selected on 2019). "
+                    "Scores are from a temporal test on Jan–Jul 2020. The deployed model's own "
+                    "hyperparameters (depth 8, lr 0.1) scored R² 0.870, MAE 17.9 on the same test; "
+                    "the deployed file itself was trained on rows that include 2020, so it was not "
+                    "scored on that test."
+                ),
                 "strengths": [
-                    "Best R² at 0.932 — explains 93.2% of AQI variance",
-                    "Handles missing pollutant readings without imputation",
-                    "Fastest inference — under 2ms per prediction on Render",
+                    "Beat linear regression on the 2020 test (MAE 15.8 vs 21.1)",
+                    "Handles missing pollutant readings natively (no imputation)",
                     "Native feature importance via SHAP values",
                 ],
                 "color": "#22c55e",
             },
             {
                 "name": "LightGBM",
-                "status": "CHALLENGER",
-                "r2": 0.918,
-                "mae": 23.1,
-                "rmse": 33.8,
-                "train_time_seconds": 8,
-                "inference_ms": 1.2,
-                "description": "Leaf-wise gradient boosting, faster training than XGBoost",
-                "strengths": [
-                    "Fastest training time at 8 seconds",
-                    "Lower memory footprint during training",
-                    "Strong performance on categorical features",
-                ],
+                "status": "NOT RE-EVALUATED",
+                "r2": None,
+                "mae": None,
+                "rmse": None,
+                "train_time_seconds": None,
+                "inference_ms": None,
+                "description": "Not re-evaluated on the temporal test; earlier figures were unverified and were removed.",
+                "strengths": [],
                 "color": "#f59e0b",
             },
             {
                 "name": "Random Forest",
-                "status": "BASELINE",
-                "r2": 0.901,
-                "mae": 26.4,
-                "rmse": 38.1,
-                "train_time_seconds": 41,
-                "inference_ms": 4.1,
-                "description": "Ensemble of 100 independent decision trees",
-                "strengths": [
-                    "Most interpretable — easy to explain to non-technical users",
-                    "Robust to outliers in training data",
-                    "No hyperparameter sensitivity",
-                ],
+                "status": "NOT RE-EVALUATED",
+                "r2": None,
+                "mae": None,
+                "rmse": None,
+                "train_time_seconds": None,
+                "inference_ms": None,
+                "description": "Not re-evaluated on the temporal test; earlier figures were unverified and were removed.",
+                "strengths": [],
                 "color": "#6b7280",
             },
         ],
         "dataset": {
             "name": "city_day.csv",
-            "rows": 29531,
+            "rows": 24850,
             "cities": 26,
             "period": "2015–2020",
-            "features": 13,
+            "features": 12,
             "target": "AQI",
         },
         "winner": "XGBoost",
         "verdict": (
-            "XGBoost was chosen for production because it achieved the highest "
-            "predictive accuracy (R²=0.932) while maintaining sub-2ms inference "
-            "latency on Render’s free tier — critical for a real-time public "
-            "health application."
+            "XGBoost is in production. On a temporal test (train 2015–2018, tune on 2019, "
+            "test Jan–Jul 2020) the 2019-tuned XGBoost reached R² 0.898 and MAE 15.8 AQI points, "
+            "versus R² 0.842 and MAE 18.1 for the CPCB formula computed from daily means and "
+            "R² 0.834 and MAE 21.1 for linear regression. The difference from the formula is not "
+            "statistically significant (MAE difference −2.2, 95% CI −4.7 to +0.3). The earlier "
+            "R² of 0.932 came from a random row split and overstates real-world accuracy."
         ),
     }
