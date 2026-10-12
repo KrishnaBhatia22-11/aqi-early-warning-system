@@ -56,7 +56,7 @@ This project was built to change that. One student, one laptop, Faridabad.
 - 24h diurnal forecast — physics-informed model anchored to live AQI, peaks at morning rush (07–09) and evening (17–19)
 - Anomaly detection — Z-score spike flagging with city baseline comparison
 - Model benchmarks — XGBoost temporal-test results; LightGBM and Random Forest not re-evaluated
-- AI chatbot — Groq LLaMA 3.1 8B Instant with live city AQI injected as context per query
+- AI chatbot — GPT-OSS 20B (openai/gpt-oss-20b) via Groq with live city AQI injected as context per query
 
 ### Unique Features
 - **Crop Burn Detector** — 4-signal system: seasonal calendar + Punjab AQI spike + downwind city pattern + NASA FIRMS VIIRS satellite fire count
@@ -94,7 +94,7 @@ This project was built to change that. One student, one laptop, Faridabad.
 └─────────────────┘        └─────────────────────┘   └──────────────────┘
          │
 ┌─────────────────┐        ┌─────────────────────┐
-│  NASA FIRMS     │        │  Groq LLaMA 3.1     │
+│  NASA FIRMS     │        │  GPT-OSS 20B (Groq) │
 │  VIIRS Satellite│        │  Live AQI context   │
 │  Fire detection │        │  injected per query │
 └─────────────────┘        └─────────────────────┘
@@ -150,7 +150,7 @@ Source: `research/aqi_estimation/results/20261012T135944Z-6e220f0c/RESULTS_SUMMA
 | GET | `/api/v1/city/{city}` | Single city — all pollutants, all stations |
 | POST | `/api/v1/predict` | XGBoost AQI prediction + SHAP values |
 | POST | `/api/v1/forecast` | 24h diurnal AQI forecast |
-| POST | `/api/v1/chat` | Groq LLaMA chatbot with live AQI context |
+| POST | `/api/v1/chat` | GPT-OSS 20B (openai/gpt-oss-20b) via Groq chatbot with live AQI context |
 | GET | `/api/v1/cropburn/status` | Crop burning 4-signal detection |
 | GET | `/api/v1/weather/{city}` | Weather + AQI correlation data |
 | GET | `/api/v1/db/history` | Real hourly AQI from PostgreSQL |
@@ -179,7 +179,7 @@ Source: `research/aqi_estimation/results/20261012T135944Z-6e220f0c/RESULTS_SUMMA
 | `/history` | AQI Time Machine — real DB data |
 | `/weather` | Weather + AQI Correlation |
 | `/cropburn` | Crop Burning Early Warning |
-| `/chatbot` | Groq LLaMA Chatbot |
+| `/chatbot` | GPT-OSS 20B Chatbot |
 | `/alerts` | Email Threshold Alerts |
 | `/models` | ML Model Benchmarks |
 | `/about` | About + Mission |
@@ -214,7 +214,7 @@ aqi-early-warning-system/
 │       ├── city.py             # /cities, /city/{name}
 │       ├── predict.py          # /predict (XGBoost + SHAP)
 │       ├── forecast.py         # /forecast (24h diurnal)
-│       ├── chat.py             # /chat (Groq LLaMA)
+│       ├── chat.py             # /chat (GPT-OSS 20B via Groq)
 │       ├── alerts.py           # /alerts/subscribe (Resend)
 │       ├── db.py               # /db/history, /db/status, /db/audit, /db/cleanup
 │       ├── cropburn.py         # /cropburn/status (NASA FIRMS)
@@ -320,7 +320,7 @@ Open `http://localhost:5173`
 
 **Frontend** — React 18 · Vite 5 · Tailwind CSS · Recharts · Leaflet.js
 
-**AI** — Groq LLaMA 3.1 8B Instant
+**AI** — GPT-OSS 20B (openai/gpt-oss-20b) via Groq
 
 **Data Sources** — CPCB India via data.gov.in · NASA FIRMS VIIRS · OpenWeatherMap · Resend
 

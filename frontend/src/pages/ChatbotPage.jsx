@@ -106,7 +106,7 @@ export default function ChatbotPage({ cities }) {
   return (
     <div className="chatbot-page">
       <div className="chat-hero">
-        <div className="mono chat-eyebrow">AI ASSISTANT · GROQ LLaMA · LIVE CITY DATA CONTEXT</div>
+        <div className="mono chat-eyebrow">AI ASSISTANT · GPT-OSS 20B VIA GROQ · LIVE CITY DATA CONTEXT</div>
         <h1 className="display chat-title">AQI Chatbot</h1>
       </div>
 

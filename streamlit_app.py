@@ -962,7 +962,7 @@ elif "chatbot" in page:
             scale, Indian cities pollution patterns, seasonal effects, and health
             impacts. Be concise, helpful, and data-driven. Answer in 3-5 sentences."""
             resp = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             messages=[
             {"role": "system", "content": ctx},
             {"role": "user", "content": prompt}

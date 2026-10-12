@@ -17,6 +17,9 @@ _SUSPICION_RE  = re.compile(
 
 router = APIRouter()
 
+# Groq retired the previous Llama model on 2026-08-16; openai/gpt-oss-20b is their named replacement.
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+
 SUGGESTED_QUESTIONS = [
     "What is Delhi's AQI right now?",
     "Is it safe to exercise in Mumbai today?",
@@ -47,7 +50,7 @@ TECH STACK:
 - Backend: FastAPI on Render
 - Frontend: React + Tailwind + Vite on Vercel
 - Database: PostgreSQL — stores AQI readings
-- AI Chatbot: Groq LLaMA (that's you)
+- AI Chatbot: GPT-OSS 20B (openai/gpt-oss-20b) via Groq (that's you)
 - Live AQI: official CPCB feed (data.gov.in), multi-station averaging, India CPCB National AQI
 - Weather: OpenWeatherMap API
 - Satellite fires: NASA FIRMS VIIRS satellite
@@ -410,12 +413,16 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         messages.append({"role": "user", "content": message})
 
         resp = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=GROQ_MODEL,
             messages=messages,
-            max_tokens=2048,
+            max_completion_tokens=2048,
             temperature=0.6,
+            reasoning_effort="low",
         )
-        reply = resp.choices[0].message.content.strip()
+        # message.content is the final answer only; the reasoning trace lives in a separate field.
+        reply = (resp.choices[0].message.content or "").strip()
+        if not reply:
+            raise RuntimeError("Groq returned an empty answer")
         return {
             "reply": reply,
             "source": "groq",
@@ -423,6 +430,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         }
 
     except Exception as e:
+        print(f"[chat] Groq call failed (model={GROQ_MODEL}): {type(e).__name__}: {e}", flush=True)
         return {
             "reply": "AI is temporarily unavailable. Please try again in a moment.",
             "source": "error",
