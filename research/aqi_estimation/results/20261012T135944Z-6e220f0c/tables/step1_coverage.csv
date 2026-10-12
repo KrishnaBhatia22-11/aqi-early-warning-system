@@ -1,0 +1,5 @@
+model,rows_total,rows_predicted,coverage
+xgb_deployed_config,4404,4404,1.0
+xgb_selected,4404,4404,1.0
+linear,4404,4404,1.0
+cpcb_formula,4404,4397,0.9984105358764759

@@ -1,0 +1,55 @@
+{
+  "selected_xgb_params": {
+    "n_estimators": 200,
+    "max_depth": 5,
+    "learning_rate": 0.05,
+    "subsample": 0.8
+  },
+  "deployed_xgb_params": {
+    "n_estimators": 200,
+    "max_depth": 8,
+    "learning_rate": 0.1,
+    "subsample": 0.8
+  },
+  "xgb_seed": 42,
+  "grid": {
+    "max_depth": [
+      3,
+      5,
+      8
+    ],
+    "n_estimators": [
+      200,
+      400
+    ],
+    "learning_rate": [
+      0.05,
+      0.1
+    ]
+  },
+  "selection_metric": "2019 MAE, all rows",
+  "train_rows": 12988,
+  "val_rows": 6915,
+  "linear_train_medians": {
+    "PM2.5": 56.705,
+    "PM10": 108.15,
+    "NO": 10.0,
+    "NO2": 24.82,
+    "NOx": 22.72,
+    "NH3": 21.125,
+    "CO": 1.0,
+    "SO2": 8.24,
+    "O3": 30.905
+  },
+  "pollutant_features": [
+    "PM2.5",
+    "PM10",
+    "NO",
+    "NO2",
+    "NOx",
+    "NH3",
+    "CO",
+    "SO2",
+    "O3"
+  ]
+}

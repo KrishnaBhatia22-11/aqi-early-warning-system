@@ -1,0 +1,131 @@
+{
+  "run_id": "20261012T135944Z-6e220f0c",
+  "created_utc": "2026-10-12T14:00:20.085346Z",
+  "dataset": {
+    "path": "data\\raw\\city_day.csv",
+    "sha256": "0d84b21c3e4878bbad8df362f2ab05f61ad959538dddf5918e714077ed3c1847",
+    "raw_rows": 29531,
+    "missing_aqi": 4681,
+    "aqi_above_500_excluded": 543,
+    "aqi_negative_excluded": 0,
+    "valid_rows": 24307
+  },
+  "reference_inputs": {
+    "clean_data.csv_sha256": "32c854557109635bcd9bb367b087f7dd3be75971556afaa3fa259df2d68b929c",
+    "best_model.pkl_sha256": "8522bab32fa0af82dd63ab496d8c697e535d9f249fe5967391c9757211a95ae5"
+  },
+  "git": {
+    "commit": "6e220f0c875b180a01bdaa733dcdde7723f3102d",
+    "short": "6e220f0c",
+    "branch": "main",
+    "tracked_changes_at_run": []
+  },
+  "package_versions": {
+    "python": "3.13.3",
+    "numpy": "2.4.4",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.1",
+    "xgboost": "3.2.0",
+    "shap": "0.51.0",
+    "matplotlib": "3.10.9",
+    "joblib": "1.5.3"
+  },
+  "seeds": {
+    "xgboost": 42,
+    "bootstrap": 20200101,
+    "random_split_reference": 42
+  },
+  "windows": {
+    "train_start": "2015-01-01",
+    "train_end": "2018-12-31",
+    "val_start": "2019-01-01",
+    "val_end": "2019-12-31",
+    "test_start": "2020-01-01",
+    "test_end": "2020-07-01"
+  },
+  "bootstrap_reps": 2000,
+  "selected_xgb_params": {
+    "n_estimators": 200,
+    "max_depth": 5,
+    "learning_rate": 0.05,
+    "subsample": 0.8
+  },
+  "selection_sha256": "f09c4277a378e19528f24c74014f8492a821081a7c7581e04730ee5f71d55423",
+  "scoring_events": [
+    {
+      "utc": "2026-10-12T13:59:44.625873Z",
+      "event": "run_started",
+      "run_id": "20261012T135944Z-6e220f0c",
+      "test_window": "2020-01-01..2020-07-01"
+    },
+    {
+      "utc": "2026-10-12T14:00:08.416890Z",
+      "event": "development_frozen",
+      "selection_sha256": "f09c4277a378e19528f24c74014f8492a821081a7c7581e04730ee5f71d55423",
+      "selected_xgb_params": {
+        "n_estimators": 200,
+        "max_depth": 5,
+        "learning_rate": 0.05,
+        "subsample": 0.8
+      },
+      "test_rows_visible_to_development": 0
+    },
+    {
+      "utc": "2026-10-12T14:00:08.418467Z",
+      "event": "test_scoring_started",
+      "window": "2020-01-01..2020-07-01",
+      "ledger_recorded": true
+    },
+    {
+      "utc": "2026-10-12T14:00:17.163453Z",
+      "event": "test_scoring_finished",
+      "rows": 4404,
+      "common_rows": 4397
+    },
+    {
+      "utc": "2026-10-12T14:00:19.849829Z",
+      "event": "random_split_reference_scored",
+      "note": "labeled comparison only; random split, not the temporal test",
+      "rows": 2
+    },
+    {
+      "utc": "2026-10-12T14:00:20.158796Z",
+      "event": "outputs_hashed"
+    }
+  ],
+  "output_file_sha256": {
+    "figures/step1_pred_vs_recorded.png": "fb7bb36265c7d22f0416d9cf615c901163abb7da348402320d927503695b29d7",
+    "figures/step3_shap_beeswarm.png": "41ec159f64422b7839e9a25f77021de6918337e25dc524871d34e55dae9f5b7f",
+    "figures/step3_shap_waterfall_delhi_max.png": "ddc812c90bd995dad356e246bcafef24c0f10c605b9c681e03c868c5c379b34e",
+    "figures/step4_confusion_matrices.png": "280481bd6ad9e624e8c32503a40179c656e1480aeb8fb586d3f0584145db514b",
+    "models/xgb_deployed_config.ubj": "7be90a3b4da9f9b2eaac9ec28a883f454407ba8f5d66f2e12de1efef67167b89",
+    "models/xgb_selected.ubj": "9b377de388e5ded42c0358079a71ac121e0868855f04caed0e9534c9220187b5",
+    "PROVENANCE.md": "5c8011df8ee1ab402c5a773899e928ee36a8c2952f8b98f17c9d2782cbf27bdc",
+    "RESULTS_SUMMARY.md": "73c67b570fbd43ade95a7d5b8033689658b5cee937612a1bfc2b7f7279fd76a0",
+    "scoring_log.json": "c9a00c52cb66a6e82f7cdd6f55aca765ab7afe131263b070a12bc852654202a4",
+    "selection.json": "f09c4277a378e19528f24c74014f8492a821081a7c7581e04730ee5f71d55423",
+    "tables/dev_validation_2019.csv": "3e7a9ef59f2f990846d0c6208101133fc8eb809b39ae7dfffaad1a9f59e521b7",
+    "tables/dev_xgb_grid_2019.csv": "f7634f1fa670ed5320d187c91cffa5cf3f47609811807942f77ce7ce3f6ebc0a",
+    "tables/step1_coverage.csv": "1feec821cea5951f920989fc5448d57a5749d02b9f2ec272006a788f6a3d333a",
+    "tables/step1_metrics_bootstrap_ci.csv": "5044987c95f8acedd8333689ddc562f6db1380b2ac3b2513a40d7d4baecf69fb",
+    "tables/step1_per_city_mae_common.csv": "5699a011b6836ba71e57eacd98a62e7d90d46db7c5583a62e961b6ad3d2383a5",
+    "tables/step1_random_split_reference.csv": "e4638699479236457179331bdb7b9deacf97d8bcc51b63faaa3843babcf34abb",
+    "tables/step2_missing_input_robustness.csv": "8aba2eb41d67c74947c261f8c5aec227757fe0a4cd9fc4992d2a1c80a9a4dbc9",
+    "tables/step3_agreement_by_category.csv": "28de8545fce278e01cc5a0bef42179c3e2809f2219bb591f11b11d8d9e4c869d",
+    "tables/step3_agreement_by_city.csv": "4d7fedb9500b556b5dda3f9916d07aad44b51d1812565a54a1e796ee8862097e",
+    "tables/step3_agreement_overall.csv": "e0ff4d3301af508af5eafbc1cf7124b374898c6c2fdf6cc0c7a9e5afd75fba21",
+    "tables/step3_dominant_vs_top_shap_crosstab.csv": "1499c2ea68a7998bb2f3a0261569c3f56f43b27d88ace4ddb7f159a4afb32591",
+    "tables/step3_mean_abs_shap_by_city.csv": "2d1099cea493291f0fc4afaea89895380c8979c367942b5e9c12f1b6caaa9f06",
+    "tables/step3_mean_abs_shap_overall.csv": "076175ca9e4672a7bece10e072f57ae685e30cc59fd49db11bd1223ec478bb61",
+    "tables/step3_waterfall_day.json": "63ee89772b55b717239a4ca8eb9e54ada19418ebe37de0f270517b1f66d0f1fe",
+    "tables/step4_category_metrics.csv": "15bdc9cbd93d6ac15a47d8f3ed7176ed4c55c2cc1a814c9d822d229bd8c66377",
+    "tables/step4_confusion_cpcb_formula.csv": "9d49a5606067e4b1c7d328e432183dd5b79febfd43cf1b680fc4251cb23f23e1",
+    "tables/step4_confusion_linear.csv": "f834d1113f43a4acaa24dcab9c34fe65b0e9645780f06dab3751765c257b42e8",
+    "tables/step4_confusion_xgb_deployed_config.csv": "06463bd7a67bcdbfeddda37f737451f6d7ca7dfab33090028213acb521eac097",
+    "tables/step4_confusion_xgb_selected.csv": "33719c589ce970079791fd0d07b5e0eb19e9223c45ec715f7ce01accdf148f05",
+    "tables/step4_event_scores.csv": "b79d84e4016fb2f1cd0f607f544990730cc47a5feacd2fa52bab0c21fdca2996",
+    "tables/test_predictions_2020.csv": "9c2b02de7e0e76ebbc9584e77bb679f10c3f8d51dff93b1668d379b4352e7c53",
+    "tables/test_predictions_2020_masked.csv": "166f7905aff97b840277a1feec420706090efdc0cafd073aa177fe4dd22f729d"
+  }
+}

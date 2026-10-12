@@ -1,0 +1,3 @@
+label,split,n,MAE,RMSE,R2
+"RANDOM-SPLIT: original deployed artifact re-scored on its own random 20% split (clean_data.csv: imputed, AQI clipped to 500, features include Year/Month/Season)",random 80/20 seed 42,4970,17.9282327840026,29.500287806194045,0.932017611735235
+"RANDOM-SPLIT: deployed XGBoost config, 9 pollutant features only, raw NaNs, city_day valid AQI 0-500",random 80/20 seed 42,4862,17.49326938800192,28.38541251807751,0.9211821973278647

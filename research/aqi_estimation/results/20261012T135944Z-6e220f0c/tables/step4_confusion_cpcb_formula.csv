@@ -1,0 +1,7 @@
+,pred_Good,pred_Satisfactory,pred_Moderate,pred_Poor,pred_Very Poor,pred_Severe
+true_Good,473,54,1,0,0,0
+true_Satisfactory,396,1456,90,3,0,0
+true_Moderate,9,388,1033,49,3,0
+true_Poor,1,1,75,154,55,1
+true_Very Poor,0,0,5,14,115,0
+true_Severe,0,0,0,4,10,7
