@@ -49,7 +49,7 @@ export async function predictAQI(values) {
 
   const data = await res.json();
 
-  // API returns predicted_aqi / top_factors — throw if missing so caller uses local estimate
+  // API returns predicted_aqi / top_factors — throw if missing so the caller shows an error
   if (data.predicted_aqi == null && data.aqi == null) {
     throw new Error("API returned unexpected response: " + JSON.stringify(data).slice(0, 120));
   }
@@ -128,8 +128,8 @@ export async function fetchWeather(city) {
   return res.json();
 }
 
-export async function fetchHistory(city) {
-  const res = await fetch(`${BASE}/api/v1/history/${encodeURIComponent(city)}`);
+export async function fetchHistory(city, days = 7) {
+  const res = await fetch(`${BASE}/api/v1/history/${encodeURIComponent(city)}?days=${days}`);
   if (!res.ok) {
     let detail = "Failed to fetch history";
     try { detail = (await res.json()).detail ?? detail; } catch {}
@@ -156,9 +156,14 @@ export async function fetchCropBurnStatus() {
   return res.json();
 }
 
-export async function fetchForecast(city, baseAqi = null) {
+export async function fetchForecast(city, baseAqi = null, base = {}) {
   const body = { city };
-  if (baseAqi !== null && baseAqi > 0) body.base_aqi = baseAqi;
+  if (baseAqi !== null && baseAqi > 0) {
+    body.base_aqi = baseAqi;
+    // Tell the server when the base value is a stored (non-live) reading.
+    if (base.dataMode) body.base_data_mode = base.dataMode;
+    if (base.asOf) body.base_as_of = base.asOf;
+  }
   const res = await fetch(`${BASE}/api/v1/forecast`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

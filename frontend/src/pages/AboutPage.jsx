@@ -2,14 +2,12 @@ import krishnaImg from '../assets/krishna.jpeg';
 
 export default function AboutPage() {
   const stats = [
-    { n: "10",    l: "Live Stations" },
     { n: "26",    l: "Cities in ML Dataset" },
     { n: "9",     l: "Pollutants Tracked" },
     { n: "0.898", l: "R² (temporal 2020 test)" },
     { n: "15.8",  l: "MAE (AQI pts, 2020 test)" },
     { n: "6 yrs", l: "Training Data" },
     { n: "29,531",l: "Dataset Rows" },
-    { n: "Free",  l: "Forever" },
   ];
 
   const stack = [
@@ -27,8 +25,8 @@ export default function AboutPage() {
         <div className="mono about-eyebrow">MISSION & TRANSPARENCY</div>
         <h1 className="display about-title">About This Project</h1>
         <p className="about-mission">
-          India's 1.4 billion people breathe air that is often invisible to them — no real-time alerts,
-          no ML forecasts, no accessible dashboard. We built this to change that. Open source, free forever.
+          Air quality data from the Central Pollution Control Board (CPCB, via data.gov.in), with
+          alerts, forecasts and an open-source codebase. Built to make that data easier to read.
         </p>
       </section>
 
@@ -120,15 +118,15 @@ export default function AboutPage() {
           {/* Right side */}
           <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: "white", marginBottom: 12 }}>
-              Built solo. For 1.4 billion Indians.
+              Built solo.
             </div>
             <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7, margin: 0 }}>
               Every line of code in this product — the XGBoost ML model, FastAPI backend, React frontend,
               PostgreSQL database, NASA FIRMS satellite integration, and email alert system — was designed,
-              built, and deployed by one person. Built in Faridabad. Free forever.
+              built, and deployed by one person in Faridabad.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "16px 0" }}>
-              {["XGBoost R² 0.898 (2020 test)", "53 Indian Cities", "NASA FIRMS Satellite", "2600+ Real DB Readings", "Free Forever"].map(pill => (
+              {["XGBoost R² 0.898 (2020 test)", "CPCB data (data.gov.in)", "NASA FIRMS Satellite"].map(pill => (
                 <span key={pill} style={{
                   border: "1px solid #f97316", color: "#f97316",
                   borderRadius: 20, padding: "4px 14px",
@@ -191,7 +189,6 @@ export default function AboutPage() {
             <div className="mc-row"><span className="mono mc-key">TRAINING DATA</span><span className="mc-val">CPCB, 2015–2020</span></div>
             <div className="mc-row"><span className="mono mc-key">DATASET ROWS</span><span className="mc-val">29,531</span></div>
             <div className="mc-row"><span className="mono mc-key">ML CITIES</span><span className="mc-val">26</span></div>
-            <div className="mc-row"><span className="mono mc-key">LIVE STATIONS</span><span className="mc-val">10</span></div>
             <div className="mc-row"><span className="mono mc-key">FEATURES</span><span className="mc-val">PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Month, Year, Season_Code</span></div>
             <div className="mc-row"><span className="mono mc-key">TARGET</span><span className="mc-val">AQI (continuous, 0–500)</span></div>
             <div className="mc-row"><span className="mono mc-key">R² SCORE</span><span className="mc-val" style={{ color: "#34d27a" }}>0.898 (temporal 2020 test)</span></div>

@@ -20,7 +20,8 @@ class ChatCategoryTests(unittest.TestCase):
             self.assertEqual(chat.categorize_aqi(aqi), name, aqi)
 
     def test_live_city_context_uses_cpcb_names(self):
-        cities = [{"name": "A", "aqi": 150}, {"name": "B", "aqi": 250}, {"name": "C", "aqi": 450}]
+        cities = [{"success": True, "city": n, "name": n, "aqi": a}
+                  for n, a in (("A", 150), ("B", 250), ("C", 450), ("D", 60), ("E", 80))]
         with patch("src.data.cpcb_client.fetch_all_cities", return_value=cities):
             text = asyncio.run(chat._fetch_cities_ctx())
         self.assertIn("A: 150 AQI (Moderate)", text)

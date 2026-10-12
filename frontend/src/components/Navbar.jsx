@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const PRIMARY_NAV = [
-  { id: "map",      label: "LIVE MAP"  },
+  { id: "map",      label: "MAP"       },
   { id: "predict",  label: "PREDICT"   },
   { id: "health",   label: "HEALTH"    },
   { id: "forecast", label: "FORECAST"  },
@@ -22,7 +22,7 @@ const MORE_ITEMS = [
 ];
 
 const MOBILE_PRIMARY = [
-  { id: "map",      icon: "🗺",  label: "Live Map"           },
+  { id: "map",      icon: "🗺",  label: "Map"                },
   { id: "predict",  icon: "🎯",  label: "AQI Predictor"      },
   { id: "health",   icon: "❤️",  label: "Health Impact"      },
   { id: "forecast", icon: "📈",  label: "24H Forecast"       },
@@ -41,7 +41,11 @@ const MOBILE_MORE = [
   { id: "about",    icon: "ℹ️",  label: "About"              },
 ];
 
-export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities = [] }) {
+export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities = [], feed = null }) {
+  const feedMode = feed?.mode ?? "unknown";
+  const feedLabel = feedMode === "live" ? "LIVE" : feedMode === "snapshot" ? "STORED READINGS" : "NO LIVE DATA";
+  const pillLabel = feedMode === "live" && feed?.citiesLive != null ? `${feed.citiesLive} CITIES LIVE`
+    : feedMode === "snapshot" ? "STORED DATA" : "NO LIVE DATA";
   const { user, logout } = useAuth();
   const [time, setTime]         = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
@@ -52,7 +56,7 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities
     const valid = cities.filter(c => c.aqi && typeof c.aqi === "number" && c.aqi > 0);
     if (!valid.length) return { nationalAvg: null, hazardous: 0 };
     const avg = Math.round(valid.reduce((s, c) => s + c.aqi, 0) / valid.length);
-    const haz = valid.filter(c => c.aqi > 400).length;
+    const haz = valid.filter(c => c.aqi > 400).length; // CPCB "Severe"
     return { nationalAvg: avg, hazardous: haz };
   }, [cities]);
 
@@ -131,16 +135,16 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities
           </div>
 
           <div className="nbb-center mono">
-            <span className={`nbb-dot${!apiOnline ? " offline" : ""}`} />
-            <span className="nbb-live">LIVE</span>
+            <span className={`nbb-dot${!apiOnline || feedMode !== "live" ? " offline" : ""}`} />
+            <span className="nbb-live">{feedLabel}</span>
             {nationalAvg !== null && (
               <>
                 <span className="nbb-sep">·</span>
-                <span className="nbb-stat">NATIONAL AQI <strong>{nationalAvg}</strong></span>
+                <span className="nbb-stat">{feedMode === "snapshot" ? "NATIONAL AQI (STORED)" : "NATIONAL AQI"} <strong>{nationalAvg}</strong></span>
                 {hazardous > 0 && (
                   <>
                     <span className="nbb-sep">·</span>
-                    <span className="nbb-hazardous">{hazardous} HAZARDOUS</span>
+                    <span className="nbb-hazardous">{hazardous} SEVERE</span>
                   </>
                 )}
               </>
@@ -230,8 +234,8 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities
 
             <div className="nav-status-pills">
               <span className="nav-status-pill">
-                <span className="nsp-dot" />
-                10 LIVE
+                <span className="nsp-dot" style={feedMode !== "live" ? { background: "#ef3a4d" } : undefined} />
+                {pillLabel}
               </span>
               <span className="nav-status-pill">R² 0.898 (2020 test)</span>
               <span className="nav-status-pill">BUILD v2.1</span>

@@ -143,10 +143,14 @@ export default function HealthImpactPage({ cities = [] }) {
     setLiveAqi(found?.aqi ?? null);
   }, [city, cities]);
 
-  const effectiveAqi = aqiInput ? Math.max(0, Math.min(500, Number(aqiInput))) : (liveAqi ?? 100);
-  const isLive = !aqiInput && !!liveAqi;
+  // No default value: with neither a typed AQI nor a city reading there is nothing to calculate.
+  const effectiveAqi = aqiInput ? Math.max(0, Math.min(500, Number(aqiInput))) : liveAqi;
+  const isLive = !aqiInput && liveAqi != null;
+  const cityRow = cities.find(c => c.name?.toLowerCase() === city.toLowerCase());
+  const stored = cityRow?.data_mode === "snapshot";
 
   const handleCalculate = async () => {
+    if (effectiveAqi == null) return;
     setLoading(true);
     setResults(null);
     try {
@@ -221,7 +225,7 @@ export default function HealthImpactPage({ cities = [] }) {
                   return (
                     <span className="health-live-badge">
                       <span className="hlb-dot" />
-                      LIVE {liveAqi} {AQI_STANDARD_LABEL}
+                      {stored ? "STORED" : "LIVE"} {liveAqi} {AQI_STANDARD_LABEL}
                       {stnName && <span style={{ opacity: 0.6, marginLeft: 5, fontSize: 10 }}>· {stnName}</span>}
                     </span>
                   );
@@ -295,7 +299,8 @@ export default function HealthImpactPage({ cities = [] }) {
             </div>
           </div>
 
-          <button className="health-calc-btn" onClick={handleCalculate} disabled={loading}>
+          <button className="health-calc-btn" onClick={handleCalculate} disabled={loading || effectiveAqi == null}
+            title={effectiveAqi == null ? "No live or stored AQI for this city: enter an AQI" : undefined}>
             {loading
               ? <><span className="health-calc-spin" />CALCULATING…</>
               : "CALCULATE IMPACT"

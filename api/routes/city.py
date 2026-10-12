@@ -10,6 +10,7 @@ from src.data.cpcb_client import fetch_city_aqi, fetch_all_cities
 from src.analytics.health_score import get_health_advisory, get_general_precautions
 from config.settings import CITY_COORDS
 from api.limiter import limiter
+from api import snapshot as snap
 
 router = APIRouter()
 
@@ -135,10 +136,16 @@ async def get_all_cities(request: Request):
                 for row in cities_data
             ]
 
+        # Fewer than MIN_LIVE_CITIES live: fill from the latest STORED readings, labelled.
+        cities_data, summary = await snap.rows_with_fallback(
+            cities_data, live_as_of=snap.live_as_of_iso()
+        )
+
         return {
             "success": True,
             "count":   len(cities_data),
             "cities":  cities_data,
+            **summary,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

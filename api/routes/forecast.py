@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import numpy as np
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from api.limiter import limiter
+from api import snapshot as snap
 
 router = APIRouter()
 
@@ -35,15 +36,6 @@ SEASONAL = {
 
 # Day-of-week multiplier (0=Mon … 6=Sun)
 DOW = {0: 1.02, 1: 1.02, 2: 1.02, 3: 1.02, 4: 1.05, 5: 0.92, 6: 0.85}
-
-# Summer 2026 researched baseline AQI — used when live CPCB data is unavailable
-CITY_DEFAULTS = {
-    "Delhi": 185, "Mumbai": 95, "Kolkata": 140, "Chennai": 75,
-    "Bengaluru": 85, "Hyderabad": 90, "Ahmedabad": 130, "Jaipur": 145,
-    "Lucknow": 160, "Patna": 175, "Chandigarh": 105, "Amritsar": 120,
-    "Guwahati": 95, "Thiruvananthapuram": 55, "Visakhapatnam": 80,
-    "Coimbatore": 65, "Kochi": 70, "Bhopal": 120,
-}
 
 CITY_NORM = {
     "bangalore": "Bengaluru", "bengalore": "Bengaluru", "bengaluru": "Bengaluru",
@@ -88,11 +80,14 @@ def _recommendation(peak: float, trend: str) -> str:
 class ForecastRequest(BaseModel):
     city: str
     base_aqi: Optional[float] = None
+    # Set by the client when base_aqi is a stored (non-live) reading, so the response says so.
+    base_data_mode: Optional[str] = None
+    base_as_of: Optional[str] = None
 
 
 @router.post("/forecast")
 @limiter.limit("20/minute")
-def forecast_aqi(req: ForecastRequest, request: Request):
+async def forecast_aqi(req: ForecastRequest, request: Request):
     city_input = req.city.strip()
     norm_city = CITY_NORM.get(city_input.lower(), city_input)
     now = datetime.now()
@@ -105,13 +100,22 @@ def forecast_aqi(req: ForecastRequest, request: Request):
     if entry and (now_ts - entry["ts"]) < CACHE_TTL:
         return entry["data"]
 
-    # Determine base AQI and source label
+    # Base AQI always comes from a real reading: the one the client is showing, else live data,
+    # else the latest stored reading. With none of those there is no forecast (no default values).
+    base_as_of = req.base_as_of
     if req.base_aqi and 1.0 <= req.base_aqi <= 500.0:
         base = float(req.base_aqi)
-        base_aqi_source = "live_cpcb"
+        base_aqi_source = "stored_snapshot" if req.base_data_mode == "snapshot" else "live_cpcb"
     else:
-        base = float(CITY_DEFAULTS.get(norm_city, 150))
-        base_aqi_source = "seasonal_estimate"
+        resolved = await snap.resolve_city_aqi(norm_city)
+        if resolved is None:
+            raise HTTPException(
+                status_code=503,
+                detail=f"No live or stored CPCB reading for {city_input}; forecast unavailable",
+            )
+        base = float(resolved["aqi"])
+        base_aqi_source = "stored_snapshot" if resolved["data_mode"] == "snapshot" else "live_cpcb"
+        base_as_of = resolved["as_of"]
 
     seasonal_mult = SEASONAL.get(now.month, 1.0)
     dow_mult = DOW.get(now.weekday(), 1.0)
@@ -179,6 +183,7 @@ def forecast_aqi(req: ForecastRequest, request: Request):
         "recommendation":    _recommendation(peak["aqi"], trend),
         "base_aqi_source":   base_aqi_source,
         "base_aqi":          int(round(base)),
+        "base_as_of":        base_as_of,
     }
 
     _cache[cache_key] = {"ts": now_ts, "data": result}

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { aqiCategory, AQI_STANDARD_LABEL } from "../utils/aqiCategory";
 import CountUp from "./CountUp";
-import { TREND_7D } from "../data/index";
+import { useCityHistory } from "../utils/useCityHistory";
+import { formatAsOf } from "../utils/feed";
 
 function ZpSparkline({ values, color }) {
   const w = 320, h = 80;
@@ -160,25 +161,28 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
     return () => window.removeEventListener("keydown", handleEsc);
   }, [handleEsc]);
 
+  const { points: historyPoints } = useCityHistory(city?.name, 7);
   if (!city) return null;
   const cat = aqiCategory(city.aqi);
-  const factor = city.aqi / 200;
+  const snapshot = city.data_mode === "snapshot";
+  const dominant = city.dominant_pollutant ?? null;
+  // Real concentrations from the API only (a pollutant the feed did not report shows "—").
+  const fmt = v => (Number.isFinite(v) ? (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1)) : "—");
+  const isDominant = names => dominant != null && names.includes(String(dominant).toUpperCase());
   const readings = [
-    { name: "PM2.5", val: Math.round(80 * factor),          unit: "µg/m³", crit: city.pollutant === "PM2.5" },
-    { name: "PM10",  val: Math.round(120 * factor),         unit: "µg/m³", crit: city.pollutant === "PM10"  },
-    { name: "NO",    val: Math.round(5 + 10 * factor),      unit: "µg/m³" },
-    { name: "NO2",   val: Math.round(30 * factor),          unit: "µg/m³", crit: city.pollutant === "NO2"   },
-    { name: "NOx",   val: Math.round(35 * factor),          unit: "µg/m³" },
-    { name: "NH3",   val: Math.round(10 * factor),          unit: "µg/m³" },
-    { name: "CO",    val: (1.5 * factor).toFixed(2),        unit: "mg/m³" },
-    { name: "SO2",   val: Math.round(15 * factor),          unit: "µg/m³" },
-    { name: "O3",    val: Math.round(40 * factor),          unit: "µg/m³", crit: city.pollutant === "O3"    },
+    { name: "PM2.5", val: fmt(city.pm25), unit: "µg/m³", crit: isDominant(["PM2.5"]) },
+    { name: "PM10",  val: fmt(city.pm10), unit: "µg/m³", crit: isDominant(["PM10"]) },
+    { name: "NO2",   val: fmt(city.no2),  unit: "µg/m³", crit: isDominant(["NO2"]) },
+    { name: "CO",    val: fmt(city.co),   unit: "mg/m³", crit: isDominant(["CO"]) },
+    { name: "SO2",   val: fmt(city.so2),  unit: "µg/m³", crit: isDominant(["SO2"]) },
+    { name: "O3",    val: fmt(city.o3),   unit: "µg/m³", crit: isDominant(["O3", "OZONE"]) },
+    ...(city.nh3 != null ? [{ name: "NH3", val: fmt(city.nh3), unit: "µg/m³", crit: isDominant(["NH3"]) }] : []),
   ];
-  const trend = TREND_7D.map(v => Math.max(20, v + (city.aqi - 200)));
+  const trend = historyPoints.map(p => p.aqi);
 
   const stationLabel = city.station_count > 1
     ? `AVG OF ${city.station_count} CPCB STATIONS`
-    : "SINGLE STATION · LIVE";
+    : "SINGLE STATION";
 
   return (
     <div className="city-zoom-overlay" onClick={onClose}>
@@ -241,13 +245,13 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
         <button className="city-zoom-out-btn" onClick={onClose}>✕ ZOOM OUT</button>
         <div className="zp-top">
           <div>
-            <div className="mono zp-eyebrow">{stationLabel} · {city.name.toUpperCase()} · LIVE</div>
+            <div className="mono zp-eyebrow">{stationLabel} · {city.name.toUpperCase()} · {snapshot ? "STORED READING" : "LIVE"}</div>
             <div className="display zp-name">{city.name}</div>
             {showHint && (
               <div className="zp-hint mono">Press ESC or click ✕ to return to map</div>
             )}
             <div className="mono zp-coords">
-              {city.source ?? "CPCB"} · {city.data_quality ?? "LIVE"}
+              {city.source ?? "CPCB"}{snapshot ? ` · AS OF ${formatAsOf(city.as_of).toUpperCase()}` : city.data_quality ? ` · ${city.data_quality}` : ""}
             </div>
           </div>
           <div className="zp-aqi-block" style={{ color: cat.color }}>
@@ -275,17 +279,22 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
           </div>
 
           <div className="zp-trend">
-            <div className="zp-section-title mono">7-DAY TREND</div>
-            <ZpSparkline values={trend} color={cat.color}/>
-            <div className="mono zp-trend-meta">
-              <span>7d ▲ +28%</span>
-              <span style={{ color: cat.color }}>PEAK {Math.max(...trend)}</span>
-            </div>
+            <div className="zp-section-title mono">7-DAY TREND (STORED READINGS)</div>
+            {trend.length >= 2 ? (
+              <>
+                <ZpSparkline values={trend} color={cat.color}/>
+                <div className="mono zp-trend-meta">
+                  <span>{trend.length} days of stored data</span>
+                  <span style={{ color: cat.color }}>PEAK {Math.max(...trend)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="mono zp-trend-meta"><span>No stored history for this city yet</span></div>
+            )}
             <div className="zp-driver">
-              <span className="mono zp-section-title" style={{ marginBottom: 6 }}>TOP POLLUTANT</span>
+              <span className="mono zp-section-title" style={{ marginBottom: 6 }}>DOMINANT POLLUTANT</span>
               <div className="zp-driver-row">
-                <span className="display zp-driver-name" style={{ color: cat.color }}>{city.pollutant}</span>
-                <span className="mono zp-driver-pct">38% OF AQI</span>
+                <span className="display zp-driver-name" style={{ color: cat.color }}>{dominant ?? "—"}</span>
               </div>
             </div>
           </div>
@@ -310,7 +319,7 @@ export default function CityZoomModal({ city, onClose, onPredict, onViewReport, 
       <button className="zoom-close" onClick={onClose}>✕ ZOOM OUT</button>
       <div className="zoom-meta mono">
         <div>● ZOOMED · {city.name.toUpperCase()}</div>
-        <div>{city.last_updated ? `UPDATED ${city.last_updated}` : "UPDATED 12s AGO"}</div>
+        <div>{snapshot ? `STORED READING · AS OF ${formatAsOf(city.as_of).toUpperCase()}` : city.last_updated ? `UPDATED ${city.last_updated}` : ""}</div>
       </div>
     </div>
   );

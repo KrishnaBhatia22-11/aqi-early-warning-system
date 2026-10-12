@@ -25,9 +25,8 @@ export default function RichFooter({ setPage }) {
         <div className="rfb-brand">
           <img src="/logo.svg" alt="AQI India" style={{height:'48px', width:'auto'}} />
           <p className="rfb-tag">
-            Monitoring India's air since 2024.<br />
-            Free forever. Open source.<br />
-            Built for 1.4 billion Indians.
+            Data: CPCB via data.gov.in.<br />
+            Open source.
           </p>
           <div className="rfb-social">
             <a

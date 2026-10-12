@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List, Optional
 
 import numpy as np
@@ -6,31 +5,6 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
-
-# Shared diurnal profile (same as forecast route — Indian metro cities)
-_DIURNAL_RAW = [
-    0.87, 0.85, 0.83, 0.83, 0.86, 0.92,  # 00–05
-    1.05, 1.28, 1.32, 1.20, 1.08, 1.00,  # 06–11
-    0.95, 0.93, 0.97, 1.05, 1.15, 1.30,  # 12–17
-    1.35, 1.25, 1.10, 1.00, 0.93, 0.89,  # 18–23
-]
-_diurnal_mean = sum(_DIURNAL_RAW) / 24
-DIURNAL = [v / _diurnal_mean for v in _DIURNAL_RAW]
-
-SEASONAL = {
-    1: 1.25, 2: 1.20, 3: 1.05, 4: 1.05, 5: 1.08,
-    6: 0.90, 7: 0.82, 8: 0.78, 9: 0.88, 10: 1.05,
-    11: 1.20, 12: 1.35,
-}
-
-# Seasonal daily-average AQI baselines per city
-CITY_DEFAULTS = {
-    "Delhi": 185, "Mumbai": 95, "Kolkata": 140, "Chennai": 75,
-    "Bengaluru": 85, "Hyderabad": 90, "Ahmedabad": 130, "Jaipur": 145,
-    "Lucknow": 160, "Patna": 175, "Chandigarh": 105, "Amritsar": 120,
-    "Guwahati": 95, "Thiruvananthapuram": 55, "Visakhapatnam": 80,
-    "Coimbatore": 65, "Kochi": 70, "Bhopal": 120,
-}
 
 CITY_NORM = {
     "bangalore": "Bengaluru", "bengalore": "Bengaluru", "bengaluru": "Bengaluru",
@@ -55,25 +29,6 @@ def _severity(z_abs: float, delta: Optional[float] = None) -> str:
     return "LOW"
 
 
-def _synthetic_window(city: str, n: int = 6) -> list:
-    """
-    Build n synthetic past readings using the diurnal model anchored to the
-    city's typical daily-average AQI for the current season.
-    This represents 'normal' so that a spike in current_aqi registers as anomalous.
-    """
-    norm = CITY_NORM.get(city.lower(), city)
-    typical_avg = float(CITY_DEFAULTS.get(norm, 150))
-    now = datetime.now()
-    s_mult = SEASONAL.get(now.month, 1.0)
-    # DIURNAL mean = 1.0 by construction, so neutral_base * s_mult = typical_avg
-    neutral_base = typical_avg / s_mult
-    readings = []
-    for h_back in range(n, 0, -1):
-        h = (now.hour - h_back) % 24
-        readings.append(round(neutral_base * DIURNAL[h] * s_mult, 1))
-    return readings
-
-
 class AnomalyRequest(BaseModel):
     city: str
     current_aqi: float
@@ -90,15 +45,19 @@ def detect_anomaly(req: AnomalyRequest):
     # Sanitise incoming history
     raw_hist = [float(v) for v in (req.aqi_history or []) if 0 <= v <= 500]
 
-    data_quality = "live"
+    # Anomaly detection needs real readings. Nothing is padded or invented: with fewer than
+    # 5 real past readings the answer is "not available".
     if len(raw_hist) < 5:
-        # Pad with diurnal-model synthetic readings to reach 6-point window
-        synthetic = _synthetic_window(city, n=max(0, 6 - len(raw_hist)))
-        history = synthetic + raw_hist
-        data_quality = "synthetic" if not raw_hist else "mixed"
-    else:
-        history = raw_hist
-        data_quality = "live"
+        return {
+            "available": False,
+            "reason": f"Needs at least 5 real past readings for {norm_city}; got {len(raw_hist)}. "
+                      "No history is invented.",
+            "is_anomaly": False, "type": "NO_DATA", "severity": "LOW", "z_score": None,
+            "message": "Anomaly detection unavailable: not enough real readings.",
+            "window_mean": None, "window_std": None, "data_quality": "none",
+        }
+    history = raw_hist
+    data_quality = "live"
 
     # ── RAPID_RISE: AQI jumped >50 points in one polling cycle
     rapid_rise = False

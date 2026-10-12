@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { aqiCategory } from "../utils/aqiCategory";
 
-export default function EmergencyBanner({ cities }) {
+export default function EmergencyBanner({ cities, feed = null }) {
   const [open, setOpen] = useState(true);
-  if (!cities || !open) return null;
+  // Only a live feed can raise an emergency; stored readings are never presented as current.
+  if (!cities || !open || feed?.mode !== "live" || !cities.length) return null;
   const avg = Math.round(cities.reduce((s, c) => s + c.aqi, 0) / cities.length);
   const hazardous = cities.filter(c => c.aqi >= 300).map(c => c.name).slice(0, 3);
   if (avg < 200 || hazardous.length === 0) return null;

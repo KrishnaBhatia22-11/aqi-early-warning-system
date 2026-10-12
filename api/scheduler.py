@@ -8,7 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import select
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.data.cpcb_client import fetch_all_cities, refresh_cache
+from src.data.cpcb_client import fetch_all_cities, refresh_cache, cache_status
 from src.data.india_aqi import categorize_aqi, CATEGORY_COLORS
 from api.database import AsyncSessionLocal
 from api.models import AQIReading, AlertSubscription
@@ -46,17 +46,32 @@ def _health_advice(aqi: float) -> str:
     return _ADVICE.get(categorize_aqi(aqi), _ADVICE["Moderate"])
 
 
+# A snapshot is only written from a cache that CPCB actually filled recently. If the refresh
+# failed, fetch_all_cities() still serves the previous in-memory snapshot; storing that would
+# stamp an old reading with a new timestamp.
+_MAX_CACHE_AGE_FOR_SNAPSHOT_S = 600
+
+
+def _valid_aqi(aqi) -> bool:
+    return isinstance(aqi, (int, float)) and 0 < aqi <= 500
+
+
 async def save_hourly_snapshot():
     try:
         # Force a refresh so the hourly snapshot is a genuinely new reading
         # rather than a replay of the cache entry the last run already wrote.
         await asyncio.to_thread(refresh_cache)
+        age = cache_status().get("age_seconds")
+        if age is None or age > _MAX_CACHE_AGE_FOR_SNAPSHOT_S:
+            print("[Scheduler] CPCB feed did not refresh — saved 0 city readings")
+            await check_and_fire_alerts()
+            return
         cities_data = await asyncio.to_thread(fetch_all_cities)
 
         rows = []
         for city in cities_data:
             aqi = city.get("aqi")
-            if not city.get("data_available", False) or not aqi or aqi == 0:
+            if not city.get("data_available", False) or not _valid_aqi(aqi):
                 continue
             rows.append(AQIReading(
                 city=city.get("city") or city.get("name", "Unknown"),

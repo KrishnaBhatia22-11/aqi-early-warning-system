@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from api.limiter import limiter
+from api import snapshot as snap
 from src.data.india_aqi import categorize_aqi  # single CPCB category helper (shared with predict)
 
 _HTML_RE       = re.compile(r'<[^>]+>')
@@ -163,7 +164,7 @@ PRODUCT PRINCIPLES:
 3. CAREFUL — multi-station averages not single sensor
 4. TRUSTWORTHY — show confidence, show limitations
 5. ACTIONABLE — every AQI reading has health advice
-6. FREE FOREVER — public health tool, not paywall
+6. FREE TO USE — public health tool, not paywall
 7. INDIA FIRST — Indian cities, Indian standards
 
 YOUR PERSONALITY:
@@ -172,18 +173,20 @@ YOUR PERSONALITY:
 - You give specific actionable health advice
 - You cite real data from this product
 - You can speak in Hindi if the user writes in Hindi
-- You never say "I don't have real-time data" because
-  you always have it — it's injected below
+- You only quote AQI values that appear in the data injected below
+- If that block is headed "LAST STORED CPCB READINGS as of <time>", the live
+  feed is down: say the values are stored readings from that time, never call
+  them current or live, and mention how old they are
+- If no readings are injected, say you have no current data; never guess a number
 - You are warm, helpful, and care about people's health
 - Keep answers concise but complete
 - Use bullet points for lists
-- Always mention the live AQI numbers when relevant
-- If someone asks about a city, give their current AQI
-  from the live data below
+- Mention the AQI numbers from the data below when relevant, labelled live or stored
+- If someone asks about a city, give its AQI from the data below (or say none is available)
 
-LIVE DATA IS INJECTED BELOW THIS LINE.
-Always use this data to answer questions.
-This data was fetched seconds ago from our own backend.
+DATA IS INJECTED BELOW THIS LINE.
+Always use this data to answer questions and respect its label: "LIVE CITY AQI"
+was fetched just now; "LAST STORED CPCB READINGS" are older stored values.
 """
 
 
@@ -197,7 +200,8 @@ async def _fetch_cities_ctx() -> str:
         from src.data.cpcb_client import fetch_all_cities
         from api.routes.anomaly import detect_anomaly, AnomalyRequest
 
-        cities = await asyncio.to_thread(fetch_all_cities)
+        live_rows = await asyncio.to_thread(fetch_all_cities)
+        cities, summary = await snap.rows_with_fallback(live_rows, live_as_of=snap.live_as_of_iso())
         if not cities:
             return ""
 
@@ -207,14 +211,27 @@ async def _fetch_cities_ctx() -> str:
             reverse=True,
         )
 
-        lines = ["=== LIVE CITY AQI (fetched just now) ==="]
+        snapshot_mode = summary["data_mode"] == "snapshot"
+        if snapshot_mode:
+            lines = [
+                f"=== LAST STORED CPCB READINGS as of {summary['snapshot_as_of']} "
+                "(live feed unavailable) ===",
+                "These are NOT live. Always say they are stored readings from the time above.",
+            ]
+        elif not valid:
+            return ("=== LIVE CITY AQI ===\n"
+                    "No live or stored CPCB readings are available. "
+                    "Say so; do not guess any city's AQI.")
+        else:
+            lines = ["=== LIVE CITY AQI (fetched just now) ==="]
         for c in valid:
             name   = c.get("name") or c.get("city", "Unknown")
             aqi    = int(c["aqi"])
             cat    = categorize_aqi(aqi)
             sc     = c.get("station_count")
             sc_str = f" — {sc} stations" if sc else ""
-            lines.append(f"{name}: {aqi} AQI ({cat}){sc_str}")
+            when   = f" [stored {c['as_of']}]" if c.get("data_mode") == "snapshot" else ""
+            lines.append(f"{name}: {aqi} AQI ({cat}){sc_str}{when}")
 
         # Anomaly detection for top cities
         anomalies = []
@@ -226,7 +243,7 @@ async def _fetch_cities_ctx() -> str:
                     detect_anomaly,
                     AnomalyRequest(city=name, current_aqi=aqi)
                 )
-                if result.get("is_anomaly"):
+                if result.get("available", True) and result.get("is_anomaly"):
                     anomalies.append(
                         f"{name} ({int(aqi)} AQI): {result.get('type', 'SPIKE')} — "
                         f"{result.get('message', '')}"
@@ -239,7 +256,7 @@ async def _fetch_cities_ctx() -> str:
         if anomalies:
             lines.extend(anomalies)
         else:
-            lines.append("None detected")
+            lines.append("None detected, or not assessed: anomaly detection needs real recent readings")
 
         return "\n".join(lines)
 
@@ -379,7 +396,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
     try:
         live_context = await get_live_context()
-        full_system  = SYSTEM_PROMPT + "\n\nLIVE DATA RIGHT NOW:\n" + live_context
+        full_system  = SYSTEM_PROMPT + "\n\nCURRENT DATA CONTEXT:\n" + live_context
 
         from groq import Groq
         client = Groq(api_key=groq_key)

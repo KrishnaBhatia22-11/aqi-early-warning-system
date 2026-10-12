@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from src.data.cpcb_client import fetch_city_aqi
+from api import snapshot as snap
 # India CPCB bands, re-exported from the calculator so this file can never
 # drift from the thresholds the AQI numbers were produced with.
 from src.data.india_aqi import categorize_aqi as _cat
@@ -21,53 +21,32 @@ _POPULATIONS = {
     "Chandigarh": 1_200_000, "Amritsar": 1_300_000, "Varanasi": 1_500_000,
 }
 
-# Seasonal fallback baselines (summer 2026)
-_CITY_DEFAULTS = {
-    "Delhi": 185, "Mumbai": 95, "Kolkata": 140, "Chennai": 75,
-    "Bengaluru": 85, "Hyderabad": 90, "Ahmedabad": 130, "Jaipur": 145,
-    "Lucknow": 160, "Patna": 175, "Chandigarh": 105, "Amritsar": 120,
-    "Guwahati": 95, "Bhopal": 120, "Pune": 100, "Nagpur": 125,
-    "Surat": 115, "Kanpur": 180, "Varanasi": 170,
-}
-
-_DOMINANT = {
-    "Delhi": "PM2.5", "Mumbai": "NO2", "Kolkata": "PM2.5", "Chennai": "O3",
-    "Bengaluru": "NO2", "Hyderabad": "PM2.5", "Ahmedabad": "PM10",
-    "Jaipur": "PM10", "Lucknow": "PM2.5", "Patna": "PM2.5",
-}
-
 _cache: dict = {}
 _CACHE_TTL = 300  # 5 minutes
 
 
-def _resolve(city: str) -> dict:
-    """Try live CPCB; fall back to seasonal default if unavailable."""
-    result = fetch_city_aqi(city) or {}
-    if result.get("success") and result.get("aqi"):
-        return {
-            "name":               city,
-            "aqi":                int(result["aqi"]),
-            "category":           _cat(int(result["aqi"])),
-            # The live feed names the pollutant that actually drove this AQI;
-            # the static table is only a fallback for the estimate path.
-            "dominant_pollutant": result.get("dominant_pollutant") or _DOMINANT.get(city, "PM2.5"),
-            "population":         _POPULATIONS.get(city, 0),
-            "source":             "live",
-        }
-    # Fallback to seasonal default
-    aqi = _CITY_DEFAULTS.get(city, 150)
+async def _resolve(city: str) -> dict:
+    """Live CPCB AQI, else the latest stored reading (labelled), else a 503. No default values."""
+    resolved = await snap.resolve_city_aqi(city)
+    if resolved is None:
+        raise HTTPException(
+            status_code=503,
+            detail=f"No live or stored CPCB reading for {city}; comparison unavailable",
+        )
+    aqi = int(round(resolved["aqi"]))
     return {
         "name":               city,
         "aqi":                aqi,
         "category":           _cat(aqi),
-        "dominant_pollutant": _DOMINANT.get(city, "PM2.5"),
+        "dominant_pollutant": resolved["dominant_pollutant"],
         "population":         _POPULATIONS.get(city, 0),
-        "source":             "estimate",
+        "source":             "live" if resolved["data_mode"] == "live" else "snapshot",
+        "as_of":              resolved["as_of"],
     }
 
 
 @router.get("/compare")
-def compare_cities(
+async def compare_cities(
     city1: str = "Delhi",
     city2: str = "Mumbai",
     aqi1: Optional[float] = None,
@@ -87,12 +66,12 @@ def compare_cities(
     if _provided:
         d1 = {
             "name": city1, "aqi": int(aqi1), "category": _cat(int(aqi1)),
-            "dominant_pollutant": _DOMINANT.get(city1, "PM2.5"),
+            "dominant_pollutant": None,
             "population": _POPULATIONS.get(city1, 0), "source": "provided",
         }
         d2 = {
             "name": city2, "aqi": int(aqi2), "category": _cat(int(aqi2)),
-            "dominant_pollutant": _DOMINANT.get(city2, "PM2.5"),
+            "dominant_pollutant": None,
             "population": _POPULATIONS.get(city2, 0), "source": "provided",
         }
     else:
@@ -101,8 +80,8 @@ def compare_cities(
             if now - ts < _CACHE_TTL:
                 return data
 
-        d1 = _resolve(city1)
-        d2 = _resolve(city2)
+        d1 = await _resolve(city1)
+        d2 = await _resolve(city2)
 
     v1, v2 = d1["aqi"], d2["aqi"]
     diff = abs(v1 - v2)
@@ -111,10 +90,12 @@ def compare_cities(
     worse, better = (d1, d2) if v1 >= v2 else (d2, d1)
     pct_worse = round((worse["aqi"] - better["aqi"]) / max(better["aqi"], 1) * 100)
 
+    stored = "snapshot" in (d1["source"], d2["source"])
+    when = "at the last stored reading (live feed unavailable)" if stored else "right now"
     if pct_worse < 5:
-        insight = f"{worse['name']} and {better['name']} have similar air quality right now"
+        insight = f"{worse['name']} and {better['name']} have similar air quality {when}"
     else:
-        insight = f"{worse['name']} air is {pct_worse}% worse than {better['name']} right now"
+        insight = f"{worse['name']} air is {pct_worse}% worse than {better['name']} {when}"
 
     # Cigarette equivalent difference per 1 hour outside
     cig1 = worse["aqi"] / (22 * 24)

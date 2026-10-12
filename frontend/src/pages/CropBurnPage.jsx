@@ -366,7 +366,7 @@ export default function CropBurnPage({ setPage }) {
           {sortedCities.length > 0 && (
             <div className="cb-section" style={{ paddingTop: 0 }}>
               <div className="cb-section-head">
-                <div className="mono cb-eyebrow">LIVE AQI · 6 MONITORED CITIES</div>
+                <div className="mono cb-eyebrow">AQI · {sortedCities.length} CITIES</div>
                 <h2 className="cb-section-title">Cities currently monitored</h2>
               </div>
               <div className="cb-cities-strip">

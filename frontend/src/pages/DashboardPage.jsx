@@ -1,45 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import SparkLine from "../components/SparkLine";
 import { aqiCategory } from "../utils/aqiCategory";
-import { TREND_7D, CALENDAR_30D, POLLUTANT_BREAKDOWN } from "../data/index";
 import AnomalyBanner from "../components/AnomalyBanner";
 import ShareButton from "../components/ShareButton";
-import { detectAnomaly } from "../utils/api";
-
-const HOURS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-
-function DonutChart({ data, total }) {
-  const cx = 80, cy = 80, r = 60;
-  let offset = -90;
-  return (
-    <svg viewBox="0 0 160 160" width="160" height="160">
-      {data.map((d, i) => {
-        const pct = d.value / total;
-        const deg = pct * 360;
-        const start = offset;
-        offset += deg;
-        const r1 = (start * Math.PI) / 180;
-        const r2 = ((start + deg) * Math.PI) / 180;
-        const x1 = cx + r * Math.cos(r1), y1 = cy + r * Math.sin(r1);
-        const x2 = cx + r * Math.cos(r2), y2 = cy + r * Math.sin(r2);
-        const large = deg > 180 ? 1 : 0;
-        return (
-          <path
-            key={d.name}
-            d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`}
-            fill={d.color}
-            opacity="0.85"
-            stroke="#0a0a0a"
-            strokeWidth="1.5"
-          />
-        );
-      })}
-      <circle cx={cx} cy={cy} r={r * 0.55} fill="#0a0a0a" />
-      <text x={cx} y={cy - 4} textAnchor="middle" fill="#fff" fontFamily="Space Grotesk" fontSize="18" fontWeight="700">{total}</text>
-      <text x={cx} y={cy + 14} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontFamily="JetBrains Mono" fontSize="8">AQI</text>
-    </svg>
-  );
-}
+import { detectAnomaly, fetchForecast } from "../utils/api";
+import { useCityHistory } from "../utils/useCityHistory";
+import { formatAsOf } from "../utils/feed";
 
 function TrendChart({ values, color }) {
   const w = 400, h = 120;
@@ -69,16 +35,16 @@ function TrendChart({ values, color }) {
 function CalendarHeatmap({ data }) {
   return (
     <div className="cal-grid">
-      {data.map((v, i) => {
-        const cat = aqiCategory(v);
+      {data.map(d => {
+        const cat = aqiCategory(d.aqi);
         return (
           <div
-            key={i}
+            key={d.date}
             className="cal-cell"
             style={{ background: cat.color + "55", border: `1px solid ${cat.color}44` }}
-            title={`Day ${i + 1}: AQI ${v}`}
+            title={`${d.date}: AQI ${d.aqi}`}
           >
-            <span className="mono" style={{ fontSize: 8, color: cat.color }}>{v}</span>
+            <span className="mono" style={{ fontSize: 8, color: cat.color }}>{d.aqi}</span>
           </div>
         );
       })}
@@ -86,8 +52,9 @@ function CalendarHeatmap({ data }) {
   );
 }
 
-export default function DashboardPage({ cities, initialCity }) {
-  const [selectedCity, setSelectedCity] = useState(initialCity || "Delhi");
+export default function DashboardPage({ cities, feed, initialCity }) {
+  const [selectedCity, setSelectedCity] = useState(initialCity || cities[0]?.name || null);
+  const [forecast, setForecast]         = useState(null);   // { items, peak, low } from /forecast, or { error }
   const [anomaly, setAnomaly]           = useState(null);
   const aqiHistoryRef = useRef({});   // { cityName: number[] } — rolling 12-reading buffer
   const dismissedRef  = useRef(null); // key of last dismissed anomaly — prevents re-flash
@@ -100,7 +67,7 @@ export default function DashboardPage({ cities, initialCity }) {
 
   // If a deep-linked ?city= isn't a city we have live data for, fall back to default.
   useEffect(() => {
-    if (cities.length && !cities.some(c => c.name === selectedCity)) {
+    if (cities.length && (!selectedCity || !cities.some(c => c.name === selectedCity))) {
       setSelectedCity(cities[0].name);
     }
   }, [cities, selectedCity]);
@@ -131,26 +98,45 @@ export default function DashboardPage({ cities, initialCity }) {
     });
   }, [cities, selectedCity]);
 
-  const cityData = useMemo(() => {
-    return cities.find(c => c.name === selectedCity) || cities[0] || { name: "Delhi", aqi: 187, pollutant: "PM2.5" };
-  }, [cities, selectedCity]);
+  const cityData = useMemo(
+    () => cities.find(c => c.name === selectedCity) || cities[0] || null,
+    [cities, selectedCity],
+  );
+  const snapshot = cityData?.data_mode === "snapshot";
+  const cat = cityData ? aqiCategory(cityData.aqi) : aqiCategory(0);
 
-  const cat = aqiCategory(cityData?.aqi ?? 187);
-  const trend = TREND_7D.map(v => Math.max(20, v + ((cityData?.aqi ?? 187) - 200)));
-  const forecast72h = Array.from({ length: 24 }, (_, i) => {
-    const base = cityData?.aqi ?? 187;
-    return Math.max(20, Math.round(base + Math.sin(i * 0.4) * 30 + (Math.random() - 0.5) * 20));
-  });
+  // Real stored history only (daily summaries). No history -> no chart.
+  const { points: trendPoints } = useCityHistory(cityData?.name, 7);
+  const { points: monthPoints } = useCityHistory(cityData?.name, 30);
+  const trend = trendPoints.map(p => p.aqi);
 
-  const donutData = POLLUTANT_BREAKDOWN.map(p => ({ ...p }));
-  const donutTotal = cityData?.aqi ?? 187;
+  // 24h modelled forecast from the API, anchored to the AQI shown (live or stored).
+  const baseAqi = cityData?.aqi ?? null;
+  const baseMode = cityData?.data_mode ?? null;
+  const baseAsOf = cityData?.as_of ?? null;
+  useEffect(() => {
+    if (!cityData || !baseAqi) { setForecast(null); return undefined; }
+    let cancelled = false;
+    setForecast(null);
+    fetchForecast(cityData.name, baseAqi, { dataMode: baseMode, asOf: baseAsOf })
+      .then(d => { if (!cancelled) setForecast(d); })
+      .catch(e => { if (!cancelled) setForecast({ error: e.message }); });
+    return () => { cancelled = true; };
+  }, [cityData?.name, baseAqi, baseMode, baseAsOf]);
+  const forecastValues = forecast?.forecast?.map(f => f.aqi) ?? [];
 
-  const cityNames = cities.length ? cities.map(c => c.name) : ["Delhi", "Mumbai", "Bangalore", "Chennai", "Kolkata"];
+  const pollutants = cityData ? [
+    ["PM2.5", cityData.pm25, "µg/m³"], ["PM10", cityData.pm10, "µg/m³"], ["NO2", cityData.no2, "µg/m³"],
+    ["CO", cityData.co, "mg/m³"], ["SO2", cityData.so2, "µg/m³"], ["O3", cityData.o3, "µg/m³"],
+    ...(cityData.nh3 != null ? [["NH3", cityData.nh3, "µg/m³"]] : []),
+  ] : [];
+
+  const cityNames = cities.map(c => c.name);
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-hero">
-        <div className="mono dashboard-eyebrow">CITY INTELLIGENCE DASHBOARD</div>
+        <div className="mono dashboard-eyebrow">CITY INTELLIGENCE DASHBOARD{snapshot ? ` · STORED READING AS OF ${formatAsOf(cityData.as_of).toUpperCase()}` : ""}</div>
         <h1 className="display dashboard-title">Air Quality Analytics</h1>
         <div style={{ marginTop: 18, display: "flex", justifyContent: "center" }}>
           <ShareButton city={selectedCity} />
@@ -168,12 +154,17 @@ export default function DashboardPage({ cities, initialCity }) {
       />
 
       <div className="dash-city-select-wrap">
+        {!cityData && (
+          <div className="mono feed-stored-note" style={{ textAlign: "center", padding: 12 }}>
+            No live or stored city data available.
+          </div>
+        )}
         <div className="glass dash-city-bar">
           <span className="mono dash-city-label">SELECT CITY</span>
           <div className="dash-city-pills">
             {cityNames.slice(0, 10).map(name => {
               const c = cities.find(x => x.name === name);
-              const cc = aqiCategory(c?.aqi ?? 100);
+              const cc = c?.aqi ? aqiCategory(c.aqi) : { color: "#6b7280" };
               return (
                 <button
                   key={name}
@@ -192,53 +183,74 @@ export default function DashboardPage({ cities, initialCity }) {
       <div className="dash-grid">
         <div className="dash-card glass-strong dash-trend">
           <div className="panel-header">
-            <span className="mono panel-title">7-DAY TREND · {selectedCity.toUpperCase()}</span>
-            <span className="mono panel-meta" style={{ color: cat.color }}>AQI {cityData?.aqi}</span>
+            <span className="mono panel-title">7-DAY TREND (STORED) · {(selectedCity ?? "").toUpperCase()}</span>
+            <span className="mono panel-meta" style={{ color: cat.color }}>
+              {cityData ? `AQI ${cityData.aqi}${snapshot ? " (STORED)" : ""}` : "—"}
+            </span>
           </div>
-          <TrendChart values={trend} color={cat.color} />
-          <div className="dash-trend-meta mono">
-            {["MON","TUE","WED","THU","FRI","SAT","SUN"].map((d, i) => (
-              <span key={d}>{d}</span>
-            ))}
-          </div>
+          {trend.length >= 2 ? (
+            <>
+              <TrendChart values={trend} color={cat.color} />
+              <div className="dash-trend-meta mono">
+                {trendPoints.map(p => <span key={p.date}>{p.date.slice(5)}</span>)}
+              </div>
+            </>
+          ) : (
+            <div className="mono feed-stored-note" style={{ padding: 16 }}>No stored history for this city yet.</div>
+          )}
         </div>
 
         <div className="dash-card glass-strong dash-donut">
           <div className="panel-header">
-            <span className="mono panel-title">POLLUTANT BREAKDOWN</span>
+            <span className="mono panel-title">POLLUTANT CONCENTRATIONS</span>
+            <span className="mono panel-meta">{snapshot ? "STORED" : "CPCB"}</span>
           </div>
-          <div className="donut-row">
-            <DonutChart data={donutData} total={donutTotal} />
+          {pollutants.length ? (
             <div className="donut-legend">
-              {donutData.map(d => (
-                <div className="donut-leg-item" key={d.name}>
-                  <span className="donut-leg-dot" style={{ background: d.color }} />
-                  <span className="mono donut-leg-name">{d.name}</span>
-                  <span className="mono donut-leg-pct">{d.pct}%</span>
+              {pollutants.map(([name, value, unit]) => (
+                <div className="donut-leg-item" key={name}>
+                  <span className="mono donut-leg-name">{name}</span>
+                  <span className="mono donut-leg-pct">{Number.isFinite(value) ? `${value} ${unit}` : "—"}</span>
                 </div>
               ))}
+              {cityData?.dominant_pollutant && (
+                <div className="mono feed-stored-note">Dominant pollutant: {cityData.dominant_pollutant}</div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="mono feed-stored-note" style={{ padding: 16 }}>No pollutant data.</div>
+          )}
         </div>
 
         <div className="dash-card glass-strong dash-calendar">
           <div className="panel-header">
-            <span className="mono panel-title">30-DAY AQI CALENDAR</span>
-            <span className="mono panel-meta">MAY 2026</span>
+            <span className="mono panel-title">DAILY AQI · LAST 30 DAYS (STORED)</span>
           </div>
-          <CalendarHeatmap data={CALENDAR_30D} />
+          {monthPoints.length ? (
+            <CalendarHeatmap data={monthPoints} />
+          ) : (
+            <div className="mono feed-stored-note" style={{ padding: 16 }}>No stored history for this city yet.</div>
+          )}
         </div>
 
         <div className="dash-card glass-strong dash-forecast">
           <div className="panel-header">
-            <span className="mono panel-title">72H FORECAST</span>
-            <span className="mono panel-meta">NEXT 24 READINGS</span>
+            <span className="mono panel-title">24H MODELLED FORECAST</span>
+            <span className="mono panel-meta">DIURNAL MODEL{snapshot ? " · ANCHORED TO STORED READING" : ""}</span>
           </div>
-          <TrendChart values={forecast72h} color="#FFB300" />
-          <div className="mono dash-forecast-badge">
-            PEAK: <span style={{ color: "#ef3a4d" }}>{Math.max(...forecast72h)}</span>
-            &nbsp;&nbsp;LOW: <span style={{ color: "#34d27a" }}>{Math.min(...forecast72h)}</span>
-          </div>
+          {forecastValues.length >= 2 ? (
+            <>
+              <TrendChart values={forecastValues} color="#FFB300" />
+              <div className="mono dash-forecast-badge">
+                PEAK: <span style={{ color: "#ef3a4d" }}>{forecast.peak.aqi}</span>
+                &nbsp;&nbsp;LOW: <span style={{ color: "#34d27a" }}>{forecast.low.aqi}</span>
+              </div>
+            </>
+          ) : (
+            <div className="mono feed-stored-note" style={{ padding: 16 }}>
+              {forecast?.error ?? (cityData ? "Loading…" : "Forecast needs a current or stored reading.")}
+            </div>
+          )}
         </div>
       </div>
     </div>

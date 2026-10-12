@@ -6,6 +6,8 @@ import SparkLine from "../components/SparkLine";
 import CountUp from "../components/CountUp";
 import { aqiCategory } from "../utils/aqiCategory";
 import { fetchCropBurnStatus } from "../utils/api";
+import { useCityHistory } from "../utils/useCityHistory";
+import { formatAsOf, formatAge, totalStations, isLive, isSnapshot } from "../utils/feed";
 
 const HERO_LINES = [
   "India breathes.",
@@ -14,13 +16,22 @@ const HERO_LINES = [
   "Protect your city.",
 ];
 
-const SPARKLINES = {
-  delhi:   [210, 230, 195, 240, 260, 245, 255],
-  mumbai:  [90,  85,  100, 95,  80,  88,  92 ],
-  chennai: [65,  70,  60,  75,  68,  72,  66 ],
-};
+// One featured city: AQI from the API (live or stored) and a sparkline from REAL stored history only.
+function FeaturedCard({ city, snapshot }) {
+  const { points } = useCityHistory(city.name, 7);
+  const c = aqiCategory(city.aqi);
+  const values = points.map(p => p.aqi);
+  return (
+    <div className="spark-card glass">
+      <div className="mono spark-city">{city.name.toUpperCase()}</div>
+      <div className="spark-aqi" style={{ color: c.color }}>{city.aqi}</div>
+      {snapshot && <div className="mono feed-stored-note">STORED · AS OF {formatAsOf(city.as_of)}</div>}
+      {values.length >= 2 && <SparkLine values={values} color={c.color} />}
+    </div>
+  );
+}
 
-export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, isLoading, isWaking, wakeSeconds, loadError, onRetry }) {
+export default function HeroMapPage({ cities, feed, onCitySelect, setPage, zoomCity, isLoading, isWaking, wakeSeconds, loadError, onRetry }) {
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroFade, setHeroFade] = useState(true);
   const [mapVisible, setMapVisible] = useState(true);
@@ -93,12 +104,17 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
     );
   }
 
-  const nationalAvg = cities.length
+  const hasData      = cities.length > 0;
+  const snapshotMode = isSnapshot(feed);
+  const nationalAvg  = hasData
     ? Math.round(cities.reduce((s, c) => s + (c.aqi ?? 0), 0) / cities.length)
-    : 0;
-  const hazardousCities = cities.filter(c => c.aqi > 300).length;
+    : null;
+  const veryPoorOrWorse = cities.filter(c => c.aqi > 300).length;
   const cleanCities = cities.filter(c => c.aqi <= 100).length;
-  const cat = aqiCategory(nationalAvg);
+  const cat = aqiCategory(nationalAvg ?? 0);
+  const stations = totalStations(cities);
+  const featured = [...cities].sort((a, b) => b.aqi - a.aqi).slice(0, 3);
+  const asOfLatest = feed?.asOfLatest ?? null;
 
   const worstCity    = cities.length ? cities.reduce((a, b) => a.aqi > b.aqi ? a : b) : null;
   const cleanestCity = cities.length ? cities.reduce((a, b) => a.aqi < b.aqi ? a : b) : null;
@@ -133,12 +149,16 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
           <div className="dh-orb dh-orb-2" />
         </div>
         <div className="dh-content">
-          <div className="mono dh-eyebrow">● LIVE · 50+ CITIES · 200+ STATIONS · INDIA</div>
+          <div className="mono dh-eyebrow">
+            {isLive(feed) ? `● LIVE · ${cities.length} CITIES${stations ? ` · ${stations} STATIONS` : ""} · INDIA`
+              : snapshotMode ? `◌ STORED READINGS · AS OF ${formatAsOf(asOfLatest).toUpperCase()} · NOT LIVE`
+              : "○ NO LIVE DATA · INDIA"}
+          </div>
           <h1 className="display dh-headline" style={{ opacity: heroFade ? 1 : 0, transition: "opacity 0.4s" }}>
             {HERO_LINES[heroIdx]}
           </h1>
           <p className="dh-sub">
-            Real-time air quality data from across India. ML-powered forecasts. Free forever.
+            Air quality data from CPCB via data.gov.in.
           </p>
           <div className="dh-cta-row">
             <button className="btn-primary" onClick={() => setPage("predict")}>PREDICT MY CITY →</button>
@@ -161,33 +181,33 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
           <div className="dh-stat-strip">
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: cat.color }}>
-                <CountUp to={nationalAvg} duration={1200} />
+                {nationalAvg === null ? "—" : <CountUp to={nationalAvg} duration={1200} />}
               </span>
-              <span className="mono dh-stat-label">NATIONAL AVG AQI</span>
+              <span className="mono dh-stat-label">{snapshotMode ? "AVG AQI (STORED)" : "AVG AQI OF CITIES"}</span>
             </div>
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: "#ef3a4d" }}>
-                <CountUp to={hazardousCities} duration={800} />
+                {hasData ? <CountUp to={veryPoorOrWorse} duration={800} /> : "—"}
               </span>
-              <span className="mono dh-stat-label">HAZARDOUS CITIES</span>
+              <span className="mono dh-stat-label">VERY POOR OR WORSE (&gt;300)</span>
             </div>
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: "#34d27a" }}>
-                <CountUp to={cleanCities} duration={800} />
+                {hasData ? <CountUp to={cleanCities} duration={800} /> : "—"}
               </span>
               <span className="mono dh-stat-label">CLEAN AIR CITIES</span>
             </div>
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: "#FFB300" }}>
-                200+
+                {stations ?? "—"}
               </span>
-              <span className="mono dh-stat-label">LIVE STATIONS</span>
+              <span className="mono dh-stat-label">{snapshotMode ? "STATIONS (STORED)" : "STATIONS"}</span>
             </div>
             <div className="dh-stat">
               <span className="display dh-stat-num" style={{ color: "#3498db" }}>
-                <CountUp to={cities.length} duration={600} />
+                {hasData ? <CountUp to={cities.length} duration={600} /> : "—"}
               </span>
-              <span className="mono dh-stat-label">CITIES MONITORED</span>
+              <span className="mono dh-stat-label">{isLive(feed) ? "CITIES LIVE" : "CITIES WITH A VALUE"}</span>
             </div>
           </div>
         </div>
@@ -209,7 +229,9 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
           <div className="map-left">
             <div className="panel-header" style={{ marginBottom: 16 }}>
               <span className="mono panel-title">LIVE AIR QUALITY MAP</span>
-              <span className="mono panel-meta" style={{ color: "#34d27a" }}>● LIVE</span>
+              <span className="mono panel-meta" style={{ color: isLive(feed) ? "#34d27a" : "#fbbf24" }}>
+                {isLive(feed) ? "● LIVE" : snapshotMode ? `STORED · ${formatAge(asOfLatest).toUpperCase()}` : "NO LIVE DATA"}
+              </span>
             </div>
             <div style={{ display: mapVisible ? "block" : "none" }}>
               <IndiaMap cities={cities} onCityClick={handleCityClick} />
@@ -233,11 +255,11 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
               </span>
               <span className="legend-item">
                 <span className="legend-dot" style={{background:'#ef4444'}}></span>
-                Severe <span className="legend-range">301–400</span>
+                Very Poor <span className="legend-range">301–400</span>
               </span>
               <span className="legend-item">
                 <span className="legend-dot" style={{background:'#7c3aed'}}></span>
-                Hazardous <span className="legend-range">400+</span>
+                Severe <span className="legend-range">400+</span>
               </span>
             </div>
           </div>
@@ -250,43 +272,15 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
             <ThreatMatrix cities={cities} onCityClick={onCitySelect} />
 
             <div className="sparkline-strip">
-              {Object.entries(SPARKLINES).map(([city, vals]) => {
-                const cityData = cities.find(c => c.name?.toLowerCase().includes(city));
-                const aqi = cityData?.aqi ?? vals[vals.length - 1];
-                const c = aqiCategory(aqi);
-                return (
-                  <div className="spark-card glass" key={city}>
-                    <div className="mono spark-city">{city.toUpperCase()}</div>
-                    <div className="spark-aqi" style={{ color: c.color }}>{aqi}</div>
-                    <SparkLine values={cityData ? [...vals.slice(0,-1), aqi] : vals} color={c.color} />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 1: Impact Statement ── */}
-      <section className="impact-section">
-        <div className="impact-inner">
-          <div className="impact-grid">
-            <div className="impact-stat">
-              <div className="impact-num">1.4 Billion</div>
-              <div className="impact-label">People in India breathing<br />polluted air daily</div>
-              <div className="impact-source">Source: WHO 2024</div>
-            </div>
-            <div className="impact-divider" />
-            <div className="impact-stat">
-              <div className="impact-num">7 of 10</div>
-              <div className="impact-label">World's most polluted<br />cities are in India</div>
-              <div className="impact-source">Source: IQAir 2024</div>
-            </div>
-            <div className="impact-divider" />
-            <div className="impact-stat">
-              <div className="impact-num">₹1.5 Lakh Cr</div>
-              <div className="impact-label">Annual economic cost<br />of air pollution in India</div>
-              <div className="impact-source">Source: World Bank</div>
+              {featured.length === 0 && (
+                <div className="spark-card glass">
+                  <div className="mono spark-city">LIVE CPCB FEED UNAVAILABLE</div>
+                  <div className="mono feed-stored-note">No live or stored values to show.</div>
+                </div>
+              )}
+              {featured.map(city => (
+                <FeaturedCard key={city.name} city={city} snapshot={city.data_mode === "snapshot"} />
+              ))}
             </div>
           </div>
         </div>
@@ -296,7 +290,7 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
       {cities.length > 0 && (
         <section className="snapshot-section">
           <div className="snapshot-inner">
-            <div className="mono snapshot-date">TODAY ACROSS INDIA — {todayLabel}</div>
+            <div className="mono snapshot-date">{snapshotMode ? `LAST STORED READINGS — ${formatAsOf(asOfLatest)}` : `TODAY ACROSS INDIA — ${todayLabel}`}</div>
             <div className="snapshot-pills">
               <div className="snapshot-pill">
                 <span className="snap-dot" style={{ background: worstCat.color }} />
@@ -312,7 +306,7 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
               </div>
               <div className="snapshot-pill">
                 <span className="snap-dot" style={{ background: cat.color }} />
-                <span className="snap-label">National Average</span>
+                <span className="snap-label">Average of cities</span>
                 <span className="snap-val" style={{ color: cat.color }}>{nationalAvg}</span>
                 <span className="snap-cat" style={{ color: cat.color }}>— {cat.name}</span>
               </div>
@@ -324,7 +318,7 @@ export default function HeroMapPage({ cities, onCitySelect, setPage, zoomCity, i
               </div>
             </div>
             <div className="snapshot-context mono">
-              CPCB safe limit is AQI 100. Today, {aboveSafe} {aboveSafe === 1 ? "city is" : "cities are"} above it.
+              CPCB "Satisfactory" ends at AQI 100. {snapshotMode ? "At the last stored reading" : "Today"}, {aboveSafe} {aboveSafe === 1 ? "city is" : "cities are"} above it.
             </div>
           </div>
         </section>

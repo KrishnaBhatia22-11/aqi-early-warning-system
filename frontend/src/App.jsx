@@ -7,6 +7,8 @@ import CinematicIntro from "./components/CinematicIntro";
 import Navbar from "./components/Navbar";
 import StatusBar from "./components/StatusBar";
 import EmergencyBanner from "./components/EmergencyBanner";
+import FeedBanner from "./components/FeedBanner";
+import { feedFromResponse } from "./utils/feed";
 import HelpFAB from "./components/HelpFAB";
 import RichFooter from "./components/RichFooter";
 import CityZoomModal from "./components/CityZoomModal";
@@ -116,6 +118,7 @@ function AppInner() {
   });
   const [page, setPage] = useState(INITIAL_NAV.page || "map");
   const [cities, setCities] = useState([]);
+  const [feed, setFeed] = useState(null);   // data_mode / as_of reported by /api/v1/cities
   const [apiOnline, setApiOnline] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -144,6 +147,7 @@ function AppInner() {
       setCities(data.cities
         .filter(c => c.data_available !== false)
         .map(c => ({ ...c, name: c.name ?? c.city })));
+      setFeed(feedFromResponse(data));
       setIsLoading(false);
       setIsWaking(false);
       setLastSync(Date.now());
@@ -167,6 +171,7 @@ function AppInner() {
       setCities(data.cities
         .filter(c => c.data_available !== false)
         .map(c => ({ ...c, name: c.name ?? c.city })));
+      setFeed(feedFromResponse(data));
       setLastSync(Date.now());
     } catch {}
   }, []);
@@ -243,12 +248,12 @@ function AppInner() {
 
   const renderPage = () => {
     switch (page) {
-      case "map":      return <HeroMapPage cities={cities} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} zoomCity={zoomCity} isLoading={isLoading} isWaking={isWaking} wakeSeconds={wakeSeconds} loadError={loadError} onRetry={fetchCities} />;
+      case "map":      return <HeroMapPage cities={cities} feed={feed} onCitySelect={c => setZoomCity(c)} setPage={navigateTo} zoomCity={zoomCity} isLoading={isLoading} isWaking={isWaking} wakeSeconds={wakeSeconds} loadError={loadError} onRetry={fetchCities} />;
       case "predict":  return <PredictorPage />;
       case "health":   return <HealthImpactPage cities={cities} />;
       case "forecast": return <ForecastPage cities={cities} />;
       case "models":   return <ModelComparisonPage />;
-      case "cities":   return <DashboardPage cities={cities} initialCity={citiesInitialCity} />;
+      case "cities":   return <DashboardPage cities={cities} feed={feed} initialCity={citiesInitialCity} />;
       case "compare":  return <CityComparisonPage cities={cities} />;
       case "alerts":   return <AlertsPage cities={cities} initialCity={alertsInitialCity} />;
       case "chat":     return <ChatbotPage cities={cities} />;
@@ -266,12 +271,14 @@ function AppInner() {
   return (
     <>
       <div className={`app-root ${a11y ? "a11y-mode" : ""}`}>
-        <EmergencyBanner cities={cities} />
+        <FeedBanner feed={feed} loading={isLoading} />
+        <EmergencyBanner cities={cities} feed={feed} />
         <Navbar
           page={page}
           setPage={navigateTo}
           apiOnline={apiOnline}
           cities={cities}
+          feed={feed}
           a11y={a11y}
           setA11y={setA11y}
         />
@@ -283,7 +290,7 @@ function AppInner() {
         {page !== "login" && page !== "register" && (
           <RichFooter setPage={navigateTo} />
         )}
-        <StatusBar apiOnline={apiOnline} lastSync={lastSync} />
+        <StatusBar apiOnline={apiOnline} lastSync={lastSync} feed={feed} />
         <HelpFAB />
         {zoomCity && (
           <CityZoomModal

@@ -6,7 +6,7 @@ import PredictionHistory from "../components/PredictionHistory";
 import HealthAdvisory from "../components/HealthAdvisory";
 import { predictAQI } from "../utils/api";
 import { aqiCategory } from "../utils/aqiCategory";
-import { POLLUTANTS, SHAP_STATIC } from "../data/index";
+import { POLLUTANTS } from "../data/index";
 
 const DEFAULTS = { "PM2.5": 60, PM10: 90, NO: 12, NO2: 40, NOx: 52, NH3: 18, CO: 1.2, SO2: 20, O3: 45 };
 
@@ -26,15 +26,13 @@ export default function PredictorPage() {
       const res = await predictAQI(next);
       setResult(res);
       setHistory(h => [
-        { aqi: res.aqi, t: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), vals: next },
+        { aqi: res.aqi, shap: res.shap_values, t: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), vals: next },
         ...h.slice(0, 9),
       ]);
     } catch (e) {
-      setError("API unreachable — using local estimate");
-      const rough = Math.min(500, Math.round(
-        next["PM2.5"] * 0.7 + next["PM10"] * 0.3 + next["NO2"] * 0.4 + next["O3"] * 0.2
-      ));
-      setResult({ aqi: rough, category: aqiCategory(rough).name, shap_values: SHAP_STATIC });
+      // No local formula and no canned explanation: if the service fails, say so.
+      setResult(null);
+      setError("Prediction service unavailable, try again");
     } finally {
       setShapKey(k => k + 1);
       setLoading(false);
@@ -54,12 +52,12 @@ export default function PredictorPage() {
 
   const handlePick = (h) => {
     setVals(h.vals);
-    setResult({ aqi: h.aqi, category: aqiCategory(h.aqi).name, shap_values: SHAP_STATIC });
+    setResult({ aqi: h.aqi, category: aqiCategory(h.aqi).name, shap_values: h.shap ?? [] });
   };
 
   const aqi = result?.aqi ?? 0;
   const cat = aqiCategory(aqi);
-  const shapData = result?.shap_values?.length ? result.shap_values : SHAP_STATIC;
+  const shapData = result?.shap_values ?? [];
 
   return (
     <div className="predict-page">
@@ -73,7 +71,7 @@ export default function PredictorPage() {
         <div className="predict-knobs glass-strong">
           <div className="panel-header">
             <span className="mono panel-title">POLLUTANT INPUTS</span>
-            <span className="mono panel-meta">{loading ? "COMPUTING…" : error ? "ESTIMATED" : result ? "● LIVE" : "DRAG DIALS"}</span>
+            <span className="mono panel-meta">{loading ? "COMPUTING…" : error ? "UNAVAILABLE" : result ? "MODEL OUTPUT" : "DRAG DIALS"}</span>
           </div>
           <div className="knobs-grid">
             {POLLUTANTS.map(p => (

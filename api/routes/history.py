@@ -53,7 +53,8 @@ async def get_history(
         async with AsyncSessionLocal() as session:
             rows = (await session.execute(
                 select(AQIReading.timestamp, AQIReading.aqi, AQIReading.pm25)
-                .where(AQIReading.city == city, AQIReading.timestamp >= cutoff)
+                .where(AQIReading.city == city, AQIReading.source == "CPCB",
+                       AQIReading.timestamp >= cutoff)
                 .order_by(AQIReading.timestamp.asc())
             )).all()
     except Exception as e:

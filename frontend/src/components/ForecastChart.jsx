@@ -198,7 +198,7 @@ export default function ForecastChart({ forecastData, loading, slowLoad, error, 
           </div>
           <div className={`fc-source-badge ${base_aqi_source === "live_cpcb" ? "live" : "est"}`}>
             <span className="fc-source-dot" />
-            <span className="mono">{base_aqi_source === "live_cpcb" ? "LIVE CPCB" : "SEASONAL ESTIMATE"}</span>
+            <span className="mono">{base_aqi_source === "live_cpcb" ? "LIVE CPCB" : "STORED READING"}</span>
           </div>
         </div>
       </div>

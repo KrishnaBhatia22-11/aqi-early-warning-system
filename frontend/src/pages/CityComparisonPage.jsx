@@ -406,7 +406,7 @@ export default function CityComparisonPage({ cities = [] }) {
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi1} <span style={{ fontSize: 9, opacity: 0.6 }}>{AQI_STANDARD_LABEL}</span></span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>{cities.find(c => c.name?.toLowerCase() === city1.toLowerCase())?.data_mode === "snapshot" ? "STORED" : "LIVE"} {liveAqi1} <span style={{ fontSize: 9, opacity: 0.6 }}>{AQI_STANDARD_LABEL}</span></span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
                   {src1 && <span className="mono" style={{ fontSize: 10, opacity: 0.45, display: "block", marginTop: 2 }}>{src1}</span>}
                 </div>
@@ -433,7 +433,7 @@ export default function CityComparisonPage({ cities = [] }) {
               return (
                 <div className="cmp-live-badge">
                   <span className="cmp-live-dot" style={{ background: catColor(cat) }} />
-                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>LIVE {liveAqi2} <span style={{ fontSize: 9, opacity: 0.6 }}>{AQI_STANDARD_LABEL}</span></span>
+                  <span className="mono cmp-live-text" style={{ color: catColor(cat) }}>{cities.find(c => c.name?.toLowerCase() === city2.toLowerCase())?.data_mode === "snapshot" ? "STORED" : "LIVE"} {liveAqi2} <span style={{ fontSize: 9, opacity: 0.6 }}>{AQI_STANDARD_LABEL}</span></span>
                   <span className="cmp-live-cat" style={{ color: catColor(cat) }}>{cat}</span>
                   {src2 && <span className="mono" style={{ fontSize: 10, opacity: 0.45, display: "block", marginTop: 2 }}>{src2}</span>}
                 </div>

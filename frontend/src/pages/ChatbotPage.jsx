@@ -21,13 +21,14 @@ function localReply(msg, cities) {
     if (cities.length) {
       const worst = [...cities].sort((a, b) => b.aqi - a.aqi)[0];
       const cat = aqiCategory(worst.aqi);
-      return `Currently, **${worst.name}** has the worst air quality with AQI **${worst.aqi}** (${cat.name}). Primary pollutant: ${worst.pollutant}.`;
+      return `${worst.data_mode === "snapshot" ? "At the last stored reading" : "Currently"}, **${worst.name}** has the worst air quality with AQI **${worst.aqi}** (${cat.name}).${worst.dominant_pollutant ? ` Dominant pollutant: ${worst.dominant_pollutant}.` : ""}`;
     }
-    return "Based on historical data, Delhi and Lucknow frequently top the charts for worst air quality in India, especially during winter months (Nov–Feb).";
+    return "I have no current city readings to rank right now (the live CPCB feed is unavailable and nothing is stored).";
   }
   if (lower.includes("exercise") || lower.includes("run") || lower.includes("outdoor")) {
     const delhi = cities.find(c => c.name === "Delhi");
-    const aqi = delhi?.aqi ?? 250;
+    if (delhi?.aqi == null) return "I have no current or stored reading for Delhi, so I can't say whether outdoor exercise is advisable. Please check back when data is available.";
+    const aqi = delhi.aqi;
     if (aqi > 300) return `With Delhi's current AQI of **${aqi}** (Very Poor/Severe), outdoor exercise is not recommended. If you must go out, wear an N95 mask and minimize exertion.`;
     if (aqi > 200) return `Delhi's AQI is **${aqi}** (Poor). Limit outdoor exercise to under 30 minutes. Early morning (5–7 AM) tends to be slightly better.`;
     if (aqi > 100) return `Delhi's AQI is **${aqi}** (Moderate). Light exercise is fine; avoid heavy cardio outdoors. Sensitive individuals should be cautious.`;
@@ -48,13 +49,13 @@ function localReply(msg, cities) {
   if (lower.includes("clean") || lower.includes("best") || lower.includes("good air")) {
     if (cities.length) {
       const best = [...cities].sort((a, b) => a.aqi - b.aqi)[0];
-      return `**${best.name}** currently has the cleanest air at AQI **${best.aqi}** (${aqiCategory(best.aqi).name}).`;
+      return `**${best.name}** ${best.data_mode === "snapshot" ? "had the cleanest air at the last stored reading" : "currently has the cleanest air"}, AQI **${best.aqi}** (${aqiCategory(best.aqi).name}).`;
     }
-    return "Cities in South India — Chennai, Kochi, Coimbatore, Thiruvananthapuram — typically have the cleanest air in India due to sea breeze and less industrial activity.";
+    return "I have no current city readings to compare right now (the live CPCB feed is unavailable and nothing is stored).";
   }
   const bestCity = cities.length ? [...cities].sort((a, b) => a.aqi - b.aqi)[0] : null;
   if (bestCity) {
-    return `I can answer questions about AQI, city conditions, health advice, and pollutants. Try one of the suggestions below. Currently **${bestCity.name}** has the cleanest air at AQI ${bestCity.aqi}.`;
+    return `I can answer questions about AQI, city conditions, health advice, and pollutants. Try one of the suggestions below. ${bestCity.data_mode === "snapshot" ? "At the last stored reading" : "Currently"} **${bestCity.name}** has the cleanest air at AQI ${bestCity.aqi}.`;
   }
   return "I can answer questions about air quality, pollutants, health advice, and our ML model. Try one of the suggested questions below!";
 }

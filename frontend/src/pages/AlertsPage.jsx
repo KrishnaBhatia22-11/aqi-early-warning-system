@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { aqiCategory } from "../utils/aqiCategory";
 
-const INITIAL_ALERTS = [
-  { id: 1, city: "Delhi", threshold: 200, active: true, triggered: true, lastAqi: 287 },
-  { id: 2, city: "Mumbai", threshold: 150, active: true, triggered: false, lastAqi: 92 },
-  { id: 3, city: "Lucknow", threshold: 250, active: false, triggered: true, lastAqi: 312 },
-];
+const INITIAL_ALERTS = [];   // alerts are created by the user; none are pre-filled
 
 const CITIES = ["Delhi","Mumbai","Bangalore","Chennai","Kolkata","Hyderabad","Ahmedabad","Pune","Lucknow","Jaipur","Chandigarh","Patna"];
 

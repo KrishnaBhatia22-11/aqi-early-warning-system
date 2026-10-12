@@ -38,23 +38,17 @@ router = APIRouter()
 BACKEND  = "https://aqi-api-y2qs.onrender.com"
 FRONTEND = "https://aqi-early-warning-system.vercel.app"
 
-# Public-facing count of cities with LIVE monitoring data. CITY_COORDS has 53
-# entries and the rest are honest NO_DATA (no CPCB station, or none reporting the
-# pollutants CPCB requires).
-#
-# Under WAQI this had to be a hardcoded guess, because counting meant a 53-city
-# network sweep. CPCB's cache already holds the whole country, so the real count
-# is free to read — _live_city_count() uses it whenever the cache is warm and
-# falls back to this figure only on a cold card render.
-LIVE_CITY_COUNT = 37
+# The live count comes from CPCB's cache. When the cache is cold or the feed is down there is
+# no count to show, so the card says nothing about one (no hard-coded fallback figure).
 
 
-def _live_city_count() -> int:
+def _live_city_count():
+    """Real number of live cities, or None when unknown or zero."""
     try:
-        live = cache_status().get("cities_live") or 0
-        return live or LIVE_CITY_COUNT
+        return cache_status().get("cities_live") or None
     except Exception:
-        return LIVE_CITY_COUNT
+        return None
+
 
 # ── Card design tokens ──────────────────────────────────────────────────────────
 W, H   = 1200, 630
@@ -206,11 +200,12 @@ def _render_city(city, data):
 
 def _render_default():
     img, d = _new_canvas(ACCENT)
-    d.text((MARGIN, 78), "REAL-TIME · INDIA",
+    d.text((MARGIN, 78), "AIR QUALITY · INDIA",
            font=_load_font(26, bold=True), fill=ACCENT, anchor="la")
-    hf = _fit_font(d, "India's Air, Live.", W - 2 * MARGIN, 116, bold=True, min_size=60)
-    d.text((MARGIN, 150), "India's Air, Live.", font=hf, fill=INK, anchor="la")
-    sub = f"Real-time AQI for {_live_city_count()} cities · Free forever"
+    hf = _fit_font(d, "India's Air Quality.", W - 2 * MARGIN, 116, bold=True, min_size=60)
+    d.text((MARGIN, 150), "India's Air Quality.", font=hf, fill=INK, anchor="la")
+    count = _live_city_count()
+    sub = f"AQI for {count} cities from CPCB" if count else "Air quality data from CPCB (data.gov.in)"
     sf = _fit_font(d, sub, W - 2 * MARGIN, 44, min_size=28)
     d.text((MARGIN, 322), sub, font=sf, fill="#d7d2c9", anchor="la")
     d.text((MARGIN, 386), "ML forecasts · Health impact · Anomaly alerts",
@@ -338,8 +333,8 @@ def share_landing(slug: str):
     if not city:
         return HTMLResponse(
             _share_html(
-                title="AQI Early Warning System — India's Air, Live",
-                desc="Live, real-time air quality for Indian cities. ML forecasts, health impact, free forever.",
+                title="AQI Early Warning System — India's Air Quality",
+                desc="Air quality for Indian cities from CPCB data. Forecasts and health impact.",
                 image=f"{BACKEND}/api/v1/og/default.png",
                 share_url=share_url,
                 redirect=f"{FRONTEND}/",
@@ -352,12 +347,12 @@ def share_landing(slug: str):
         aqi = int(data["aqi"])
         title = f"{city} AQI: {aqi} — {categorize_aqi(aqi)}"
     else:
-        title = f"{city} air quality — live"
+        title = f"{city} air quality"
 
     return HTMLResponse(
         _share_html(
             title=title,
-            desc=f"Live air quality for {city}. ML forecasts, health impact, free forever.",
+            desc=f"Air quality for {city} from CPCB data. Forecasts and health impact.",
             image=f"{BACKEND}/api/v1/og/{slug}.png",
             share_url=share_url,
             redirect=f"{FRONTEND}/cities?city={quote(city)}",

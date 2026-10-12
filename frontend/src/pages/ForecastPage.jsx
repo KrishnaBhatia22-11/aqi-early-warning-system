@@ -71,10 +71,11 @@ export default function ForecastPage({ cities }) {
 
     const liveCity = citiesRef.current?.find(x => x.name === city);
     const baseAqi  = liveCity?.aqi ?? null;
+    const baseInfo = { dataMode: liveCity?.data_mode, asOf: liveCity?.as_of };
 
     const slowTimer = setTimeout(() => setSlowLoad(true), 3500);
 
-    fetchForecast(city, baseAqi)
+    fetchForecast(city, baseAqi, baseInfo)
       .then(setData)
       .catch(e => setError(e.message))
       .finally(() => { setLoading(false); clearTimeout(slowTimer); });
@@ -106,7 +107,7 @@ export default function ForecastPage({ cities }) {
         <div className="mono forecast-eyebrow">DIURNAL AI MODEL · 24-HOUR FORECAST · UPDATED HOURLY</div>
         <h1 className="display forecast-title">AQI Forecast</h1>
         <p className="forecast-sub">
-          Physics-informed model anchored to live CPCB data.
+          Diurnal model anchored to the latest CPCB reading (live, or stored when the feed is down).
           Peaks at morning rush (07–09) and evening (17–19).
         </p>
       </div>
@@ -196,7 +197,7 @@ export default function ForecastPage({ cities }) {
           <div className="fss-item">
             <span className="mono fss-label">DATA SOURCE</span>
             <span className={`mono fss-source ${data.base_aqi_source === "live_cpcb" ? "live" : "est"}`}>
-              {data.base_aqi_source === "live_cpcb" ? "● LIVE CPCB" : "◎ SEASONAL EST."}
+              {data.base_aqi_source === "live_cpcb" ? "● LIVE CPCB" : "◎ STORED READING"}
             </span>
           </div>
         </div>

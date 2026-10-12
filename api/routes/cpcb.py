@@ -14,19 +14,34 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from src.data.cpcb_client import cache_status, fetch_city_aqi
+from api import snapshot as snap
 
 router = APIRouter()
 
 
 @router.get("/cpcb/status")
-def cpcb_status():
-    """Live-feed health — key present, cache age, and how many cities are live."""
+async def cpcb_status():
+    """Live-feed health — key present, cache age, how many cities are live, and fallback state."""
     status = cache_status()
+    snapshots = await snap.latest_readings() if status["cities_live"] < snap.MIN_LIVE_CITIES else {}
+    stamps = [snap.iso_utc(r.timestamp) for r in snapshots.values()]
+    snapshot_as_of = max(stamps) if stamps else None
+    fallback_active = bool(snapshots)
+    if fallback_active:
+        data_mode = "snapshot"
+    elif status["cities_live"] > 0:
+        data_mode = "live"
+    else:
+        data_mode = "unavailable"
     return {
         "available":     status["cities_live"] > 0,
         "station_count": status["cities_live"],
         "source":        status["source"],
         **status,
+        "data_mode":       data_mode,
+        "fallback_active": fallback_active,
+        "snapshot_as_of":  snapshot_as_of,
+        "snapshot_cities": len(snapshots),
     }
 
 

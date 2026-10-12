@@ -35,15 +35,12 @@ export default function ThreatMatrix({ cities, onCitySelect }) {
                 <span className="threat-city">{c.name}</span>
                 <span className="threat-bar-wrap" />
                 <span className="threat-aqi mono" style={{ color: "#6b7280" }}>—</span>
-                <span className="threat-trend" style={{ color: "#6b7280" }}>—</span>
               </button>
             );
           }
 
           const cat       = aqiCategory(c.aqi);
           const pct       = (c.aqi / max) * 100;
-          const trend     = i % 3 === 0 ? "↑" : i % 3 === 1 ? "→" : "↓";
-          const trendColor = trend === "↑" ? "#ef3a4d" : trend === "↓" ? "#34d27a" : "#FFB300";
           const stationNote = c.station_count > 1
             ? `${c.station_count} stn`
             : c.primary_station
@@ -65,7 +62,6 @@ export default function ThreatMatrix({ cities, onCitySelect }) {
                   <span style={{ fontSize: 9, opacity: 0.45, marginLeft: 4 }}>({stationNote})</span>
                 )}
               </span>
-              <span className="threat-trend" style={{ color: trendColor }}>{trend}</span>
             </button>
           );
         })}
