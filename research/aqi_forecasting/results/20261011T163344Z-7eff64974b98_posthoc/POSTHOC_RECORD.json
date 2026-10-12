@@ -1,0 +1,165 @@
+{
+  "label": "post-hoc, not pre-registered; the locked window was already scored by the frozen run; no selection changed",
+  "created_utc": "2026-10-12T14:40:57.103848+00:00",
+  "frozen_run_id": "20261011T163344Z-7eff64974b98",
+  "inputs": {
+    "dataset_sha256": "0d84b21c3e4878bbad8df362f2ab05f61ad959538dddf5918e714077ed3c1847",
+    "frozen_run_record_sha256": "d54f03b20c7ba92829ebc94c52e75cb593e77aa9a903b205a96f8e3a2d508ee4",
+    "frozen_test_common_case_with_ci_sha256": "9b124e9acc58d61adc688c1ccd82596ad781fc8a2bef5108945f5a01b07f0628",
+    "estimation_metrics_py_sha256": "a971e39d0aee4c6b90f33cb2780fc2c52db50a7a471018ca0cfec7b7ab2eaf9c"
+  },
+  "preflight": {
+    "git_commit": "ed3f31893aae1dc3a4578875aedb5f8ed7bda701",
+    "dataset_sha256": "0d84b21c3e4878bbad8df362f2ab05f61ad959538dddf5918e714077ed3c1847",
+    "versions": {
+      "python": "3.13.3",
+      "pandas": "2.3.3",
+      "numpy": "2.4.4",
+      "scikit_learn": "1.8.0",
+      "xgboost": "3.2.0",
+      "scipy": "1.17.1",
+      "matplotlib": "3.10.9"
+    }
+  },
+  "environment": {
+    "python": "3.13.3",
+    "pandas": "2.3.3",
+    "numpy": "2.4.4",
+    "scikit_learn": "1.8.0",
+    "xgboost": "3.2.0",
+    "scipy": "1.17.1",
+    "matplotlib": "3.10.9"
+  },
+  "code": {
+    "git_commit": "ed3f31893aae1dc3a4578875aedb5f8ed7bda701",
+    "tracked_changes": []
+  },
+  "gate": {
+    "passed": true,
+    "cells_compared": 34,
+    "cells_in_posthoc_predictions": 34,
+    "max_abs_mae_difference": 7.105427357601002e-15,
+    "tolerance": 1e-06,
+    "counts_all_equal": true,
+    "csv_roundtrip_max_abs_mae_difference": 1.4210854715202004e-14
+  },
+  "row_counts": {
+    "prediction_rows": 157964,
+    "common_case_rows": 101767,
+    "common_case_cells": [
+      {
+        "policy": "exclude",
+        "horizon_days": 1,
+        "common_case_count": 2955,
+        "ridge_alpha": 0.1,
+        "xgboost_config": {
+          "max_depth": 3,
+          "n_estimators": 200,
+          "learning_rate": 0.05,
+          "subsample": 0.8,
+          "colsample_bytree": 1.0,
+          "random_state": 0
+        }
+      },
+      {
+        "policy": "exclude",
+        "horizon_days": 3,
+        "common_case_count": 2929,
+        "ridge_alpha": 0.1,
+        "xgboost_config": {
+          "max_depth": 3,
+          "n_estimators": 200,
+          "learning_rate": 0.05,
+          "subsample": 0.8,
+          "colsample_bytree": 1.0,
+          "random_state": 0
+        }
+      },
+      {
+        "policy": "exclude",
+        "horizon_days": 7,
+        "common_case_count": 2946,
+        "ridge_alpha": 0.1,
+        "xgboost_config": {
+          "max_depth": 3,
+          "n_estimators": 200,
+          "learning_rate": 0.05,
+          "subsample": 0.8,
+          "colsample_bytree": 1.0,
+          "random_state": 0
+        }
+      },
+      {
+        "policy": "cap",
+        "horizon_days": 1,
+        "common_case_count": 3057,
+        "ridge_alpha": 0.1,
+        "xgboost_config": {
+          "max_depth": 3,
+          "n_estimators": 200,
+          "learning_rate": 0.05,
+          "subsample": 0.8,
+          "colsample_bytree": 1.0,
+          "random_state": 0
+        }
+      },
+      {
+        "policy": "cap",
+        "horizon_days": 3,
+        "common_case_count": 3026,
+        "ridge_alpha": 0.1,
+        "xgboost_config": {
+          "max_depth": 3,
+          "n_estimators": 200,
+          "learning_rate": 0.05,
+          "subsample": 0.8,
+          "colsample_bytree": 1.0,
+          "random_state": 0
+        }
+      },
+      {
+        "policy": "cap",
+        "horizon_days": 7,
+        "common_case_count": 3047,
+        "ridge_alpha": 0.1,
+        "xgboost_config": {
+          "max_depth": 3,
+          "n_estimators": 200,
+          "learning_rate": 0.05,
+          "subsample": 0.8,
+          "colsample_bytree": 1.0,
+          "random_state": 0
+        }
+      }
+    ]
+  },
+  "settings": {
+    "thresholds": [
+      200,
+      300
+    ],
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20200101,
+    "zones": {
+      "high": 0.3,
+      "medium": 0.1
+    },
+    "low_event_count": 30
+  },
+  "output_file_sha256": {
+    "figures/fig_confusion_xgboost_h1.png": "47fdac5e6c1429a9e027cbf1c7bb0ab31aa896f70dbe38913960929e0d4f6725",
+    "figures/fig_csi_gt200_by_horizon_model.png": "153f0ed8b2427eae58876b46af0713496d7a35ff0aa1c0e275aa5849944c94aa",
+    "GATE_PASSED.json": "bf5c4bd30519b4a7c5f8be821d8c749c8c5dd6c90dab9654dc859a2182199c62",
+    "RESULTS_SUMMARY_POSTHOC.md": "05ea569e899c6f31f16d5898b7ba07aeb58e3f6b333a8c796915c2040d893e28",
+    "tables/category_confusion_matrices.csv": "edebce708c1f5243fec3efa85301db6e7ba90b09fe741016f90053164d3ad938",
+    "tables/category_metrics.csv": "7d9911185a323e8b5b293e3036bcc8fb6027be2f569cfd23470ae7dcf0c8864b",
+    "tables/csi_bootstrap_ci.csv": "01045a83a0f41ddec0b6b196fcee8da8df8b2013bc18319ee300f4c08f5bf68a",
+    "tables/csi_difference_vs_persistence.csv": "f874789a2f5c0b30262b14cd03bf43b39dffe2a16ff3dd5a0b0729328d35f720",
+    "tables/risk_zone_agreement.csv": "1a67199ca03530d2cc241627b110fa10cbdea939b1fa12b1d9ca89678cc3cacc",
+    "tables/risk_zone_per_city.csv": "4689db40f8cb01277acc3426bd3693e3f8ff8b5253453c0243d83ce8de1ee9cf",
+    "tables/warnings_gt200_gt300.csv": "4e31c53a52a8548410d8bbc428e45e0e297de8eaedba87dffa7e03d046ee4205",
+    "tables/warnings_lockdown_split.csv": "99950716c29a28fbc30512f0a441a42cae295454498f4365c677053aaa3ba14c",
+    "test_predictions_posthoc.csv": "aef4e25201434f1ccd1c964e93cdb94358ccf7f3094718d5b976808777d3debd",
+    "test_predictions_posthoc.csv.sha256": "1742a619f605558476837c4ca17149c92780f0c7fd36eeff9a1b0346f6da44a5"
+  }
+}

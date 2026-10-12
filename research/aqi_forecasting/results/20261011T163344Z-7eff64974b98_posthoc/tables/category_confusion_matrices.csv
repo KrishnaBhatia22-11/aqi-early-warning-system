@@ -1,0 +1,649 @@
+policy,horizon_days,model,observed,predicted,count
+cap,1,persistence,true_Good,pred_Good,211
+cap,1,persistence,true_Satisfactory,pred_Good,77
+cap,1,persistence,true_Moderate,pred_Good,1
+cap,1,persistence,true_Poor,pred_Good,0
+cap,1,persistence,true_Very Poor,pred_Good,0
+cap,1,persistence,true_Severe,pred_Good,0
+cap,1,persistence,true_Good,pred_Satisfactory,81
+cap,1,persistence,true_Satisfactory,pred_Satisfactory,1087
+cap,1,persistence,true_Moderate,pred_Satisfactory,146
+cap,1,persistence,true_Poor,pred_Satisfactory,1
+cap,1,persistence,true_Very Poor,pred_Satisfactory,0
+cap,1,persistence,true_Severe,pred_Satisfactory,1
+cap,1,persistence,true_Good,pred_Moderate,0
+cap,1,persistence,true_Satisfactory,pred_Moderate,158
+cap,1,persistence,true_Moderate,pred_Moderate,823
+cap,1,persistence,true_Poor,pred_Moderate,86
+cap,1,persistence,true_Very Poor,pred_Moderate,3
+cap,1,persistence,true_Severe,pred_Moderate,0
+cap,1,persistence,true_Good,pred_Poor,0
+cap,1,persistence,true_Satisfactory,pred_Poor,2
+cap,1,persistence,true_Moderate,pred_Poor,88
+cap,1,persistence,true_Poor,pred_Poor,125
+cap,1,persistence,true_Very Poor,pred_Poor,29
+cap,1,persistence,true_Severe,pred_Poor,2
+cap,1,persistence,true_Good,pred_Very Poor,0
+cap,1,persistence,true_Satisfactory,pred_Very Poor,0
+cap,1,persistence,true_Moderate,pred_Very Poor,6
+cap,1,persistence,true_Poor,pred_Very Poor,30
+cap,1,persistence,true_Very Poor,pred_Very Poor,60
+cap,1,persistence,true_Severe,pred_Very Poor,8
+cap,1,persistence,true_Good,pred_Severe,0
+cap,1,persistence,true_Satisfactory,pred_Severe,0
+cap,1,persistence,true_Moderate,pred_Severe,2
+cap,1,persistence,true_Poor,pred_Severe,2
+cap,1,persistence,true_Very Poor,pred_Severe,6
+cap,1,persistence,true_Severe,pred_Severe,22
+cap,1,regularized_linear,true_Good,pred_Good,153
+cap,1,regularized_linear,true_Satisfactory,pred_Good,30
+cap,1,regularized_linear,true_Moderate,pred_Good,0
+cap,1,regularized_linear,true_Poor,pred_Good,0
+cap,1,regularized_linear,true_Very Poor,pred_Good,0
+cap,1,regularized_linear,true_Severe,pred_Good,0
+cap,1,regularized_linear,true_Good,pred_Satisfactory,139
+cap,1,regularized_linear,true_Satisfactory,pred_Satisfactory,1048
+cap,1,regularized_linear,true_Moderate,pred_Satisfactory,116
+cap,1,regularized_linear,true_Poor,pred_Satisfactory,1
+cap,1,regularized_linear,true_Very Poor,pred_Satisfactory,0
+cap,1,regularized_linear,true_Severe,pred_Satisfactory,1
+cap,1,regularized_linear,true_Good,pred_Moderate,0
+cap,1,regularized_linear,true_Satisfactory,pred_Moderate,244
+cap,1,regularized_linear,true_Moderate,pred_Moderate,851
+cap,1,regularized_linear,true_Poor,pred_Moderate,80
+cap,1,regularized_linear,true_Very Poor,pred_Moderate,3
+cap,1,regularized_linear,true_Severe,pred_Moderate,0
+cap,1,regularized_linear,true_Good,pred_Poor,0
+cap,1,regularized_linear,true_Satisfactory,pred_Poor,2
+cap,1,regularized_linear,true_Moderate,pred_Poor,94
+cap,1,regularized_linear,true_Poor,pred_Poor,133
+cap,1,regularized_linear,true_Very Poor,pred_Poor,41
+cap,1,regularized_linear,true_Severe,pred_Poor,3
+cap,1,regularized_linear,true_Good,pred_Very Poor,0
+cap,1,regularized_linear,true_Satisfactory,pred_Very Poor,0
+cap,1,regularized_linear,true_Moderate,pred_Very Poor,4
+cap,1,regularized_linear,true_Poor,pred_Very Poor,28
+cap,1,regularized_linear,true_Very Poor,pred_Very Poor,49
+cap,1,regularized_linear,true_Severe,pred_Very Poor,10
+cap,1,regularized_linear,true_Good,pred_Severe,0
+cap,1,regularized_linear,true_Satisfactory,pred_Severe,0
+cap,1,regularized_linear,true_Moderate,pred_Severe,1
+cap,1,regularized_linear,true_Poor,pred_Severe,2
+cap,1,regularized_linear,true_Very Poor,pred_Severe,5
+cap,1,regularized_linear,true_Severe,pred_Severe,19
+cap,1,xgboost,true_Good,pred_Good,110
+cap,1,xgboost,true_Satisfactory,pred_Good,15
+cap,1,xgboost,true_Moderate,pred_Good,0
+cap,1,xgboost,true_Poor,pred_Good,0
+cap,1,xgboost,true_Very Poor,pred_Good,0
+cap,1,xgboost,true_Severe,pred_Good,0
+cap,1,xgboost,true_Good,pred_Satisfactory,182
+cap,1,xgboost,true_Satisfactory,pred_Satisfactory,1060
+cap,1,xgboost,true_Moderate,pred_Satisfactory,101
+cap,1,xgboost,true_Poor,pred_Satisfactory,1
+cap,1,xgboost,true_Very Poor,pred_Satisfactory,0
+cap,1,xgboost,true_Severe,pred_Satisfactory,1
+cap,1,xgboost,true_Good,pred_Moderate,0
+cap,1,xgboost,true_Satisfactory,pred_Moderate,248
+cap,1,xgboost,true_Moderate,pred_Moderate,869
+cap,1,xgboost,true_Poor,pred_Moderate,81
+cap,1,xgboost,true_Very Poor,pred_Moderate,3
+cap,1,xgboost,true_Severe,pred_Moderate,0
+cap,1,xgboost,true_Good,pred_Poor,0
+cap,1,xgboost,true_Satisfactory,pred_Poor,1
+cap,1,xgboost,true_Moderate,pred_Poor,88
+cap,1,xgboost,true_Poor,pred_Poor,126
+cap,1,xgboost,true_Very Poor,pred_Poor,37
+cap,1,xgboost,true_Severe,pred_Poor,3
+cap,1,xgboost,true_Good,pred_Very Poor,0
+cap,1,xgboost,true_Satisfactory,pred_Very Poor,0
+cap,1,xgboost,true_Moderate,pred_Very Poor,8
+cap,1,xgboost,true_Poor,pred_Very Poor,34
+cap,1,xgboost,true_Very Poor,pred_Very Poor,53
+cap,1,xgboost,true_Severe,pred_Very Poor,9
+cap,1,xgboost,true_Good,pred_Severe,0
+cap,1,xgboost,true_Satisfactory,pred_Severe,0
+cap,1,xgboost,true_Moderate,pred_Severe,0
+cap,1,xgboost,true_Poor,pred_Severe,2
+cap,1,xgboost,true_Very Poor,pred_Severe,5
+cap,1,xgboost,true_Severe,pred_Severe,20
+cap,3,persistence,true_Good,pred_Good,163
+cap,3,persistence,true_Satisfactory,pred_Good,103
+cap,3,persistence,true_Moderate,pred_Good,5
+cap,3,persistence,true_Poor,pred_Good,0
+cap,3,persistence,true_Very Poor,pred_Good,0
+cap,3,persistence,true_Severe,pred_Good,1
+cap,3,persistence,true_Good,pred_Satisfactory,121
+cap,3,persistence,true_Satisfactory,pred_Satisfactory,925
+cap,3,persistence,true_Moderate,pred_Satisfactory,244
+cap,3,persistence,true_Poor,pred_Satisfactory,7
+cap,3,persistence,true_Very Poor,pred_Satisfactory,1
+cap,3,persistence,true_Severe,pred_Satisfactory,0
+cap,3,persistence,true_Good,pred_Moderate,5
+cap,3,persistence,true_Satisfactory,pred_Moderate,256
+cap,3,persistence,true_Moderate,pred_Moderate,678
+cap,3,persistence,true_Poor,pred_Moderate,103
+cap,3,persistence,true_Very Poor,pred_Moderate,21
+cap,3,persistence,true_Severe,pred_Moderate,2
+cap,3,persistence,true_Good,pred_Poor,1
+cap,3,persistence,true_Satisfactory,pred_Poor,24
+cap,3,persistence,true_Moderate,pred_Poor,102
+cap,3,persistence,true_Poor,pred_Poor,84
+cap,3,persistence,true_Very Poor,pred_Poor,31
+cap,3,persistence,true_Severe,pred_Poor,6
+cap,3,persistence,true_Good,pred_Very Poor,0
+cap,3,persistence,true_Satisfactory,pred_Very Poor,2
+cap,3,persistence,true_Moderate,pred_Very Poor,27
+cap,3,persistence,true_Poor,pred_Very Poor,42
+cap,3,persistence,true_Very Poor,pred_Very Poor,31
+cap,3,persistence,true_Severe,pred_Very Poor,6
+cap,3,persistence,true_Good,pred_Severe,1
+cap,3,persistence,true_Satisfactory,pred_Severe,0
+cap,3,persistence,true_Moderate,pred_Severe,3
+cap,3,persistence,true_Poor,pred_Severe,6
+cap,3,persistence,true_Very Poor,pred_Severe,9
+cap,3,persistence,true_Severe,pred_Severe,16
+cap,3,regularized_linear,true_Good,pred_Good,80
+cap,3,regularized_linear,true_Satisfactory,pred_Good,31
+cap,3,regularized_linear,true_Moderate,pred_Good,1
+cap,3,regularized_linear,true_Poor,pred_Good,0
+cap,3,regularized_linear,true_Very Poor,pred_Good,0
+cap,3,regularized_linear,true_Severe,pred_Good,0
+cap,3,regularized_linear,true_Good,pred_Satisfactory,199
+cap,3,regularized_linear,true_Satisfactory,pred_Satisfactory,882
+cap,3,regularized_linear,true_Moderate,pred_Satisfactory,149
+cap,3,regularized_linear,true_Poor,pred_Satisfactory,2
+cap,3,regularized_linear,true_Very Poor,pred_Satisfactory,0
+cap,3,regularized_linear,true_Severe,pred_Satisfactory,1
+cap,3,regularized_linear,true_Good,pred_Moderate,10
+cap,3,regularized_linear,true_Satisfactory,pred_Moderate,376
+cap,3,regularized_linear,true_Moderate,pred_Moderate,781
+cap,3,regularized_linear,true_Poor,pred_Moderate,96
+cap,3,regularized_linear,true_Very Poor,pred_Moderate,8
+cap,3,regularized_linear,true_Severe,pred_Moderate,1
+cap,3,regularized_linear,true_Good,pred_Poor,2
+cap,3,regularized_linear,true_Satisfactory,pred_Poor,18
+cap,3,regularized_linear,true_Moderate,pred_Poor,107
+cap,3,regularized_linear,true_Poor,pred_Poor,101
+cap,3,regularized_linear,true_Very Poor,pred_Poor,55
+cap,3,regularized_linear,true_Severe,pred_Poor,4
+cap,3,regularized_linear,true_Good,pred_Very Poor,0
+cap,3,regularized_linear,true_Satisfactory,pred_Very Poor,3
+cap,3,regularized_linear,true_Moderate,pred_Very Poor,20
+cap,3,regularized_linear,true_Poor,pred_Very Poor,40
+cap,3,regularized_linear,true_Very Poor,pred_Very Poor,25
+cap,3,regularized_linear,true_Severe,pred_Very Poor,15
+cap,3,regularized_linear,true_Good,pred_Severe,0
+cap,3,regularized_linear,true_Satisfactory,pred_Severe,0
+cap,3,regularized_linear,true_Moderate,pred_Severe,1
+cap,3,regularized_linear,true_Poor,pred_Severe,3
+cap,3,regularized_linear,true_Very Poor,pred_Severe,5
+cap,3,regularized_linear,true_Severe,pred_Severe,10
+cap,3,xgboost,true_Good,pred_Good,5
+cap,3,xgboost,true_Satisfactory,pred_Good,1
+cap,3,xgboost,true_Moderate,pred_Good,0
+cap,3,xgboost,true_Poor,pred_Good,0
+cap,3,xgboost,true_Very Poor,pred_Good,0
+cap,3,xgboost,true_Severe,pred_Good,0
+cap,3,xgboost,true_Good,pred_Satisfactory,274
+cap,3,xgboost,true_Satisfactory,pred_Satisfactory,865
+cap,3,xgboost,true_Moderate,pred_Satisfactory,123
+cap,3,xgboost,true_Poor,pred_Satisfactory,2
+cap,3,xgboost,true_Very Poor,pred_Satisfactory,0
+cap,3,xgboost,true_Severe,pred_Satisfactory,1
+cap,3,xgboost,true_Good,pred_Moderate,11
+cap,3,xgboost,true_Satisfactory,pred_Moderate,423
+cap,3,xgboost,true_Moderate,pred_Moderate,807
+cap,3,xgboost,true_Poor,pred_Moderate,92
+cap,3,xgboost,true_Very Poor,pred_Moderate,7
+cap,3,xgboost,true_Severe,pred_Moderate,1
+cap,3,xgboost,true_Good,pred_Poor,1
+cap,3,xgboost,true_Satisfactory,pred_Poor,18
+cap,3,xgboost,true_Moderate,pred_Poor,103
+cap,3,xgboost,true_Poor,pred_Poor,104
+cap,3,xgboost,true_Very Poor,pred_Poor,52
+cap,3,xgboost,true_Severe,pred_Poor,5
+cap,3,xgboost,true_Good,pred_Very Poor,0
+cap,3,xgboost,true_Satisfactory,pred_Very Poor,3
+cap,3,xgboost,true_Moderate,pred_Very Poor,25
+cap,3,xgboost,true_Poor,pred_Very Poor,40
+cap,3,xgboost,true_Very Poor,pred_Very Poor,29
+cap,3,xgboost,true_Severe,pred_Very Poor,16
+cap,3,xgboost,true_Good,pred_Severe,0
+cap,3,xgboost,true_Satisfactory,pred_Severe,0
+cap,3,xgboost,true_Moderate,pred_Severe,1
+cap,3,xgboost,true_Poor,pred_Severe,4
+cap,3,xgboost,true_Very Poor,pred_Severe,5
+cap,3,xgboost,true_Severe,pred_Severe,8
+cap,7,persistence,true_Good,pred_Good,137
+cap,7,persistence,true_Satisfactory,pred_Good,109
+cap,7,persistence,true_Moderate,pred_Good,11
+cap,7,persistence,true_Poor,pred_Good,0
+cap,7,persistence,true_Very Poor,pred_Good,0
+cap,7,persistence,true_Severe,pred_Good,0
+cap,7,persistence,true_Good,pred_Satisfactory,145
+cap,7,persistence,true_Satisfactory,pred_Satisfactory,863
+cap,7,persistence,true_Moderate,pred_Satisfactory,251
+cap,7,persistence,true_Poor,pred_Satisfactory,8
+cap,7,persistence,true_Very Poor,pred_Satisfactory,3
+cap,7,persistence,true_Severe,pred_Satisfactory,1
+cap,7,persistence,true_Good,pred_Moderate,6
+cap,7,persistence,true_Satisfactory,pred_Moderate,319
+cap,7,persistence,true_Moderate,pred_Moderate,652
+cap,7,persistence,true_Poor,pred_Moderate,92
+cap,7,persistence,true_Very Poor,pred_Moderate,14
+cap,7,persistence,true_Severe,pred_Moderate,6
+cap,7,persistence,true_Good,pred_Poor,3
+cap,7,persistence,true_Satisfactory,pred_Poor,22
+cap,7,persistence,true_Moderate,pred_Poor,113
+cap,7,persistence,true_Poor,pred_Poor,95
+cap,7,persistence,true_Very Poor,pred_Poor,28
+cap,7,persistence,true_Severe,pred_Poor,6
+cap,7,persistence,true_Good,pred_Very Poor,0
+cap,7,persistence,true_Satisfactory,pred_Very Poor,4
+cap,7,persistence,true_Moderate,pred_Very Poor,24
+cap,7,persistence,true_Poor,pred_Very Poor,45
+cap,7,persistence,true_Very Poor,pred_Very Poor,43
+cap,7,persistence,true_Severe,pred_Very Poor,8
+cap,7,persistence,true_Good,pred_Severe,0
+cap,7,persistence,true_Satisfactory,pred_Severe,1
+cap,7,persistence,true_Moderate,pred_Severe,7
+cap,7,persistence,true_Poor,pred_Severe,10
+cap,7,persistence,true_Very Poor,pred_Severe,10
+cap,7,persistence,true_Severe,pred_Severe,11
+cap,7,regularized_linear,true_Good,pred_Good,56
+cap,7,regularized_linear,true_Satisfactory,pred_Good,33
+cap,7,regularized_linear,true_Moderate,pred_Good,1
+cap,7,regularized_linear,true_Poor,pred_Good,0
+cap,7,regularized_linear,true_Very Poor,pred_Good,0
+cap,7,regularized_linear,true_Severe,pred_Good,0
+cap,7,regularized_linear,true_Good,pred_Satisfactory,224
+cap,7,regularized_linear,true_Satisfactory,pred_Satisfactory,800
+cap,7,regularized_linear,true_Moderate,pred_Satisfactory,157
+cap,7,regularized_linear,true_Poor,pred_Satisfactory,6
+cap,7,regularized_linear,true_Very Poor,pred_Satisfactory,0
+cap,7,regularized_linear,true_Severe,pred_Satisfactory,1
+cap,7,regularized_linear,true_Good,pred_Moderate,10
+cap,7,regularized_linear,true_Satisfactory,pred_Moderate,469
+cap,7,regularized_linear,true_Moderate,pred_Moderate,753
+cap,7,regularized_linear,true_Poor,pred_Moderate,81
+cap,7,regularized_linear,true_Very Poor,pred_Moderate,8
+cap,7,regularized_linear,true_Severe,pred_Moderate,4
+cap,7,regularized_linear,true_Good,pred_Poor,1
+cap,7,regularized_linear,true_Satisfactory,pred_Poor,16
+cap,7,regularized_linear,true_Moderate,pred_Poor,131
+cap,7,regularized_linear,true_Poor,pred_Poor,117
+cap,7,regularized_linear,true_Very Poor,pred_Poor,41
+cap,7,regularized_linear,true_Severe,pred_Poor,7
+cap,7,regularized_linear,true_Good,pred_Very Poor,0
+cap,7,regularized_linear,true_Satisfactory,pred_Very Poor,0
+cap,7,regularized_linear,true_Moderate,pred_Very Poor,14
+cap,7,regularized_linear,true_Poor,pred_Very Poor,42
+cap,7,regularized_linear,true_Very Poor,pred_Very Poor,48
+cap,7,regularized_linear,true_Severe,pred_Very Poor,11
+cap,7,regularized_linear,true_Good,pred_Severe,0
+cap,7,regularized_linear,true_Satisfactory,pred_Severe,0
+cap,7,regularized_linear,true_Moderate,pred_Severe,2
+cap,7,regularized_linear,true_Poor,pred_Severe,4
+cap,7,regularized_linear,true_Very Poor,pred_Severe,1
+cap,7,regularized_linear,true_Severe,pred_Severe,9
+cap,7,xgboost,true_Good,pred_Good,0
+cap,7,xgboost,true_Satisfactory,pred_Good,0
+cap,7,xgboost,true_Moderate,pred_Good,0
+cap,7,xgboost,true_Poor,pred_Good,0
+cap,7,xgboost,true_Very Poor,pred_Good,0
+cap,7,xgboost,true_Severe,pred_Good,0
+cap,7,xgboost,true_Good,pred_Satisfactory,277
+cap,7,xgboost,true_Satisfactory,pred_Satisfactory,785
+cap,7,xgboost,true_Moderate,pred_Satisfactory,128
+cap,7,xgboost,true_Poor,pred_Satisfactory,5
+cap,7,xgboost,true_Very Poor,pred_Satisfactory,0
+cap,7,xgboost,true_Severe,pred_Satisfactory,1
+cap,7,xgboost,true_Good,pred_Moderate,12
+cap,7,xgboost,true_Satisfactory,pred_Moderate,516
+cap,7,xgboost,true_Moderate,pred_Moderate,784
+cap,7,xgboost,true_Poor,pred_Moderate,87
+cap,7,xgboost,true_Very Poor,pred_Moderate,11
+cap,7,xgboost,true_Severe,pred_Moderate,4
+cap,7,xgboost,true_Good,pred_Poor,2
+cap,7,xgboost,true_Satisfactory,pred_Poor,17
+cap,7,xgboost,true_Moderate,pred_Poor,129
+cap,7,xgboost,true_Poor,pred_Poor,104
+cap,7,xgboost,true_Very Poor,pred_Poor,34
+cap,7,xgboost,true_Severe,pred_Poor,11
+cap,7,xgboost,true_Good,pred_Very Poor,0
+cap,7,xgboost,true_Satisfactory,pred_Very Poor,0
+cap,7,xgboost,true_Moderate,pred_Very Poor,15
+cap,7,xgboost,true_Poor,pred_Very Poor,52
+cap,7,xgboost,true_Very Poor,pred_Very Poor,53
+cap,7,xgboost,true_Severe,pred_Very Poor,10
+cap,7,xgboost,true_Good,pred_Severe,0
+cap,7,xgboost,true_Satisfactory,pred_Severe,0
+cap,7,xgboost,true_Moderate,pred_Severe,2
+cap,7,xgboost,true_Poor,pred_Severe,2
+cap,7,xgboost,true_Very Poor,pred_Severe,0
+cap,7,xgboost,true_Severe,pred_Severe,6
+exclude,1,persistence,true_Good,pred_Good,210
+exclude,1,persistence,true_Satisfactory,pred_Good,77
+exclude,1,persistence,true_Moderate,pred_Good,1
+exclude,1,persistence,true_Poor,pred_Good,0
+exclude,1,persistence,true_Very Poor,pred_Good,0
+exclude,1,persistence,true_Severe,pred_Good,0
+exclude,1,persistence,true_Good,pred_Satisfactory,81
+exclude,1,persistence,true_Satisfactory,pred_Satisfactory,1083
+exclude,1,persistence,true_Moderate,pred_Satisfactory,144
+exclude,1,persistence,true_Poor,pred_Satisfactory,1
+exclude,1,persistence,true_Very Poor,pred_Satisfactory,0
+exclude,1,persistence,true_Severe,pred_Satisfactory,1
+exclude,1,persistence,true_Good,pred_Moderate,0
+exclude,1,persistence,true_Satisfactory,pred_Moderate,157
+exclude,1,persistence,true_Moderate,pred_Moderate,799
+exclude,1,persistence,true_Poor,pred_Moderate,79
+exclude,1,persistence,true_Very Poor,pred_Moderate,2
+exclude,1,persistence,true_Severe,pred_Moderate,0
+exclude,1,persistence,true_Good,pred_Poor,0
+exclude,1,persistence,true_Satisfactory,pred_Poor,2
+exclude,1,persistence,true_Moderate,pred_Poor,84
+exclude,1,persistence,true_Poor,pred_Poor,117
+exclude,1,persistence,true_Very Poor,pred_Poor,25
+exclude,1,persistence,true_Severe,pred_Poor,0
+exclude,1,persistence,true_Good,pred_Very Poor,0
+exclude,1,persistence,true_Satisfactory,pred_Very Poor,0
+exclude,1,persistence,true_Moderate,pred_Very Poor,5
+exclude,1,persistence,true_Poor,pred_Very Poor,27
+exclude,1,persistence,true_Very Poor,pred_Very Poor,51
+exclude,1,persistence,true_Severe,pred_Very Poor,3
+exclude,1,persistence,true_Good,pred_Severe,0
+exclude,1,persistence,true_Satisfactory,pred_Severe,0
+exclude,1,persistence,true_Moderate,pred_Severe,2
+exclude,1,persistence,true_Poor,pred_Severe,0
+exclude,1,persistence,true_Very Poor,pred_Severe,3
+exclude,1,persistence,true_Severe,pred_Severe,1
+exclude,1,regularized_linear,true_Good,pred_Good,150
+exclude,1,regularized_linear,true_Satisfactory,pred_Good,30
+exclude,1,regularized_linear,true_Moderate,pred_Good,0
+exclude,1,regularized_linear,true_Poor,pred_Good,0
+exclude,1,regularized_linear,true_Very Poor,pred_Good,0
+exclude,1,regularized_linear,true_Severe,pred_Good,0
+exclude,1,regularized_linear,true_Good,pred_Satisfactory,141
+exclude,1,regularized_linear,true_Satisfactory,pred_Satisfactory,1047
+exclude,1,regularized_linear,true_Moderate,pred_Satisfactory,115
+exclude,1,regularized_linear,true_Poor,pred_Satisfactory,1
+exclude,1,regularized_linear,true_Very Poor,pred_Satisfactory,0
+exclude,1,regularized_linear,true_Severe,pred_Satisfactory,1
+exclude,1,regularized_linear,true_Good,pred_Moderate,0
+exclude,1,regularized_linear,true_Satisfactory,pred_Moderate,240
+exclude,1,regularized_linear,true_Moderate,pred_Moderate,827
+exclude,1,regularized_linear,true_Poor,pred_Moderate,76
+exclude,1,regularized_linear,true_Very Poor,pred_Moderate,2
+exclude,1,regularized_linear,true_Severe,pred_Moderate,0
+exclude,1,regularized_linear,true_Good,pred_Poor,0
+exclude,1,regularized_linear,true_Satisfactory,pred_Poor,2
+exclude,1,regularized_linear,true_Moderate,pred_Poor,89
+exclude,1,regularized_linear,true_Poor,pred_Poor,122
+exclude,1,regularized_linear,true_Very Poor,pred_Poor,36
+exclude,1,regularized_linear,true_Severe,pred_Poor,1
+exclude,1,regularized_linear,true_Good,pred_Very Poor,0
+exclude,1,regularized_linear,true_Satisfactory,pred_Very Poor,0
+exclude,1,regularized_linear,true_Moderate,pred_Very Poor,4
+exclude,1,regularized_linear,true_Poor,pred_Very Poor,25
+exclude,1,regularized_linear,true_Very Poor,pred_Very Poor,41
+exclude,1,regularized_linear,true_Severe,pred_Very Poor,2
+exclude,1,regularized_linear,true_Good,pred_Severe,0
+exclude,1,regularized_linear,true_Satisfactory,pred_Severe,0
+exclude,1,regularized_linear,true_Moderate,pred_Severe,0
+exclude,1,regularized_linear,true_Poor,pred_Severe,0
+exclude,1,regularized_linear,true_Very Poor,pred_Severe,2
+exclude,1,regularized_linear,true_Severe,pred_Severe,1
+exclude,1,xgboost,true_Good,pred_Good,111
+exclude,1,xgboost,true_Satisfactory,pred_Good,15
+exclude,1,xgboost,true_Moderate,pred_Good,0
+exclude,1,xgboost,true_Poor,pred_Good,0
+exclude,1,xgboost,true_Very Poor,pred_Good,0
+exclude,1,xgboost,true_Severe,pred_Good,0
+exclude,1,xgboost,true_Good,pred_Satisfactory,180
+exclude,1,xgboost,true_Satisfactory,pred_Satisfactory,1059
+exclude,1,xgboost,true_Moderate,pred_Satisfactory,102
+exclude,1,xgboost,true_Poor,pred_Satisfactory,1
+exclude,1,xgboost,true_Very Poor,pred_Satisfactory,0
+exclude,1,xgboost,true_Severe,pred_Satisfactory,1
+exclude,1,xgboost,true_Good,pred_Moderate,0
+exclude,1,xgboost,true_Satisfactory,pred_Moderate,245
+exclude,1,xgboost,true_Moderate,pred_Moderate,843
+exclude,1,xgboost,true_Poor,pred_Moderate,76
+exclude,1,xgboost,true_Very Poor,pred_Moderate,2
+exclude,1,xgboost,true_Severe,pred_Moderate,0
+exclude,1,xgboost,true_Good,pred_Poor,0
+exclude,1,xgboost,true_Satisfactory,pred_Poor,0
+exclude,1,xgboost,true_Moderate,pred_Poor,85
+exclude,1,xgboost,true_Poor,pred_Poor,122
+exclude,1,xgboost,true_Very Poor,pred_Poor,35
+exclude,1,xgboost,true_Severe,pred_Poor,1
+exclude,1,xgboost,true_Good,pred_Very Poor,0
+exclude,1,xgboost,true_Satisfactory,pred_Very Poor,0
+exclude,1,xgboost,true_Moderate,pred_Very Poor,5
+exclude,1,xgboost,true_Poor,pred_Very Poor,25
+exclude,1,xgboost,true_Very Poor,pred_Very Poor,42
+exclude,1,xgboost,true_Severe,pred_Very Poor,2
+exclude,1,xgboost,true_Good,pred_Severe,0
+exclude,1,xgboost,true_Satisfactory,pred_Severe,0
+exclude,1,xgboost,true_Moderate,pred_Severe,0
+exclude,1,xgboost,true_Poor,pred_Severe,0
+exclude,1,xgboost,true_Very Poor,pred_Severe,2
+exclude,1,xgboost,true_Severe,pred_Severe,1
+exclude,3,persistence,true_Good,pred_Good,162
+exclude,3,persistence,true_Satisfactory,pred_Good,103
+exclude,3,persistence,true_Moderate,pred_Good,5
+exclude,3,persistence,true_Poor,pred_Good,0
+exclude,3,persistence,true_Very Poor,pred_Good,0
+exclude,3,persistence,true_Severe,pred_Good,1
+exclude,3,persistence,true_Good,pred_Satisfactory,121
+exclude,3,persistence,true_Satisfactory,pred_Satisfactory,923
+exclude,3,persistence,true_Moderate,pred_Satisfactory,239
+exclude,3,persistence,true_Poor,pred_Satisfactory,7
+exclude,3,persistence,true_Very Poor,pred_Satisfactory,1
+exclude,3,persistence,true_Severe,pred_Satisfactory,0
+exclude,3,persistence,true_Good,pred_Moderate,5
+exclude,3,persistence,true_Satisfactory,pred_Moderate,254
+exclude,3,persistence,true_Moderate,pred_Moderate,658
+exclude,3,persistence,true_Poor,pred_Moderate,100
+exclude,3,persistence,true_Very Poor,pred_Moderate,17
+exclude,3,persistence,true_Severe,pred_Moderate,0
+exclude,3,persistence,true_Good,pred_Poor,1
+exclude,3,persistence,true_Satisfactory,pred_Poor,24
+exclude,3,persistence,true_Moderate,pred_Poor,99
+exclude,3,persistence,true_Poor,pred_Poor,80
+exclude,3,persistence,true_Very Poor,pred_Poor,29
+exclude,3,persistence,true_Severe,pred_Poor,1
+exclude,3,persistence,true_Good,pred_Very Poor,0
+exclude,3,persistence,true_Satisfactory,pred_Very Poor,2
+exclude,3,persistence,true_Moderate,pred_Very Poor,25
+exclude,3,persistence,true_Poor,pred_Very Poor,34
+exclude,3,persistence,true_Very Poor,pred_Very Poor,27
+exclude,3,persistence,true_Severe,pred_Very Poor,2
+exclude,3,persistence,true_Good,pred_Severe,1
+exclude,3,persistence,true_Satisfactory,pred_Severe,0
+exclude,3,persistence,true_Moderate,pred_Severe,0
+exclude,3,persistence,true_Poor,pred_Severe,2
+exclude,3,persistence,true_Very Poor,pred_Severe,4
+exclude,3,persistence,true_Severe,pred_Severe,2
+exclude,3,regularized_linear,true_Good,pred_Good,82
+exclude,3,regularized_linear,true_Satisfactory,pred_Good,30
+exclude,3,regularized_linear,true_Moderate,pred_Good,1
+exclude,3,regularized_linear,true_Poor,pred_Good,0
+exclude,3,regularized_linear,true_Very Poor,pred_Good,0
+exclude,3,regularized_linear,true_Severe,pred_Good,0
+exclude,3,regularized_linear,true_Good,pred_Satisfactory,197
+exclude,3,regularized_linear,true_Satisfactory,pred_Satisfactory,884
+exclude,3,regularized_linear,true_Moderate,pred_Satisfactory,149
+exclude,3,regularized_linear,true_Poor,pred_Satisfactory,2
+exclude,3,regularized_linear,true_Very Poor,pred_Satisfactory,0
+exclude,3,regularized_linear,true_Severe,pred_Satisfactory,1
+exclude,3,regularized_linear,true_Good,pred_Moderate,8
+exclude,3,regularized_linear,true_Satisfactory,pred_Moderate,372
+exclude,3,regularized_linear,true_Moderate,pred_Moderate,763
+exclude,3,regularized_linear,true_Poor,pred_Moderate,94
+exclude,3,regularized_linear,true_Very Poor,pred_Moderate,6
+exclude,3,regularized_linear,true_Severe,pred_Moderate,0
+exclude,3,regularized_linear,true_Good,pred_Poor,3
+exclude,3,regularized_linear,true_Satisfactory,pred_Poor,19
+exclude,3,regularized_linear,true_Moderate,pred_Poor,99
+exclude,3,regularized_linear,true_Poor,pred_Poor,96
+exclude,3,regularized_linear,true_Very Poor,pred_Poor,53
+exclude,3,regularized_linear,true_Severe,pred_Poor,1
+exclude,3,regularized_linear,true_Good,pred_Very Poor,0
+exclude,3,regularized_linear,true_Satisfactory,pred_Very Poor,1
+exclude,3,regularized_linear,true_Moderate,pred_Very Poor,14
+exclude,3,regularized_linear,true_Poor,pred_Very Poor,31
+exclude,3,regularized_linear,true_Very Poor,pred_Very Poor,17
+exclude,3,regularized_linear,true_Severe,pred_Very Poor,4
+exclude,3,regularized_linear,true_Good,pred_Severe,0
+exclude,3,regularized_linear,true_Satisfactory,pred_Severe,0
+exclude,3,regularized_linear,true_Moderate,pred_Severe,0
+exclude,3,regularized_linear,true_Poor,pred_Severe,0
+exclude,3,regularized_linear,true_Very Poor,pred_Severe,2
+exclude,3,regularized_linear,true_Severe,pred_Severe,0
+exclude,3,xgboost,true_Good,pred_Good,23
+exclude,3,xgboost,true_Satisfactory,pred_Good,4
+exclude,3,xgboost,true_Moderate,pred_Good,0
+exclude,3,xgboost,true_Poor,pred_Good,0
+exclude,3,xgboost,true_Very Poor,pred_Good,0
+exclude,3,xgboost,true_Severe,pred_Good,0
+exclude,3,xgboost,true_Good,pred_Satisfactory,256
+exclude,3,xgboost,true_Satisfactory,pred_Satisfactory,856
+exclude,3,xgboost,true_Moderate,pred_Satisfactory,116
+exclude,3,xgboost,true_Poor,pred_Satisfactory,2
+exclude,3,xgboost,true_Very Poor,pred_Satisfactory,0
+exclude,3,xgboost,true_Severe,pred_Satisfactory,1
+exclude,3,xgboost,true_Good,pred_Moderate,10
+exclude,3,xgboost,true_Satisfactory,pred_Moderate,427
+exclude,3,xgboost,true_Moderate,pred_Moderate,790
+exclude,3,xgboost,true_Poor,pred_Moderate,95
+exclude,3,xgboost,true_Very Poor,pred_Moderate,7
+exclude,3,xgboost,true_Severe,pred_Moderate,0
+exclude,3,xgboost,true_Good,pred_Poor,1
+exclude,3,xgboost,true_Satisfactory,pred_Poor,18
+exclude,3,xgboost,true_Moderate,pred_Poor,103
+exclude,3,xgboost,true_Poor,pred_Poor,95
+exclude,3,xgboost,true_Very Poor,pred_Poor,51
+exclude,3,xgboost,true_Severe,pred_Poor,1
+exclude,3,xgboost,true_Good,pred_Very Poor,0
+exclude,3,xgboost,true_Satisfactory,pred_Very Poor,1
+exclude,3,xgboost,true_Moderate,pred_Very Poor,17
+exclude,3,xgboost,true_Poor,pred_Very Poor,31
+exclude,3,xgboost,true_Very Poor,pred_Very Poor,20
+exclude,3,xgboost,true_Severe,pred_Very Poor,4
+exclude,3,xgboost,true_Good,pred_Severe,0
+exclude,3,xgboost,true_Satisfactory,pred_Severe,0
+exclude,3,xgboost,true_Moderate,pred_Severe,0
+exclude,3,xgboost,true_Poor,pred_Severe,0
+exclude,3,xgboost,true_Very Poor,pred_Severe,0
+exclude,3,xgboost,true_Severe,pred_Severe,0
+exclude,7,persistence,true_Good,pred_Good,137
+exclude,7,persistence,true_Satisfactory,pred_Good,109
+exclude,7,persistence,true_Moderate,pred_Good,11
+exclude,7,persistence,true_Poor,pred_Good,0
+exclude,7,persistence,true_Very Poor,pred_Good,0
+exclude,7,persistence,true_Severe,pred_Good,0
+exclude,7,persistence,true_Good,pred_Satisfactory,144
+exclude,7,persistence,true_Satisfactory,pred_Satisfactory,861
+exclude,7,persistence,true_Moderate,pred_Satisfactory,245
+exclude,7,persistence,true_Poor,pred_Satisfactory,8
+exclude,7,persistence,true_Very Poor,pred_Satisfactory,3
+exclude,7,persistence,true_Severe,pred_Satisfactory,1
+exclude,7,persistence,true_Good,pred_Moderate,6
+exclude,7,persistence,true_Satisfactory,pred_Moderate,316
+exclude,7,persistence,true_Moderate,pred_Moderate,637
+exclude,7,persistence,true_Poor,pred_Moderate,90
+exclude,7,persistence,true_Very Poor,pred_Moderate,11
+exclude,7,persistence,true_Severe,pred_Moderate,2
+exclude,7,persistence,true_Good,pred_Poor,3
+exclude,7,persistence,true_Satisfactory,pred_Poor,22
+exclude,7,persistence,true_Moderate,pred_Poor,106
+exclude,7,persistence,true_Poor,pred_Poor,89
+exclude,7,persistence,true_Very Poor,pred_Poor,24
+exclude,7,persistence,true_Severe,pred_Poor,2
+exclude,7,persistence,true_Good,pred_Very Poor,0
+exclude,7,persistence,true_Satisfactory,pred_Very Poor,4
+exclude,7,persistence,true_Moderate,pred_Very Poor,22
+exclude,7,persistence,true_Poor,pred_Very Poor,40
+exclude,7,persistence,true_Very Poor,pred_Very Poor,39
+exclude,7,persistence,true_Severe,pred_Very Poor,3
+exclude,7,persistence,true_Good,pred_Severe,0
+exclude,7,persistence,true_Satisfactory,pred_Severe,1
+exclude,7,persistence,true_Moderate,pred_Severe,3
+exclude,7,persistence,true_Poor,pred_Severe,3
+exclude,7,persistence,true_Very Poor,pred_Severe,4
+exclude,7,persistence,true_Severe,pred_Severe,0
+exclude,7,regularized_linear,true_Good,pred_Good,58
+exclude,7,regularized_linear,true_Satisfactory,pred_Good,34
+exclude,7,regularized_linear,true_Moderate,pred_Good,1
+exclude,7,regularized_linear,true_Poor,pred_Good,0
+exclude,7,regularized_linear,true_Very Poor,pred_Good,0
+exclude,7,regularized_linear,true_Severe,pred_Good,0
+exclude,7,regularized_linear,true_Good,pred_Satisfactory,221
+exclude,7,regularized_linear,true_Satisfactory,pred_Satisfactory,807
+exclude,7,regularized_linear,true_Moderate,pred_Satisfactory,159
+exclude,7,regularized_linear,true_Poor,pred_Satisfactory,6
+exclude,7,regularized_linear,true_Very Poor,pred_Satisfactory,0
+exclude,7,regularized_linear,true_Severe,pred_Satisfactory,1
+exclude,7,regularized_linear,true_Good,pred_Moderate,10
+exclude,7,regularized_linear,true_Satisfactory,pred_Moderate,456
+exclude,7,regularized_linear,true_Moderate,pred_Moderate,736
+exclude,7,regularized_linear,true_Poor,pred_Moderate,79
+exclude,7,regularized_linear,true_Very Poor,pred_Moderate,7
+exclude,7,regularized_linear,true_Severe,pred_Moderate,1
+exclude,7,regularized_linear,true_Good,pred_Poor,1
+exclude,7,regularized_linear,true_Satisfactory,pred_Poor,16
+exclude,7,regularized_linear,true_Moderate,pred_Poor,118
+exclude,7,regularized_linear,true_Poor,pred_Poor,113
+exclude,7,regularized_linear,true_Very Poor,pred_Poor,38
+exclude,7,regularized_linear,true_Severe,pred_Poor,4
+exclude,7,regularized_linear,true_Good,pred_Very Poor,0
+exclude,7,regularized_linear,true_Satisfactory,pred_Very Poor,0
+exclude,7,regularized_linear,true_Moderate,pred_Very Poor,10
+exclude,7,regularized_linear,true_Poor,pred_Very Poor,30
+exclude,7,regularized_linear,true_Very Poor,pred_Very Poor,36
+exclude,7,regularized_linear,true_Severe,pred_Very Poor,2
+exclude,7,regularized_linear,true_Good,pred_Severe,0
+exclude,7,regularized_linear,true_Satisfactory,pred_Severe,0
+exclude,7,regularized_linear,true_Moderate,pred_Severe,0
+exclude,7,regularized_linear,true_Poor,pred_Severe,2
+exclude,7,regularized_linear,true_Very Poor,pred_Severe,0
+exclude,7,regularized_linear,true_Severe,pred_Severe,0
+exclude,7,xgboost,true_Good,pred_Good,0
+exclude,7,xgboost,true_Satisfactory,pred_Good,0
+exclude,7,xgboost,true_Moderate,pred_Good,0
+exclude,7,xgboost,true_Poor,pred_Good,0
+exclude,7,xgboost,true_Very Poor,pred_Good,0
+exclude,7,xgboost,true_Severe,pred_Good,0
+exclude,7,xgboost,true_Good,pred_Satisfactory,276
+exclude,7,xgboost,true_Satisfactory,pred_Satisfactory,780
+exclude,7,xgboost,true_Moderate,pred_Satisfactory,127
+exclude,7,xgboost,true_Poor,pred_Satisfactory,5
+exclude,7,xgboost,true_Very Poor,pred_Satisfactory,0
+exclude,7,xgboost,true_Severe,pred_Satisfactory,1
+exclude,7,xgboost,true_Good,pred_Moderate,13
+exclude,7,xgboost,true_Satisfactory,pred_Moderate,518
+exclude,7,xgboost,true_Moderate,pred_Moderate,771
+exclude,7,xgboost,true_Poor,pred_Moderate,89
+exclude,7,xgboost,true_Very Poor,pred_Moderate,10
+exclude,7,xgboost,true_Severe,pred_Moderate,1
+exclude,7,xgboost,true_Good,pred_Poor,1
+exclude,7,xgboost,true_Satisfactory,pred_Poor,15
+exclude,7,xgboost,true_Moderate,pred_Poor,117
+exclude,7,xgboost,true_Poor,pred_Poor,112
+exclude,7,xgboost,true_Very Poor,pred_Poor,35
+exclude,7,xgboost,true_Severe,pred_Poor,5
+exclude,7,xgboost,true_Good,pred_Very Poor,0
+exclude,7,xgboost,true_Satisfactory,pred_Very Poor,0
+exclude,7,xgboost,true_Moderate,pred_Very Poor,9
+exclude,7,xgboost,true_Poor,pred_Very Poor,24
+exclude,7,xgboost,true_Very Poor,pred_Very Poor,36
+exclude,7,xgboost,true_Severe,pred_Very Poor,1
+exclude,7,xgboost,true_Good,pred_Severe,0
+exclude,7,xgboost,true_Satisfactory,pred_Severe,0
+exclude,7,xgboost,true_Moderate,pred_Severe,0
+exclude,7,xgboost,true_Poor,pred_Severe,0
+exclude,7,xgboost,true_Very Poor,pred_Severe,0
+exclude,7,xgboost,true_Severe,pred_Severe,0
