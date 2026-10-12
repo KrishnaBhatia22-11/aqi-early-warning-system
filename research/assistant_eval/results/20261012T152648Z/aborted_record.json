@@ -1,0 +1,46 @@
+{
+  "status": "ABORTED by the operator after 3 of 30 questions; no scores were computed",
+  "aborted_utc": "2026-10-12T15:37:24.850312+00:00",
+  "reason": "All answered questions returned source=error: Groq API 404 model_not_found for llama-3.1-8b-instant ('does not exist or you do not have access to it'). Continuing would only record 27 more identical failures.",
+  "questions_asked": [
+    "Delhi-Q1",
+    "Delhi-Q2",
+    "Delhi-Q3"
+  ],
+  "sources": [
+    "error",
+    "error",
+    "error"
+  ],
+  "delhi_q1_attempts": [
+    {
+      "attempt": 1,
+      "http_status": null,
+      "latency_s": 120.402,
+      "retry_reason": "ReadTimeout(ReadTimeoutError(\"HTTPSConnectionPool(host='aqi-api-y2qs.onrender.com', port=443): Read timed out. (read timeout=120)\"))"
+    },
+    {
+      "attempt": 2,
+      "http_status": 502,
+      "latency_s": 17.639,
+      "retry_reason": "HTTP 502"
+    },
+    {
+      "attempt": 3,
+      "http_status": null,
+      "latency_s": 120.399,
+      "retry_reason": "ReadTimeout(ReadTimeoutError(\"HTTPSConnectionPool(host='aqi-api-y2qs.onrender.com', port=443): Read timed out. (read timeout=120)\"))"
+    },
+    {
+      "attempt": 4,
+      "http_status": 200,
+      "latency_s": 15.149,
+      "retry_reason": null
+    }
+  ],
+  "protocol_commit": "43351b43e053cb63ae57bcae45eb442b0366a017",
+  "output_file_sha256": {
+    "ground_truth.jsonl": "84155fbd12138d6c3595049dff24d21072d6b195985ecec6ec0d4f2829ed4f2d",
+    "raw_answers.jsonl": "843e20f22ec80373f0721755f8eb5a3087c32b3baf9bd4153f2bb1c6de5ad533"
+  }
+}
