@@ -147,7 +147,7 @@ def write_summary(results: Path, rows: list[dict], overrides: list[dict]) -> Non
         lines.append(f"| {city} | " + " | ".join(cells) + " |")
     lines += ["", "## Every answer scored 0 (or unsupported = 1), with justification", ""]
     for r in rows:
-        bad = [k for k in CRITERIA if (r[k] == "0") or (k == "unsupported_statement" and r[k] == "1")]
+        bad = [k for k in CRITERIA if (k != "unsupported_statement" and r[k] == "0") or (k == "unsupported_statement" and r[k] == "1")]
         if bad:
             lines += [f"- **{r['id']}** ({', '.join(bad)}): {r['justification']}" + (f' Quote: "{r["unsupported_quote"]}"' if r["unsupported_quote"] else "")]
     unverif = [r["id"] for r in rows if str(r["unverifiable_context_statement"]) == "1"]

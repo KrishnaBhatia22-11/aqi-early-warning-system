@@ -1,0 +1,311 @@
+id,city,type,source,answer_failed,retries,gt_aqi,gt_category,gt_mode,gt_as_of,value_correct,category_correct,advice_consistent,pollutant_correct,accuracy_claim_ok,abstained,staleness_disclosed,unsupported_statement,unverifiable_context_statement,unsupported_quote,justification,answer
+Delhi-Q1,Delhi,value,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,1,1,NA,NA,NA,NA,1,0,0,,,Delhi’s latest stored reading (from 2026‑09‑27 19:14:17 UTC) is **76 AQI** – a *Satisfactory* level on the India CPCB National AQI scale. This value comes from 42 stations and reflects the multi‑station average; it is not a live feed.
+Delhi-Q2,Delhi,category,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,NA,NA,NA,NA,1,0,0,,,"Delhi’s latest stored CPCB reading (as of 2026‑09‑27 19:14:17 UTC) is **76 AQI**.  
+That falls into the **“Satisfactory”** category on the India CPCB National AQI scale."
+Delhi-Q3,Delhi,advice,groq,False,2,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,1,NA,NA,NA,1,0,0,,,"**Delhi – stored AQI (2026‑09‑27 19:14:17 UTC)**  
+- **AQI:** 76 (“Satisfactory”)  
+- **Stations:** 42 (all recent, <48 h)  
+
+---
+
+### What this means for someone with asthma
+
+| Category | AQI | General impact |
+|----------|-----|----------------|
+| Good (0‑50) | 0‑50 | Safe for all, minimal risk |
+| Satisfactory (51‑100) | 51‑100 | Mild‑to‑moderate irritation possible, especially for sensitive groups |
+| Moderate (101‑200) | 101‑200 | Higher risk of respiratory symptoms, consider indoor activity |
+
+At **76 AQI** Delhi is in the **Satisfactory** band. For most people, outdoor exercise is **possible but not ideal** for asthma sufferers. The risk of bronchoconstriction, coughing, or shortness of breath is higher than on a “Good” day.
+
+---
+
+### Practical advice if you decide to run
+
+- **Time of day:**  
+  - Early morning (5–7 am) or late evening (after 8 pm) often have slightly lower pollutant levels.  
+  - Avoid peak traffic hours (7–9 am, 5–7 pm).
+
+- **Duration & intensity:**  
+  - Keep the run short (≤30 min).  
+  - If you feel chest tightness or wheezing, stop immediately.
+
+- **Equipment:**  
+  - Use a rescue inhaler 15 min before exercise.  
+  - Consider a mask rated for fine particles (e.g., N95) if you must run longer.
+
+- **Alternative:**  
+  - Indoor treadmill or yoga at home.  
+  - Outdoor walk at a nearby park with lower traffic (e.g., Lodhi Garden, Central Park).
+
+---
+
+### If you’re unsure
+
+- **Check the 24‑hour forecast** (via `/forecast`) – a sudden drop to the “Good” band would make outdoor running safer.  
+- **Monitor symptoms** during the run; if you notice increased coughing, wheeze, or breathlessness, stop and seek fresh air.
+
+---
+
+**Bottom line:**  
+With an AQI of 76, Delhi is **not ideal** for a vigorous outdoor run if you have asthma. A short, low‑intensity walk or indoor exercise would be safer. If you choose to run, do so early, keep it brief, and have your inhaler ready."
+Delhi-Q4,Delhi,pollutant,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,NA,1,0,0,,,"I don’t have the individual pollutant concentrations for the latest Delhi reading in the data set you’ve provided.  
+The stored reading shows:
+
+- **Delhi:** 76 AQI (Satisfactory) – 42 stations (stored 2026‑09‑27 19:14:17 UTC)
+
+To determine which pollutant is driving the AQI, we would need the latest PM₂.₅, PM₁₀, NO₂, O₃, etc., for that day. If you can provide those values or point me to a source that lists the sub‑indices, I can tell you which one is the maximum and thus the primary contributor."
+Delhi-Q5,Delhi,accuracy,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,0,NA,NA,1,0,Accuracy is slightly lower for very high or very low AQI values because the model was trained on a limited range of historical data.,"Invented claim about error by AQI range; no such figure exists. accuracy_claim_ok=0 by the pre-registered strict reading: it quotes RMSE 22.5 (the benchmark-block figure, a verified figure but not R2 0.898 / MAE 15.8).","**Model accuracy on this platform**
+
+- **Production model** – XGBoost regressor, trained on 2015‑2020 city‑day data (24 850 rows, 26 cities).  
+- **Temporal test (2015‑2018 train, 2019 tune, Jan‑Jul 2020 test)**  
+  - **R² = 0.898**  
+  - **MAE = 15.8 AQI points**  
+  - **RMSE = 22.5 AQI points**  
+
+These numbers come from the official benchmark that the app uses.  
+The older “R² = 0.932” figure is from a random split that over‑estimates accuracy and should not be quoted.
+
+**Key take‑aways**
+
+- The model predicts the *maximum* pollutant‑based sub‑index (CPCB National AQI) with an average error of ~16 AQI points.  
+- For a city with an AQI of 100, the prediction is usually within ±16 points.  
+- Accuracy is slightly lower for very high or very low AQI values because the model was trained on a limited range of historical data.  
+
+Feel free to ask if you’d like a comparison with the official CPCB formula or any other detail!"
+Delhi-Q6,Delhi,unanswerable,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,1,NA,0,0,,,"I don’t have that specific historical reading. The live feed is currently unavailable, and the stored snapshot only gives the most recent aggregated value for Delhi (76 AQI, Satisfactory). For a precise 9 am value on 3 March 2019 you would need to query the historical API (`/api/v1/history/Delhi`) or consult the CPCB archives directly."
+Mumbai-Q1,Mumbai,value,groq,False,1,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,1,1,NA,NA,NA,NA,1,1,0,this value is a stored snapshot and may be up to a few hours old.,"The reading is dated 2026-09-27; the run was on 2026-10-12, about 15 days later, so 'a few hours' is false.","The most recent reading for Mumbai in the database is **52 AQI** (Satisfactory), recorded on **2026‑09‑27 19:14:17.937356 +00:00**.  
+Since the live feed is currently unavailable, this value is a stored snapshot and may be up to a few hours old."
+Mumbai-Q2,Mumbai,category,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,NA,NA,NA,NA,1,0,0,,,"Mumbai’s latest stored reading (from 2026‑09‑27) shows an AQI of **52**, which falls into the **“Satisfactory”** category on the India CPCB National AQI scale."
+Mumbai-Q3,Mumbai,advice,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,1,NA,NA,NA,0,0,0,,staleness_disclosed=0: heading calls the stored value 'Current AQI'.,"**Mumbai – Current AQI (stored 2026‑09‑27 19:14:17 UTC)**  
+- **AQI:** 52  (Satisfactory)  
+- **Stations:** 21 (all recent, < 48 h old)  
+
+---
+
+### What this means for you (asthma)
+
+| Category | AQI | Health advice for people with asthma |
+|----------|-----|--------------------------------------|
+| Satisfactory (51–100) | 52 | • Air is *acceptable* for most people.  <br>• If you usually exercise outdoors, a 30‑minute run is likely fine.  <br>• Still, keep your inhaler handy and monitor how you feel.  <br>• If you notice wheezing, coughing, or shortness of breath, stop and go indoors. |
+
+---
+
+### Practical tips for a safe run
+
+- **Check your inhaler:** Have a rescue inhaler within arm’s reach.  
+- **Warm‑up indoors:** Do a 5‑minute warm‑up inside, then head out.  
+- **Shorter distance:** If you’re unsure, try a shorter route (e.g., 2–3 km) and gauge your response.  
+- **Avoid peak traffic times:** Traffic contributes to local pollution; choose quieter streets or parks.  
+- **Stay hydrated:** Dehydration can worsen asthma symptoms.  
+- **Monitor symptoms:** If you feel chest tightness, cough, or wheeze, stop immediately and seek medical help if needed.  
+
+---
+
+### Bottom line
+
+With an AQI of 52 (Satisfactory), it is **generally safe** for you to go for a run outside today, provided you follow the precautions above and listen to your body. If you have any doubts or your asthma is poorly controlled, consider exercising indoors or postponing until the AQI improves."
+Mumbai-Q4,Mumbai,pollutant,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,NA,0,0,0,,staleness_disclosed=0: 'the current snapshot' with no stored label or date.,"I’m sorry, but the current snapshot only gives the overall AQI for Mumbai (52 AQI, Satisfactory). It does not include the individual pollutant sub‑indices for that moment, so I can’t tell which specific pollutant is driving the reading right now. If you need that level of detail, you can check the **/api/v1/cities** endpoint or the city‑specific page on the app, which shows the latest sub‑indices when live data is available."
+Mumbai-Q5,Mumbai,accuracy,groq,False,1,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,0,NA,NA,1,0,"The official CPCB calculation uses 8-hour means for CO and O3, whereas the model uses daily means; this introduces a small systematic difference. / The model only predicts the AQI that the CPCB would publish ... if a city lacks any of the three mandatory pollutants, the platform shows NO DATA rather than a prediction.","The prompt's 8-hour caveat is about the CPCB-formula comparison, not a 'systematic difference' of the model; NO DATA applies to the live feed, not to /predict. accuracy_claim_ok=0 (strict): quotes RMSE 22.5.","The model that powers the **/predict** endpoint is an XGBoost regressor trained on the same‑day pollutant readings (PM₂.₅, PM₁₀, NO, NO₂, NOₓ, NH₃, CO, SO₂, O₃, month, year, season code).  
+Here are the only figures we can share:
+
+| Metric | Temporal test (2015‑2018 train / 2019 tune / Jan‑Jul 2020 test) |
+|--------|--------------------------------------------------------------|
+| R²     | **0.898** |
+| MAE    | **15.8 AQI points** |
+| RMSE   | **22.5 AQI points** |
+
+These numbers come from a realistic temporal split (train on past years, test on future years), so they reflect how the model would perform on unseen data.  
+- The model’s MAE of ~16 AQI points means that, on average, the predicted AQI is within ±16 points of the official CPCB value.  
+- For context, the CPCB national AQI scale spans 0‑500; an error of 16 points is roughly 3–4 % of the full range.
+
+**Key caveats**
+
+- The model was trained on data up to 2020; it has **not** been re‑evaluated on the most recent years (2021‑2026).  
+- The official CPCB calculation uses 8‑hour means for CO and O₃, whereas the model uses daily means; this introduces a small systematic difference.  
+- The model only predicts the AQI that the CPCB would publish for a city if all required pollutants are available; if a city lacks any of the three mandatory pollutants, the platform shows “NO DATA” rather than a prediction.
+
+So, while the model is reasonably accurate for most practical purposes, it is not a perfect substitute for the official CPCB calculation and should be interpreted as an estimate rather than an exact value."
+Mumbai-Q6,Mumbai,unanswerable,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,1,NA,0,0,,,"I don’t have the 2019 hourly readings in the dataset that’s currently available. The live feed and the stored snapshot only give the most recent daily averages, and the historical archive isn’t included in the data I can access right now. If you need the exact 9 am AQI for Mumbai on 3 March 2019, you could check the CPCB’s archived reports or the official national AQI database for that date."
+Kolkata-Q1,Kolkata,value,groq,False,0,37,Good,snapshot,2026-09-27T19:14:17.937356+00:00,1,1,NA,NA,NA,NA,1,0,0,,,"Kolkata’s most recent CPCB reading (stored 2026‑09‑27 T19:14:17.937356 +00:00) is **AQI 37** – which falls in the **Good** category.  
+Since the live feed is currently unavailable, this value is from the last snapshot and is not a real‑time update."
+Kolkata-Q2,Kolkata,category,groq,False,0,37,Good,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,NA,NA,NA,NA,1,1,0,falls into the **Good** category (0-37).,"CPCB Good is 0-50, not 0-37. The category NAME is correct, so category_correct stays 1.","Kolkata’s latest stored CPCB reading is **37 AQI**, which falls into the **Good** category (0‑37)."
+Kolkata-Q3,Kolkata,advice,groq,False,1,37,Good,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,1,NA,NA,NA,0,0,0,,staleness_disclosed=0: heading calls the stored value 'Current AQI'.,"**Kolkata – Current AQI (stored reading, 2026‑09‑27 19:14:17 UTC)**  
+- **AQI:** **37** (Good) – 7 stations  
+
+---
+
+### What this means for someone with asthma
+
+| AQI Range | Health Impact | Recommendation for outdoor activity |
+|-----------|---------------|-------------------------------------|
+| 0‑50 (Good) | Minimal impact on most people. | **Safe** to run outdoors, but keep a few precautions in mind: |
+| 51‑100 (Satisfactory) | Mild irritation for sensitive groups. | Consider shorter runs or indoor alternatives. |
+| 101‑200 (Moderate) | Noticeable irritation; asthma symptoms may worsen. | Avoid strenuous outdoor exercise. |
+| 201‑300 (Poor) | Significant risk; asthma attacks common. | Stay indoors. |
+| 301‑400 (Very Poor) | Severe risk; avoid all outdoor activity. | Stay indoors. |
+| 401‑500 (Severe) | Life‑threatening for vulnerable groups. | Stay indoors. |
+
+Since Kolkata’s AQI is **37 (Good)**, the air quality is currently low enough that most people, including those with asthma, can safely exercise outdoors.  
+
+---
+
+### Practical tips for a safe run
+
+- **Wear a mask** (N95 or equivalent) if you feel any chest tightness or if you’re running at a high intensity.  
+- **Start slowly** and monitor how you feel. If you notice wheezing, shortness of breath, or chest tightness, stop and return indoors.  
+- **Hydrate** well before and after the run.  
+- **Check the weather** – high temperatures or humidity can amplify the effect of pollutants.  
+- **Use the app**:  
+  - `/health` – calculate your personal exposure (cigarette equivalent, PM₂.₅ inhaled, etc.).  
+  - `/weather` – see if high humidity or temperature might affect you.  
+
+---
+
+### Bottom line
+
+- **Yes, it is safe** to go for a run outside today in Kolkata, given the current Good AQI.  
+- **Stay alert** to your body’s signals and adjust intensity or duration if you feel any asthma symptoms.  
+
+Enjoy your run, and stay healthy!"
+Kolkata-Q4,Kolkata,pollutant,groq,False,0,37,Good,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,NA,1,0,0,,,"I don’t have the individual pollutant concentrations for Kolkata at the moment.  
+The stored reading shows an overall AQI of **37 AQI (Good)**, but without the per‑pollutant sub‑indices I can’t tell which pollutant is the maximum contributor. If you need that detail, you can check the live feed on the app’s **/cities** page or use the **/api/v1/cities** endpoint for the most recent multi‑station averages."
+Kolkata-Q5,Kolkata,accuracy,groq,False,0,37,Good,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,0,NA,NA,1,0,"For a city with a current AQI of 80, the model might predict anywhere between ~65 and ~95 with 68 % confidence (+-1 sigma ~ 15 points).","Invented confidence interval. accuracy_claim_ok=0 (strict): quotes RMSE 22.5 and the formula/linear figures 0.842, 18.1, 0.834, 21.1 (all verified prompt figures, but not the permitted pair).","The XGBoost model that powers the **/predict** endpoint has been evaluated on a *temporal* split (train 2015‑2018, tune 2019, test Jan‑Jul 2020).  
+For that test set the published metrics are:
+
+| Metric | Value |
+|--------|-------|
+| R² | **0.898** |
+| MAE | **15.8 AQI points** |
+| RMSE | **22.5 AQI points** |
+
+These numbers reflect the model’s performance on unseen, future‑dated data, which is the most realistic measure of real‑world accuracy.  
+
+**Key points**
+
+- The model uses the same 12 features (PM2.5, PM10, NO, NO₂, NOₓ, NH₃, CO, SO₂, O₃, month, year, season code) that are available in the live CPCB feed.
+- The MAE of ~16 AQI points means that, on average, a prediction will differ from the actual CPCB‑computed AQI by about that amount.
+- The model’s performance is comparable to the official CPCB formula (R² ≈ 0.842, MAE ≈ 18.1) and better than a simple linear regression baseline (R² ≈ 0.834, MAE ≈ 21.1).
+
+**What this means for users**
+
+- For a city with a current AQI of 80, the model might predict anywhere between ~65 and ~95 with 68 % confidence (±1 σ ≈ 15 points).
+- The prediction is most reliable when the city’s recent pollutant measurements are available and the station data quality is good.
+- The model does **not** claim perfect accuracy; it is a tool to give a quick estimate, not a definitive measurement."
+Kolkata-Q6,Kolkata,unanswerable,groq,False,0,37,Good,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,1,NA,0,0,,,"I don’t have the exact AQI value for Kolkata at 9 am on 3 March 2019 in the data set. The historical archive in this system only contains daily aggregated readings, and the timestamped 9 am value isn’t available. If you need that specific point‑in‑time figure, you might check the CPCB’s official archives or the National Air Quality Index portal, which keeps hourly logs for many stations."
+Chennai-Q1,Chennai,value,groq,False,1,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,1,1,NA,NA,NA,NA,1,0,0,,,"The most recent reading for **Chennai** is **76 AQI** (Satisfactory).  
+This value is from the **stored snapshot** taken on **2026‑09‑27 19:14:17 UTC**; it is not a live feed."
+Chennai-Q2,Chennai,category,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,NA,NA,NA,NA,0,0,0,,"staleness_disclosed=0: 'Chennai is currently in the Satisfactory category' (then says last stored, not live).",Chennai is currently in the **Satisfactory** category (AQI 76). This value comes from the last stored CPCB readings (2026‑09‑27 19:14:17 UTC) and is not a live feed.
+Chennai-Q3,Chennai,advice,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,1,NA,NA,NA,1,1,0,"(42 stations) ; ""PM2.5 (the main concern for asthma) is still below the India CPCB limit of 60 ug/m3 for an annual mean""","Chennai has 7 stations in the ground truth, not 42 (the Delhi count); and the answer implies Chennai's PM2.5 is below 60 although no pollutant data was provided.","**Chennai – AQI 76 (Satisfactory)**  
+*Stored reading from 2026‑09‑27 19:14:17 UTC (42 stations). The live feed is currently unavailable, so this is the most recent official value we have.*
+
+### What does “Satisfactory” mean for you?
+- **PM2.5** (the main concern for asthma) is still below the India CPCB limit of 60 µg m⁻³ for an annual mean, but the 24‑h average can be higher.
+- At 76 AQI the air is *not* in the “Moderate” or “Poor” range, so it is **generally safe** for most people, but asthma can make you more sensitive.
+
+### Practical advice for a run outside
+
+| Situation | Recommendation |
+|-----------|----------------|
+| **You’re feeling well, no recent asthma flare** | You can run, but keep the duration short (≤30 min) and stay hydrated. |
+| **You’ve had recent asthma symptoms or a flare** | Consider running indoors (treadmill, gym) or postpone until the AQI drops. |
+| **You’re planning a long run (>30 min)** | Use a mask rated for fine particles (e.g., N95) and monitor your breathing; if you feel wheeze or chest tightness, stop immediately. |
+| **You’re sensitive to pollen or have allergies** | The “Satisfactory” AQI may still include pollen; check local pollen forecasts if that’s a trigger. |
+
+### Quick check‑list before you head out
+- **Check your inhaler**: Have a rescue inhaler (SABA) ready.
+- **Monitor symptoms**: If you notice increased coughing, wheeze, or shortness of breath, cut the run short.
+- **Stay hydrated**: Dehydration can worsen asthma symptoms.
+- **Use a mask**: An N95 or equivalent can filter out fine particles and pollen.
+
+### Bottom line
+At 76 AQI, Chennai’s air quality is **Satisfactory**—acceptable for outdoor exercise for most people, including those with asthma, provided you stay alert to your body’s signals. If you’re unsure or have had recent asthma attacks, it’s safer to exercise indoors or wait for a lower AQI."
+Chennai-Q4,Chennai,pollutant,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,NA,1,0,0,,,"I’m looking at the stored CPCB reading for Chennai (76 AQI, Satisfactory, 7 stations, stored 2026‑09‑27 19:14:17 UTC).  
+The live feed is currently unavailable, so I don’t have the real‑time pollutant breakdown (PM₂.₅, PM₁₀, NO₂, etc.) for this moment.  
+
+Without the current sub‑index values I can’t say which pollutant is dominating the AQI right now. If you want the latest pollutant data, you can check the **/api/v1/cities** endpoint or the live map on the site once the feed is back online."
+Chennai-Q5,Chennai,accuracy,groq,False,1,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,0,NA,NA,1,0,"The error distribution is fairly symmetric; extreme outliers are rare because the model uses a robust training set ... / if a city has fewer than 3 valid stations, the API will return NO DATA.","Invented error-distribution claim; CPCB needs 3 pollutants, not 3 stations. accuracy_claim_ok=0 (strict): quotes RMSE 22.5 and 18.1.","The AI model that powers the /predict endpoint is an XGBoost regressor trained on the same‑day pollutant readings that the CPCB publishes.  
+Here are the only figures that have been independently verified on a temporal hold‑out set (train 2015‑2018, tune 2019, test Jan‑Jul 2020):
+
+| Metric | Value |
+|--------|-------|
+| R² (coefficient of determination) | **0.898** |
+| Mean Absolute Error (MAE) | **15.8 AQI points** |
+| Root‑Mean‑Square Error (RMSE) | **22.5 AQI points** |
+
+**What this means**
+
+- The model explains about 90 % of the variance in the test data – a strong fit for a complex, multi‑pollutant environment.
+- On average, the predicted AQI differs from the official CPCB value by roughly 16 points.  
+  For a city with an actual AQI of 80, the model might predict 64–96 – still within the same health category (Good‑Satisfactory‑Moderate) for most cases.
+- The error distribution is fairly symmetric; extreme outliers are rare because the model uses a robust training set and the CPCB data are already cleaned (stations older than 48 h are dropped, outliers removed).
+
+**Limitations to keep in mind**
+
+- The model was trained on data up to 2020. It has not been re‑evaluated on the most recent years, so its performance on 2024‑2026 readings is an extrapolation.
+- The CPCB formula itself (using daily means) has a slightly higher MAE (18.1) on the same test set, so the XGBoost model offers only a modest improvement over the official calculation.
+- The model requires at least 3 pollutants (including PM2.5 or PM10) to produce a prediction; if a city has fewer than 3 valid stations, the API will return “NO DATA”.
+
+In short, the model is reasonably accurate for day‑level AQI estimation, but it should be viewed as a tool that complements, not replaces, the official CPCB readings."
+Chennai-Q6,Chennai,unanswerable,groq,False,0,76,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,1,NA,0,0,,,"I don’t have a record for Chennai at 9 am on 3 March 2019 in the data set. The live feed and stored readings only cover the most recent snapshot (2026‑09‑27) and the historical API is not accessible from here. If you need that specific timestamp, you can try the `/api/v1/history/Chennai` endpoint on the live site or check the CPCB archives directly."
+Bengaluru-Q1,Bengaluru,value,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,1,1,NA,NA,NA,NA,1,0,0,,,"The latest stored reading for Bengaluru (as of 2026‑09‑27 19:14:17 UTC) is **AQI 52** – “Satisfactory”.  
+This value is from the database snapshot and not a live feed, so it reflects the air quality at that time."
+Bengaluru-Q2,Bengaluru,category,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,NA,NA,NA,NA,1,1,0,this value is from the stored snapshot and may be a few hours old.,Same false age claim: the reading is about 15 days old.,"Bengaluru’s latest stored CPCB reading (as of 2026‑09‑27 19:14:17) is **52 AQI**, which falls in the **“Satisfactory”** category (51–100 AQI).  
+Since the live feed is currently unavailable, this value is from the stored snapshot and may be a few hours old."
+Bengaluru-Q3,Bengaluru,advice,groq,False,1,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,1,1,NA,NA,NA,0,0,0,,staleness_disclosed=0: heading calls the stored value 'Current (stored) AQI'.,"**Bengaluru – Current (stored) AQI**  
+- AQI = 52 (Satisfactory) – 7 stations (data stored 2026‑09‑27 19:14:17 UTC)
+
+### What this means for someone with asthma
+| AQI range | Category | Typical health advice |
+|-----------|----------|-----------------------|
+| 0–50 | Good | Safe for outdoor activity; minimal risk. |
+| 51–100 | Satisfactory | Generally safe, but people with asthma may feel mild symptoms. |
+| 101–200 | Moderate | Increased risk of asthma symptoms; consider indoor exercise. |
+| 201–300 | Poor | Strongly advised to stay indoors. |
+| 301–400 | Very Poor | Avoid outdoor activity. |
+| 401–500 | Severe | Stay indoors, use air‑purifier. |
+
+**Your situation (Bengaluru, AQI 52)**  
+- The air quality is in the *Satisfactory* band.  
+- It’s generally considered safe for outdoor exercise, but you may notice:
+  - Slight increase in shortness of breath or wheeze for sensitive individuals.
+  - A higher chance of needing rescue inhaler use during or after the run.
+
+### Practical tips if you decide to run
+- **Time of day**: Early morning (before 8 am) usually has the lowest PM2.5 levels.
+- **Duration**: Keep the run moderate (≤ 30 min) and monitor how you feel.
+- **Equipment**: Use a rescue inhaler before you start.  
+- **Hydration**: Drink water before, during, and after the run.
+- **Listen to your body**: If you feel chest tightness, shortness of breath, or wheezing, stop immediately and use your inhaler.
+- **Alternative**: If you’re uncertain, consider indoor cardio (treadmill, elliptical) or a low‑intensity walk.
+
+### Bottom line
+- **Yes, it is generally safe** to go for a run outside today, but stay alert to any asthma symptoms and have your inhaler handy. If you experience any discomfort, cut the run short and seek medical advice."
+Bengaluru-Q4,Bengaluru,pollutant,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,NA,1,0,0,,,"I don’t have the real‑time pollutant breakdown for Bengaluru at the moment.  
+The only data available right now is the stored reading from 2026‑09‑27 19:14:17 UTC:
+
+- **Bengaluru:** 52 AQI (Satisfactory) – 7 stations
+
+Because the live feed is down, I can’t tell which individual pollutant (PM₂.₅, PM₁₀, NO₂, etc.) is contributing most to that AQI value. If you need the latest pollutant‑level details, you can try refreshing the page later or check the “/history” endpoint for Bengaluru to see recent trends."
+Bengaluru-Q5,Bengaluru,accuracy,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,0,NA,NA,1,0,the model is **within a few AQI units** of the CPCB calculation for most days ... works well for day-ahead forecasts,"Misreads the MAE-difference CI (-2.2, -4.7 to +0.3) as a prediction gap; the model estimates same-day AQI, not forecasts. accuracy_claim_ok=0 (strict): quotes RMSE 22.5.","**Model performance (production XGBoost)**  
+
+| Metric | Value | What it means |
+|--------|-------|---------------|
+| R² (temporal test 2015‑2018 → 2019 → Jan‑Jul 2020) | **0.898** | Explains ~90 % of the variation in the AQI that the model predicts from the same‑day pollutant readings. |
+| MAE (Mean Absolute Error) | **15.8 AQI points** | On average the prediction differs from the official CPCB value by about 16 AQI units. |
+| RMSE (Root‑Mean‑Square Error) | **22.5 AQI points** | Indicates the spread of prediction errors; larger than MAE because extreme errors are penalised more. |
+
+**Why these numbers are realistic**
+
+* The test set was **temporal** – training on 2015‑2018, tuning on 2019, and testing on 2020 data that the model never saw.  
+* The model uses the same 12 features (PM₂.₅, PM₁₀, NO, NO₂, NOₓ, NH₃, CO, SO₂, O₃, month, year, season code) that the live API provides.  
+* The MAE of ~16 AQI points is comparable to the difference between the model’s prediction and the official CPCB formula (≈ –2.2 points on average, 95 % CI –4.7 to +0.3). In practice, that means the model is **within a few AQI units** of the CPCB calculation for most days.
+
+**What you can expect in practice**
+
+* For a city with a live AQI of 100, the model’s prediction will likely fall between **84 and 116** (± 16 points).  
+* When the AQI is very high (≥ 250) or very low (≤ 30), the error can be a bit larger because extreme values are harder to predict.  
+* The model is **not** a perfect replica of the CPCB algorithm; it is a fast, data‑driven approximation that works well for day‑ahead forecasts and for cities with multiple stations.
+
+Feel free to ask if you’d like to see how a specific city’s prediction compares to its live reading!"
+Bengaluru-Q6,Bengaluru,unanswerable,groq,False,0,52,Satisfactory,snapshot,2026-09-27T19:14:17.937356+00:00,NA,NA,NA,NA,NA,1,NA,0,0,,,"I don’t have any recorded AQI value for Bengaluru at 9 am on 3 March 2019. The dataset we use for the chatbot contains only the live or last‑stored readings that are injected into the conversation, and that snapshot does not include historical hourly values. If you need that specific historical figure, you can query the public CPCB archive or use the /api/v1/history/{city} endpoint for Bengaluru."

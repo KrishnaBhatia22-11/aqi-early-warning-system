@@ -1,0 +1,26 @@
+{
+  "protocol": "research/assistant_eval/PROTOCOL.md",
+  "git_commit": "ee1665cc2ef019af057308be81614446a756a0f9",
+  "deployed_commit_claimed": "35d1345fa6c89c742dc804bbe766bce91ab71fa5",
+  "deployed_commit_note": "35d1345f (fix: openai/gpt-oss-20b) was pushed 2026-10-12; Render redeployed it. Independently observed Live via a smoke test (not a protocol question) POST /api/v1/chat 'Hello, what can you help me with?' which returned source 'groq' with a non-empty reply, whereas the same endpoint returned the model_not_found error for llama-3.1-8b-instant before the redeploy. The Render deploy log/commit hash itself was not inspected.",
+  "api_url": "https://aqi-api-y2qs.onrender.com",
+  "model_settings_from_code": {
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.6,
+    "reasoning_effort": "low",
+    "max_completion_tokens": 2048
+  },
+  "python": "3.13.3",
+  "utc_start": "2026-10-12T16:50:38.124282+00:00",
+  "utc_end": "2026-10-12T17:34:07.443461+00:00",
+  "questions_asked": 30,
+  "output_file_sha256": {
+    "ground_truth.jsonl": "f949229605094fce7db9b22af94a59dba6e120f93b28d58925a8b918832c0743",
+    "raw_answers.jsonl": "916226dcd3d65fbde58dbcd0aacad735aad009eaf1ea0f6c7e290ecf8397907d"
+  },
+  "protocol_file_sha256": {
+    "PROTOCOL.md": "9599be0c9cd3895ef8c276cc165259d73ba51960a2eed03bf93698d75848cd61",
+    "questions.json": "c0940697f49b14245bcda003083adfcf7bd387fc78dfb4dea4eb49f6ca2ae74c",
+    "preflight.json": "d2d0128fa4efef66f4befd27ea63fe9e3bd1f0471894bc5cf9115f2f202130e4"
+  }
+}

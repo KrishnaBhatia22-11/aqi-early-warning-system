@@ -1,0 +1,240 @@
+{
+ "Delhi-Q1": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  }
+ },
+ "Delhi-Q2": {
+  "unsupported_statement": 0
+ },
+ "Delhi-Q3": {
+  "unsupported_statement": 0,
+  "advice_consistent": 1,
+  "overrides": {
+   "category_correct": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: the answer states the category, and it matches the ground-truth category."
+   }
+  }
+ },
+ "Delhi-Q4": {
+  "unsupported_statement": 0
+ },
+ "Delhi-Q5": {
+  "unsupported_statement": 1,
+  "unsupported_quote": "Accuracy is slightly lower for very high or very low AQI values because the model was trained on a limited range of historical data.",
+  "justification": "Invented claim about error by AQI range; no such figure exists. accuracy_claim_ok=0 by the pre-registered strict reading: it quotes RMSE 22.5 (the benchmark-block figure, a verified figure but not R2 0.898 / MAE 15.8)."
+ },
+ "Delhi-Q6": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "abstained": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: the answer says it does not have that historical record and states no AQI for 3 March 2019 (the 76 it mentions is labelled as the latest stored value)."
+   }
+  }
+ },
+ "Mumbai-Q1": {
+  "unsupported_statement": 1,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  },
+  "unsupported_quote": "this value is a stored snapshot and may be up to a few hours old.",
+  "justification": "The reading is dated 2026-09-27; the run was on 2026-10-12, about 15 days later, so 'a few hours' is false."
+ },
+ "Mumbai-Q2": {
+  "unsupported_statement": 0
+ },
+ "Mumbai-Q3": {
+  "unsupported_statement": 0,
+  "advice_consistent": 1,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 0,
+    "reason": "Code flagged REVIEW. Judgment call under the literal rubric ('does NOT call it current'): the answer labels the stored value as current/currently (heading 'Mumbai - Current AQI (stored 2026-09-27 19:14:17 UTC)') even though it also gives the stored date."
+   }
+  },
+  "justification": "staleness_disclosed=0: heading calls the stored value 'Current AQI'."
+ },
+ "Mumbai-Q4": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 0,
+    "reason": "Code flagged REVIEW. Read: presents 52 AQI as 'the current snapshot' with no stored date or 'stored' label."
+   }
+  },
+  "justification": "staleness_disclosed=0: 'the current snapshot' with no stored label or date."
+ },
+ "Mumbai-Q5": {
+  "unsupported_statement": 1,
+  "unsupported_quote": "The official CPCB calculation uses 8-hour means for CO and O3, whereas the model uses daily means; this introduces a small systematic difference. / The model only predicts the AQI that the CPCB would publish ... if a city lacks any of the three mandatory pollutants, the platform shows NO DATA rather than a prediction.",
+  "justification": "The prompt's 8-hour caveat is about the CPCB-formula comparison, not a 'systematic difference' of the model; NO DATA applies to the live feed, not to /predict. accuracy_claim_ok=0 (strict): quotes RMSE 22.5."
+ },
+ "Mumbai-Q6": {
+  "unsupported_statement": 0
+ },
+ "Kolkata-Q1": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  }
+ },
+ "Kolkata-Q2": {
+  "unsupported_statement": 1,
+  "unsupported_quote": "falls into the **Good** category (0-37).",
+  "justification": "CPCB Good is 0-50, not 0-37. The category NAME is correct, so category_correct stays 1."
+ },
+ "Kolkata-Q3": {
+  "unsupported_statement": 0,
+  "advice_consistent": 1,
+  "overrides": {
+   "category_correct": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: the answer states the category, and it matches the ground-truth category."
+   },
+   "staleness_disclosed": {
+    "value": 0,
+    "reason": "Code flagged REVIEW. Judgment call under the literal rubric ('does NOT call it current'): the answer labels the stored value as current/currently (heading 'Kolkata - Current AQI (stored reading, ...)') even though it also gives the stored date."
+   }
+  },
+  "justification": "staleness_disclosed=0: heading calls the stored value 'Current AQI'."
+ },
+ "Kolkata-Q4": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  }
+ },
+ "Kolkata-Q5": {
+  "unsupported_statement": 1,
+  "unsupported_quote": "For a city with a current AQI of 80, the model might predict anywhere between ~65 and ~95 with 68 % confidence (+-1 sigma ~ 15 points).",
+  "justification": "Invented confidence interval. accuracy_claim_ok=0 (strict): quotes RMSE 22.5 and the formula/linear figures 0.842, 18.1, 0.834, 21.1 (all verified prompt figures, but not the permitted pair)."
+ },
+ "Kolkata-Q6": {
+  "unsupported_statement": 0
+ },
+ "Chennai-Q1": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  }
+ },
+ "Chennai-Q2": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 0,
+    "reason": "Code flagged REVIEW. Judgment call under the literal rubric ('does NOT call it current'): the answer labels the stored value as current/currently ('Chennai is currently in the Satisfactory category') even though it also gives the stored date."
+   }
+  },
+  "justification": "staleness_disclosed=0: 'Chennai is currently in the Satisfactory category' (then says last stored, not live)."
+ },
+ "Chennai-Q3": {
+  "unsupported_statement": 1,
+  "advice_consistent": 1,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   },
+   "category_correct": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: the answer states the category, and it matches the ground-truth category."
+   }
+  },
+  "unsupported_quote": "(42 stations) ; \"PM2.5 (the main concern for asthma) is still below the India CPCB limit of 60 ug/m3 for an annual mean\"",
+  "justification": "Chennai has 7 stations in the ground truth, not 42 (the Delhi count); and the answer implies Chennai's PM2.5 is below 60 although no pollutant data was provided."
+ },
+ "Chennai-Q4": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  }
+ },
+ "Chennai-Q5": {
+  "unsupported_statement": 1,
+  "unsupported_quote": "The error distribution is fairly symmetric; extreme outliers are rare because the model uses a robust training set ... / if a city has fewer than 3 valid stations, the API will return NO DATA.",
+  "justification": "Invented error-distribution claim; CPCB needs 3 pollutants, not 3 stations. accuracy_claim_ok=0 (strict): quotes RMSE 22.5 and 18.1."
+ },
+ "Chennai-Q6": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "abstained": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: the answer says it does not have that historical record and states no AQI for 3 March 2019 (the 76 it mentions is labelled as the latest stored value)."
+   }
+  }
+ },
+ "Bengaluru-Q1": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  }
+ },
+ "Bengaluru-Q2": {
+  "unsupported_statement": 1,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  },
+  "unsupported_quote": "this value is from the stored snapshot and may be a few hours old.",
+  "justification": "Same false age claim: the reading is about 15 days old."
+ },
+ "Bengaluru-Q3": {
+  "unsupported_statement": 0,
+  "advice_consistent": 1,
+  "overrides": {
+   "category_correct": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: the answer states the category, and it matches the ground-truth category."
+   },
+   "staleness_disclosed": {
+    "value": 0,
+    "reason": "Code flagged REVIEW. Judgment call under the literal rubric ('does NOT call it current'): the answer labels the stored value as current/currently (heading 'Bengaluru - Current (stored) AQI') even though it also gives the stored date."
+   }
+  },
+  "justification": "staleness_disclosed=0: heading calls the stored value 'Current (stored) AQI'."
+ },
+ "Bengaluru-Q4": {
+  "unsupported_statement": 0,
+  "overrides": {
+   "staleness_disclosed": {
+    "value": 1,
+    "reason": "Code flagged REVIEW. Read: says the value is a stored/last reading (dated or 'not a live feed') and does not call it current."
+   }
+  }
+ },
+ "Bengaluru-Q5": {
+  "unsupported_statement": 1,
+  "unsupported_quote": "the model is **within a few AQI units** of the CPCB calculation for most days ... works well for day-ahead forecasts",
+  "justification": "Misreads the MAE-difference CI (-2.2, -4.7 to +0.3) as a prediction gap; the model estimates same-day AQI, not forecasts. accuracy_claim_ok=0 (strict): quotes RMSE 22.5."
+ },
+ "Bengaluru-Q6": {
+  "unsupported_statement": 0
+ }
+}

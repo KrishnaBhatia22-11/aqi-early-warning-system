@@ -1,0 +1,13 @@
+{
+  "scoring_output_file_sha256": {
+    "manual_scores.json": "443c69a0001b48be81779eabaef0140b300b51258097e26121c754e9c5b4906b",
+    "scores.csv": "5188b1ab62746bf16a1062cb9cb5ab814f4c37e4fedf023e496e3304b44cbb4e",
+    "scores_auto.csv": "9a59e2c08614fd2f6975395e36c07a8a1c1f18330815d1aa9d1b5b0d69687650",
+    "SUMMARY.md": "19893b8eb1e59e50e854551120064c25cf189226072a883b27b1377f8b3cd1d2"
+  },
+  "run_files_sha256_at_scoring": {
+    "ground_truth.jsonl": "f949229605094fce7db9b22af94a59dba6e120f93b28d58925a8b918832c0743",
+    "raw_answers.jsonl": "916226dcd3d65fbde58dbcd0aacad735aad009eaf1ea0f6c7e290ecf8397907d",
+    "run_record.json": "5cbafe9470686c5162f0936e3d97eea9554063192859112830b5eddc8fd46294"
+  }
+}
