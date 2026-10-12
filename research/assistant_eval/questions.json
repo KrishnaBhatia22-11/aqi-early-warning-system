@@ -1,6 +1,6 @@
 {
-  "deployed_commit_claimed": "974dbb32bff0e35c45a62417e51566b41a5c682f",
-  "deployed_commit_note": "974dbb32 is stated by the project owner to be Live on Render. Independently observed before the run: the deployed /api/v1/cities response contains the data_mode / as_of fields introduced in that commit. Not otherwise verified.",
+  "deployed_commit_claimed": "35d1345fa6c89c742dc804bbe766bce91ab71fa5",
+  "deployed_commit_note": "35d1345f (fix: openai/gpt-oss-20b) was pushed 2026-10-12; Render redeployed it. Independently observed Live via a smoke test (not a protocol question) POST /api/v1/chat 'Hello, what can you help me with?' which returned source 'groq' with a non-empty reply, whereas the same endpoint returned the model_not_found error for llama-3.1-8b-instant before the redeploy. The Render deploy log/commit hash itself was not inspected.",
   "data_mode_at_preflight": "snapshot",
   "as_of_latest_at_preflight": "2026-09-27T19:14:17.937356+00:00",
   "cities": [

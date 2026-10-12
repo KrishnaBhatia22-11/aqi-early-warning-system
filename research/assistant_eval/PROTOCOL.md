@@ -73,3 +73,17 @@ Immediately before each call, `GET /api/v1/cities` is fetched and that city's AQ
 ## Outputs (`research/assistant_eval/results/<UTC timestamp>/`)
 `raw_answers.jsonl`, `ground_truth.jsonl`, `run_record.json` (commit, UTC start/end, API URL, model and temperature read from code, Python version, SHA-256 of every output file),
 then `scores.csv`, `SUMMARY.md` and `scoring_record.json` (hashes of the scoring outputs).
+
+## Amendment 2 (model migration; committed before any protocol question of the new run)
+1. **Model changed.** The assistant is now Groq `openai/gpt-oss-20b` (a reasoning model) with `reasoning_effort="low"`, `max_completion_tokens=2048` and temperature 0.6,
+   replacing `llama-3.1-8b-instant`, which the provider retired on 2026-08-16 (Groq's deprecation page names `openai/gpt-oss-20b` as the replacement). Only `message.content`
+   (the final answer) is returned by the endpoint. The settings are read from `api/routes/chat.py` and recorded in `run_record.json` (`run_eval.py` now parses the `GROQ_MODEL`
+   constant, `reasoning_effort` and the token limit).
+2. **Deployed commit claimed: `35d1345f`** (`fix(chat): migrate from retired llama-3.1-8b-instant to openai/gpt-oss-20b`). Observed Live via a smoke test, `POST /api/v1/chat` with
+   "Hello, what can you help me with?" (not one of the 30 protocol questions), which returned `source = "groq"` with a non-empty reply; the same endpoint had returned
+   `model_not_found` for the old model before the redeploy. The Render deploy record itself was not inspected. The runner-only commit that follows it (`6f6496d7`) changes no app code.
+3. **Aborted attempt disclosed.** An earlier attempt (`results/20261012T152648Z`, recorded in commit `382f4491`) asked Delhi Q1-Q3 once each while the assistant returned
+   `source = "error"` (HTTP 404 model_not_found). Nothing from it is scored or reused; those three questions are asked again in the new run.
+4. **New run, new results folder.** Preflight was re-run (snapshot mode, 45 cities with a value, same five cities, no replacements); `preflight.json` and `questions.json` were updated
+   (deployed commit, note). Everything else is unchanged: cities, wordings, order, 7 s spacing, retry rules, rubric (including `staleness_disclosed`), and the Q4 and Q6 rules.
+   Note that a reasoning model's answers may differ in style from the old model's; that is a property of the new target, not a protocol change.
