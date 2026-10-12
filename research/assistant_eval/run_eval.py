@@ -36,10 +36,14 @@ def assert_protocol_frozen() -> None:
 
 def model_settings() -> dict:
     code = (c.ROOT / "api" / "routes" / "chat.py").read_text(encoding="utf-8")
-    model = re.search(r'model="([^"]+)"', code)
+    model = re.search(r'GROQ_MODEL\s*=\s*os\.environ\.get\("GROQ_MODEL",\s*"([^"]+)"\)', code)
     temperature = re.search(r"temperature=([0-9.]+)", code)
+    effort = re.search(r'reasoning_effort="([^"]+)"', code)
+    max_tokens = re.search(r"max_(?:completion_)?tokens=([0-9]+)", code)
     return {"model": model.group(1) if model else None,
-            "temperature": float(temperature.group(1)) if temperature else None}
+            "temperature": float(temperature.group(1)) if temperature else None,
+            "reasoning_effort": effort.group(1) if effort else None,
+            "max_completion_tokens": int(max_tokens.group(1)) if max_tokens else None}
 
 
 def ground_truth(city: str) -> dict:
