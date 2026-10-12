@@ -13,7 +13,7 @@ export default function StatusBar({ apiOnline }) {
         <span className="sb-dot" style={{ background: apiOnline ? "#34d27a" : "#ef3a4d" }}></span>
         {apiOnline ? `LAST SYNC: ${t}s AGO` : "API OFFLINE"}
       </span>
-      <span className="sb-item">XGBOOST R²=0.932</span>
+      <span className="sb-item">XGBOOST R² 0.898 (2020 TEST)</span>
       <span className="sb-item">10 LIVE STATIONS</span>
       <span className="sb-item">DATA: 2015–2020</span>
       <span className="sb-item">BUILD v2.1</span>

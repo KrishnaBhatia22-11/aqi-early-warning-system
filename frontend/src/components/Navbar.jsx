@@ -233,7 +233,7 @@ export default function Navbar({ page, setPage, apiOnline, a11y, setA11y, cities
                 <span className="nsp-dot" />
                 10 LIVE
               </span>
-              <span className="nav-status-pill">R²=0.932</span>
+              <span className="nav-status-pill">R² 0.898 (2020 test)</span>
               <span className="nav-status-pill">BUILD v2.1</span>
             </div>
           </nav>

@@ -6,7 +6,7 @@ const ENDPOINTS = [
     method: "GET",
     path: "/health",
     desc: "Check if the API is online and get model metadata.",
-    response: `{ "status": "healthy", "model": "xgboost", "r2": 0.932 }`,
+    response: `{ "status": "ok", "timestamp": "2026-01-01T00:00:00+00:00" }`,
   },
   {
     method: "GET",

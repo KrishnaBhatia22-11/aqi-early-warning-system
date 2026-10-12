@@ -1,53 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { fetchModels } from "../utils/api";
 
-// ── Hardcoded fallback — page never goes blank if API is unavailable
-const FALLBACK = {
-  models: [
-    {
-      name: "XGBoost", status: "PRODUCTION", r2: 0.932, mae: 21.33, rmse: 31.2,
-      train_time_seconds: 14, inference_ms: 1.8,
-      description: "Gradient boosted trees with L1/L2 regularization",
-      strengths: [
-        "Best R² at 0.932 — explains 93.2% of AQI variance",
-        "Handles missing pollutant readings without imputation",
-        "Fastest inference — under 2ms per prediction on Render",
-        "Native feature importance via SHAP values",
-      ],
-      color: "#22c55e",
-    },
-    {
-      name: "LightGBM", status: "CHALLENGER", r2: 0.918, mae: 23.1, rmse: 33.8,
-      train_time_seconds: 8, inference_ms: 1.2,
-      description: "Leaf-wise gradient boosting, faster training than XGBoost",
-      strengths: [
-        "Fastest training time at 8 seconds",
-        "Lower memory footprint during training",
-        "Strong performance on categorical features",
-      ],
-      color: "#f59e0b",
-    },
-    {
-      name: "Random Forest", status: "BASELINE", r2: 0.901, mae: 26.4, rmse: 38.1,
-      train_time_seconds: 41, inference_ms: 4.1,
-      description: "Ensemble of 100 independent decision trees",
-      strengths: [
-        "Most interpretable — easy to explain to non-technical users",
-        "Robust to outliers in training data",
-        "No hyperparameter sensitivity",
-      ],
-      color: "#6b7280",
-    },
-  ],
-  dataset: { name: "city_day.csv", rows: 29531, cities: 26, period: "2015–2020", features: 13, target: "AQI" },
-  winner: "XGBoost",
-  verdict: "XGBoost was chosen for production because it achieved the highest predictive accuracy (R²=0.932) while maintaining sub-2ms inference latency on Render's free tier — critical for a real-time public health application.",
-};
+// No hard-coded metrics here: everything shown comes from /models/comparison.
+// Metrics are null for models that were not re-evaluated; those render as text, never as 0 or a bar.
+const isNum = v => typeof v === "number" && Number.isFinite(v);
+const NOT_EVAL = "Not re-evaluated";
+const TEST_NOTE = "Temporal test, Jan-Jul 2020 (4,404 rows, 26 cities). Deployed file was not scored on this test.";
 
-// ── Animated count-up metric box
+// ── Animated count-up metric box (renders nothing when the value is not a number)
 function MetricBox({ label, value, decimals = 0, color, suffix = "" }) {
   const [cur, setCur] = useState(0);
   useEffect(() => {
+    if (!isNum(value)) return;
     const start = performance.now();
     const dur = 1100;
     let raf;
@@ -61,6 +25,7 @@ function MetricBox({ label, value, decimals = 0, color, suffix = "" }) {
     return () => cancelAnimationFrame(raf);
   }, [value]);
 
+  if (!isNum(value)) return null;
   const display = decimals > 0 ? cur.toFixed(decimals) : Math.round(cur);
   return (
     <div className="model-metric">
@@ -73,24 +38,18 @@ function MetricBox({ label, value, decimals = 0, color, suffix = "" }) {
 }
 
 // ── Model card
-const STATUS_CFG = {
-  PRODUCTION: { color: "#22c55e", pulse: true,  label: "PRODUCTION" },
-  CHALLENGER: { color: "#f59e0b", pulse: false, label: "CHALLENGER" },
-  BASELINE:   { color: "#6b7280", pulse: false, label: "BASELINE"   },
-};
-
-function r2Color(v) {
-  if (v > 0.92) return "#22c55e";
-  if (v > 0.90) return "#f59e0b";
-  return "#ef3a4d";
-}
+const PRODUCTION_STATUS = { color: "#22c55e", pulse: true, label: "PRODUCTION" };
 
 function ModelCard({ model, index }) {
-  const sc = STATUS_CFG[model.status] ?? STATUS_CFG.BASELINE;
-  const isWinner = model.status === "PRODUCTION";
+  const isProduction = model.status === "PRODUCTION";
+  const sc = isProduction
+    ? PRODUCTION_STATUS
+    : { color: "#6b7280", pulse: false, label: String(model.status ?? "").toUpperCase() };
+  const hasMetrics = isNum(model.r2) || isNum(model.mae) || isNum(model.rmse);
+  const strengths = model.strengths ?? [];
   return (
     <div
-      className={`model-card glass-strong ${isWinner ? "model-card-winner" : ""}`}
+      className={`model-card glass-strong ${isProduction ? "model-card-winner" : ""}`}
       style={{ animationDelay: `${index * 150}ms` }}
     >
       <div className="model-card-header">
@@ -111,23 +70,31 @@ function ModelCard({ model, index }) {
       </div>
 
       <div className="model-metrics">
-        <MetricBox label="R² SCORE"  value={model.r2}          decimals={3} color={r2Color(model.r2)} />
-        <MetricBox label="MAE (AQI)" value={model.mae}         decimals={2} color="rgba(255,255,255,0.85)" />
-        <MetricBox label="RMSE"      value={model.rmse}        decimals={1} color="rgba(255,255,255,0.85)" />
-        <MetricBox label="INFERENCE" value={model.inference_ms} decimals={1} color="rgba(255,255,255,0.85)" suffix="ms" />
+        {hasMetrics ? (
+          <>
+            <MetricBox label="R² SCORE"  value={model.r2}           decimals={3} color="rgba(255,255,255,0.9)" />
+            <MetricBox label="MAE (AQI)" value={model.mae}          decimals={1} color="rgba(255,255,255,0.85)" />
+            <MetricBox label="RMSE"      value={model.rmse}         decimals={1} color="rgba(255,255,255,0.85)" />
+            <MetricBox label="INFERENCE" value={model.inference_ms} decimals={1} color="rgba(255,255,255,0.85)" suffix="ms" />
+          </>
+        ) : (
+          <span className="mono model-metric-label">{NOT_EVAL}</span>
+        )}
       </div>
 
-      <div className="model-strengths">
-        <div className="mono model-strengths-title">STRENGTHS</div>
-        {model.strengths.map((s, i) => (
-          <div key={i} className="model-strength-item">{s}</div>
-        ))}
-      </div>
+      {strengths.length > 0 && (
+        <div className="model-strengths">
+          <div className="mono model-strengths-title">STRENGTHS</div>
+          {strengths.map((s, i) => (
+            <div key={i} className="model-strength-item">{s}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Horizontal bar chart (SVG, no libraries)
+// ── Horizontal bar chart (SVG, no libraries). Models without a numeric value get a text row and no bar.
 const BAR_W = 560, ML = 116, MR = 100, MT = 12, MB = 30;
 const PW = BAR_W - ML - MR; // 344
 
@@ -155,7 +122,9 @@ function BarChart({ models, metricKey, title, subtitle, minVal = 0, maxVal, grid
     const bh = BAR_H[i] ?? 28;
     const cy = yPos;
     yPos += bh + BAR_GAP;
-    return { m, bh, cy, fullW: ((m[metricKey] - minVal) / range) * PW };
+    const has = isNum(m[metricKey]);
+    const frac = has ? Math.min(1, Math.max(0, (m[metricKey] - minVal) / range)) : 0;
+    return { m, bh, cy, has, fullW: frac * PW };
   });
   const totalH = yPos - BAR_GAP + MB;
 
@@ -184,7 +153,7 @@ function BarChart({ models, metricKey, title, subtitle, minVal = 0, maxVal, grid
         })}
 
         {/* Bars */}
-        {bars.map(({ m, bh, cy, fullW }, i) => {
+        {bars.map(({ m, bh, cy, has, fullW }) => {
           const animW = Math.max(0, fullW * prog);
           const isW   = m.name === winner;
           return (
@@ -198,38 +167,50 @@ function BarChart({ models, metricKey, title, subtitle, minVal = 0, maxVal, grid
               >
                 {m.name}
               </text>
-              {/* Bar track (background) */}
-              <rect x={ML} y={cy} width={PW} height={bh} rx="5"
-                fill="rgba(255,255,255,0.03)" />
-              {/* Animated bar */}
-              <rect x={ML} y={cy} width={animW} height={bh} rx="5"
-                fill={m.color} opacity={isW ? 0.9 : 0.55} />
-              {/* Value label (appears when bar is mostly drawn) */}
-              {prog > 0.5 && (
+              {!has && (
                 <text
-                  x={ML + fullW + 8} y={cy + bh / 2 + 4}
-                  fontFamily="JetBrains Mono" fontSize="10"
-                  fill="rgba(255,255,255,0.6)"
+                  x={ML} y={cy + bh / 2 + 4}
+                  fontFamily="JetBrains Mono" fontSize="10" fill="rgba(255,255,255,0.4)"
                 >
-                  {m[metricKey]}
+                  {NOT_EVAL}
                 </text>
               )}
-              {/* WINNER badge — appears after animation finishes */}
-              {isW && prog > 0.92 && (
-                <g>
-                  <rect
-                    x={ML + fullW + 44} y={cy + bh / 2 - 9}
-                    width={52} height={18} rx="4"
-                    fill={m.color + "1a"} stroke={m.color + "66"} strokeWidth="1"
-                  />
-                  <text
-                    x={ML + fullW + 70} y={cy + bh / 2 + 5}
-                    textAnchor="middle" fontFamily="JetBrains Mono"
-                    fontSize="8" fontWeight="700" fill={m.color}
-                  >
-                    WINNER
-                  </text>
-                </g>
+              {has && (
+                <>
+                  {/* Bar track (background) */}
+                  <rect x={ML} y={cy} width={PW} height={bh} rx="5"
+                    fill="rgba(255,255,255,0.03)" />
+                  {/* Animated bar */}
+                  <rect x={ML} y={cy} width={animW} height={bh} rx="5"
+                    fill={m.color} opacity={isW ? 0.9 : 0.55} />
+                  {/* Value label (appears when bar is mostly drawn) */}
+                  {prog > 0.5 && (
+                    <text
+                      x={ML + fullW + 8} y={cy + bh / 2 + 4}
+                      fontFamily="JetBrains Mono" fontSize="10"
+                      fill="rgba(255,255,255,0.6)"
+                    >
+                      {m[metricKey]}
+                    </text>
+                  )}
+                  {/* Production badge, appears after animation finishes */}
+                  {isW && prog > 0.92 && (
+                    <g>
+                      <rect
+                        x={ML + fullW + 44} y={cy + bh / 2 - 9}
+                        width={52} height={18} rx="4"
+                        fill={m.color + "1a"} stroke={m.color + "66"} strokeWidth="1"
+                      />
+                      <text
+                        x={ML + fullW + 70} y={cy + bh / 2 + 5}
+                        textAnchor="middle" fontFamily="JetBrains Mono"
+                        fontSize="8" fontWeight="700" fill={m.color}
+                      >
+                        LIVE
+                      </text>
+                    </g>
+                  )}
+                </>
               )}
             </g>
           );
@@ -286,7 +267,7 @@ export default function ModelComparisonPage() {
   useEffect(() => {
     fetchModels()
       .then(setData)
-      .catch(() => setData(FALLBACK))
+      .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, []);
 
@@ -300,35 +281,50 @@ export default function ModelComparisonPage() {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [loading]);
+  }, [loading, data]);
 
   if (loading) return <SkeletonPage />;
 
-  const { models, dataset, winner, verdict } = data ?? FALLBACK;
+  if (!data || !Array.isArray(data.models)) {
+    return (
+      <div className="models-page">
+        <div className="models-hero">
+          <h1 className="display models-title">Model Intelligence</h1>
+          <p className="models-subtitle">Model evaluation data is temporarily unavailable.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { models, dataset, winner, verdict } = data;
+  const prod = models.find(m => m.name === winner) ?? models[0] ?? {};
 
   return (
     <div className="models-page">
 
       {/* ══ SECTION 1: Hero ══════════════════════════════════════════ */}
       <div className="models-hero">
-        <div className="mono models-eyebrow">ML BENCHMARK · PHASE 4 · MODEL INTELLIGENCE</div>
+        <div className="mono models-eyebrow">MODEL EVALUATION · MODEL INTELLIGENCE</div>
         <h1 className="display models-title">Model Intelligence</h1>
         <p className="models-subtitle">
-          How we chose the engine behind every AQI prediction.
+          How the model behind the AQI predictions performs on data it has not seen.
         </p>
-        <div className="models-stat-pills">
-          {[
-            { icon: "📊", text: `${dataset.rows.toLocaleString()} training rows` },
-            { icon: "🏙",  text: `${dataset.cities} Indian cities`               },
-            { icon: "📅", text: `${dataset.period} dataset`                      },
-            { icon: "🔢", text: `${dataset.features} input features`             },
-          ].map(p => (
-            <div key={p.text} className="models-stat-pill">
-              <span>{p.icon}</span>
-              <span className="mono">{p.text}</span>
-            </div>
-          ))}
-        </div>
+        <p className="mono models-subtitle">{TEST_NOTE}</p>
+        {dataset && (
+          <div className="models-stat-pills">
+            {[
+              { icon: "📊", text: `${dataset.rows.toLocaleString()} rows with recorded AQI` },
+              { icon: "🏙",  text: `${dataset.cities} Indian cities`                         },
+              { icon: "📅", text: `${dataset.period} dataset`                                },
+              { icon: "🔢", text: `${dataset.features} input features`                       },
+            ].map(p => (
+              <div key={p.text} className="models-stat-pill">
+                <span>{p.icon}</span>
+                <span className="mono">{p.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ══ SECTION 2: Model Cards ════════════════════════════════════ */}
@@ -346,7 +342,7 @@ export default function ModelComparisonPage() {
           <BarChart
             models={models}
             metricKey="r2"
-            title="Accuracy (R² Score)"
+            title="R² Score (temporal 2020 test)"
             subtitle="HIGHER IS BETTER · MAX = 1.0 · RANGE STARTS AT 0.85"
             minVal={0.85}
             maxVal={1.00}
@@ -375,17 +371,17 @@ export default function ModelComparisonPage() {
           <ExplainerCard
             icon="🎯"
             title="R² Score"
-            body="Measures how much of AQI variance the model explains. 1.0 = perfect prediction. 0.0 = no better than guessing the mean. Our XGBoost explains 93.2% of variance across 29,531 real Indian city readings."
+            body={`Measures how much of AQI variance the model explains. 1.0 = perfect prediction. 0.0 = no better than guessing the mean.${isNum(prod.r2) ? ` ${prod.name} scored ${prod.r2} on the temporal test.` : ""}`}
           />
           <ExplainerCard
             icon="📏"
             title="MAE — Mean Absolute Error"
-            body="Average difference between predicted and actual AQI in real units. XGBoost is off by 21 AQI points on average. That's the difference between 'Moderate' and 'Poor' — we stay within one category 90% of the time."
+            body={`Average difference between predicted and actual AQI in real units.${isNum(prod.mae) ? ` ${prod.name} is off by about ${prod.mae} AQI points on average on the temporal test.` : ""}`}
           />
           <ExplainerCard
             icon="〰"
             title="RMSE — Root Mean Square Error"
-            body="Like MAE but penalises large errors more heavily. A model that's occasionally very wrong scores badly here. XGBoost RMSE of 31.2 confirms it rarely makes catastrophic mispredictions — critical for a public health tool."
+            body={`Like MAE but penalises large errors more heavily.${isNum(prod.rmse) ? ` ${prod.name} RMSE on the temporal test was ${prod.rmse}.` : ""}`}
           />
         </div>
       </section>
@@ -394,26 +390,22 @@ export default function ModelComparisonPage() {
       <section className="models-section models-verdict-section">
         <div className="mono models-section-label">PRODUCTION DECISION</div>
         <div className="verdict-panel glass-strong">
-          <h2 className="verdict-title">Why XGBoost is in Production</h2>
-          <blockquote className="verdict-blockquote">"{verdict}"</blockquote>
+          <h2 className="verdict-title">Where the production model stands</h2>
+          {verdict && <blockquote className="verdict-blockquote">"{verdict}"</blockquote>}
 
           <div className="verdict-reasons">
             {[
               {
-                icon: "🎯", title: "Highest Accuracy",
-                body: "R²=0.932 — beats LightGBM by 1.4 percentage points and Random Forest by 3.1%. On a dataset of 29,531 rows that margin is statistically decisive.",
-              },
-              {
-                icon: "⚡", title: "Fastest Inference",
-                body: "1.8ms per prediction on Render free tier. LightGBM trains faster, but XGBoost wins at runtime where latency directly affects the user experience.",
+                icon: "🧪", title: "Tested on future data",
+                body: "Trained on 2015–2018, tuned on 2019, tested on Jan–Jul 2020. An earlier random-split score is not used because it lets neighbouring days leak between train and test.",
               },
               {
                 icon: "🧩", title: "Missing Value Tolerance",
-                body: "Real-world AQI sensors fail constantly. XGBoost handles NaN inputs natively without imputation — critical when live Indian city data has gaps.",
+                body: "Real-world AQI sensors fail constantly. XGBoost handles NaN inputs natively without imputation, though accuracy drops when PM2.5 or PM10 is missing.",
               },
               {
                 icon: "🔍", title: "SHAP Explainability",
-                body: "Native SHAP integration means every prediction shows why PM2.5, NO2, or O3 drove the result. This is what powers the Predict page's feature chart.",
+                body: "Native SHAP integration means every prediction shows which pollutants drove the result. This is what powers the Predict page's feature chart.",
               },
             ].map(r => (
               <div key={r.title} className="verdict-reason">
@@ -425,9 +417,8 @@ export default function ModelComparisonPage() {
           </div>
 
           <p className="mono verdict-footer">
-            All models trained on {dataset.name} — {dataset.rows.toLocaleString()} rows,&nbsp;
-            {dataset.cities} Indian cities, {dataset.period}.&nbsp;
-            Benchmarks measured on 20% holdout test set. No data leakage.
+            {TEST_NOTE}
+            {dataset && <>&nbsp;Data: {dataset.name}, {dataset.period}.</>}
           </p>
         </div>
       </section>

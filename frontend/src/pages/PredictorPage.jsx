@@ -64,7 +64,7 @@ export default function PredictorPage() {
   return (
     <div className="predict-page">
       <div className="predict-hero">
-        <div className="mono predict-eyebrow">ML PREDICTION ENGINE · XGBOOST R²=0.932</div>
+        <div className="mono predict-eyebrow">ML PREDICTION ENGINE · XGBOOST · R² 0.898 (TEMPORAL 2020 TEST)</div>
         <h1 className="display predict-title">AQI Predictor</h1>
         <p className="predict-sub">Drag the dials to set pollutant levels. Our model predicts the AQI in real time.</p>
       </div>

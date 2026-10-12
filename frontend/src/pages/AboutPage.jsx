@@ -5,8 +5,8 @@ export default function AboutPage() {
     { n: "10",    l: "Live Stations" },
     { n: "26",    l: "Cities in ML Dataset" },
     { n: "9",     l: "Pollutants Tracked" },
-    { n: "0.932", l: "Model R² Score" },
-    { n: "21.33", l: "MAE (AQI Units)" },
+    { n: "0.898", l: "R² (temporal 2020 test)" },
+    { n: "15.8",  l: "MAE (AQI pts, 2020 test)" },
     { n: "6 yrs", l: "Training Data" },
     { n: "29,531",l: "Dataset Rows" },
     { n: "Free",  l: "Forever" },
@@ -59,8 +59,8 @@ export default function AboutPage() {
             <h2 className="about-section-title">XGBoost + CPCB data</h2>
             <p>
               We trained an XGBoost model on 6 years of Central Pollution Control Board (CPCB) data
-              (2015–2020) covering 9 pollutants across 26 cities (29,531 rows). The model achieves
-              R²=0.932 — explaining 93.2% of AQI variance. SHAP values make every prediction explainable.
+              (2015–2020) covering 9 pollutants across 26 cities (29,531 rows). On a temporal test
+              (train 2015–2018, tune 2019, test Jan–Jul 2020) it reaches R² 0.898 and MAE 15.8 AQI points. SHAP values make every prediction explainable.
             </p>
           </div>
           <div className="glass-strong about-story-card">
@@ -128,7 +128,7 @@ export default function AboutPage() {
               built, and deployed by one person. Built in Faridabad. Free forever.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "16px 0" }}>
-              {["XGBoost R²=0.932", "53 Indian Cities", "NASA FIRMS Satellite", "2600+ Real DB Readings", "Free Forever"].map(pill => (
+              {["XGBoost R² 0.898 (2020 test)", "53 Indian Cities", "NASA FIRMS Satellite", "2600+ Real DB Readings", "Free Forever"].map(pill => (
                 <span key={pill} style={{
                   border: "1px solid #f97316", color: "#f97316",
                   borderRadius: 20, padding: "4px 14px",
@@ -192,10 +192,10 @@ export default function AboutPage() {
             <div className="mc-row"><span className="mono mc-key">DATASET ROWS</span><span className="mc-val">29,531</span></div>
             <div className="mc-row"><span className="mono mc-key">ML CITIES</span><span className="mc-val">26</span></div>
             <div className="mc-row"><span className="mono mc-key">LIVE STATIONS</span><span className="mc-val">10</span></div>
-            <div className="mc-row"><span className="mono mc-key">FEATURES</span><span className="mc-val">PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3</span></div>
+            <div className="mc-row"><span className="mono mc-key">FEATURES</span><span className="mc-val">PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Month, Year, Season_Code</span></div>
             <div className="mc-row"><span className="mono mc-key">TARGET</span><span className="mc-val">AQI (continuous, 0–500)</span></div>
-            <div className="mc-row"><span className="mono mc-key">R² SCORE</span><span className="mc-val" style={{ color: "#34d27a" }}>0.932</span></div>
-            <div className="mc-row"><span className="mono mc-key">MAE</span><span className="mc-val">21.33 AQI units</span></div>
+            <div className="mc-row"><span className="mono mc-key">R² SCORE</span><span className="mc-val" style={{ color: "#34d27a" }}>0.898 (temporal 2020 test)</span></div>
+            <div className="mc-row"><span className="mono mc-key">MAE</span><span className="mc-val">15.8 AQI units (temporal 2020 test)</span></div>
             <div className="mc-row"><span className="mono mc-key">EXPLAINABILITY</span><span className="mc-val">SHAP (TreeExplainer)</span></div>
             <div className="mc-row"><span className="mono mc-key">TRACKING</span><span className="mc-val">MLflow</span></div>
           </div>

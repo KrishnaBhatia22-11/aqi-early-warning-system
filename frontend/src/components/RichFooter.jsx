@@ -93,7 +93,7 @@ export default function RichFooter({ setPage }) {
 
       {/* Bottom bar */}
       <div className="rfb-bottom">
-        <span className="mono">MODEL: XGBoost R²=0.932 · DATA: CPCB 2015–2020 · MAE 21.33</span>
+        <span className="mono">MODEL: XGBoost R² 0.898 (temporal 2020 test) · DATA: CPCB 2015–2020</span>
         <span className="rfb-bottom-center">
           Made by Krishna Bhatia ·{" "}
           <a href="mailto:krishnabhatia09@gmail.com" className="rfb-bottom-email">
