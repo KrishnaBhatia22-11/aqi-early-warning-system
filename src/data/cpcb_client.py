@@ -32,6 +32,7 @@ is deliberately identical to waqi_client's, because /city, /cities, /compare,
 
 import math
 import os
+import re
 import sys
 import time
 import threading
@@ -39,7 +40,12 @@ import requests
 from datetime import datetime, timedelta, timezone
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from config.settings import DATA_GOV_API_KEY, CITY_COORDS
+from config.settings import (
+    DATA_GOV_API_KEY,
+    CPCB_RELAY_URL,
+    CPCB_RELAY_TOKEN,
+    CITY_COORDS,
+)
 from src.data.india_aqi import (
     AQI_STANDARD,
     AQI_MAX,
@@ -230,18 +236,47 @@ def _candidates(app_city):
 # Fetch
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _get_page(offset, limit=_PAGE_LIMIT):
-    """One page of the resource. Returns the decoded body, or None."""
+def _use_relay():
+    """True when pulls go through the India relay instead of data.gov.in directly."""
+    return bool(CPCB_RELAY_URL)
+
+
+def _redact(text):
+    """Strip the data.gov.in key out of anything about to be logged.
+
+    requests puts the full URL, query string included, into its exception
+    messages, so a failed direct pull used to print the API key into the logs.
+    """
+    return re.sub(r"(api-key=)[^&\s'\"]+", r"\1***", str(text))
+
+
+def _request_for(offset, limit):
+    """(url, params, headers) for one page, direct or through the relay.
+
+    Through the relay the key never leaves Vercel: the backend sends only the
+    page window and the shared relay token.
+    """
+    if _use_relay():
+        headers = dict(_HEADERS)
+        if CPCB_RELAY_TOKEN:
+            headers["X-Relay-Token"] = CPCB_RELAY_TOKEN
+        return CPCB_RELAY_URL, {"limit": limit, "offset": offset}, headers
     params = {
         "api-key": DATA_GOV_API_KEY,
         "format":  "json",
         "limit":   limit,
         "offset":  offset,
     }
+    return BASE_URL, params, _HEADERS
+
+
+def _get_page(offset, limit=_PAGE_LIMIT):
+    """One page of the resource. Returns the decoded body, or None."""
+    url, params, headers = _request_for(offset, limit)
     for attempt in range(_RETRIES):
         try:
             resp = requests.get(
-                BASE_URL, params=params, headers=_HEADERS, timeout=_HTTP_TIMEOUT
+                url, params=params, headers=headers, timeout=_HTTP_TIMEOUT
             )
             if resp.status_code == 200:
                 return resp.json()
@@ -251,7 +286,7 @@ def _get_page(offset, limit=_PAGE_LIMIT):
                 return None
             print(f"[CPCB] offset={offset} HTTP {resp.status_code} — retry {attempt + 1}/{_RETRIES}")
         except Exception as e:
-            print(f"[CPCB] offset={offset} {type(e).__name__}: {e} — retry {attempt + 1}/{_RETRIES}")
+            print(f"[CPCB] offset={offset} {type(e).__name__}: {_redact(e)} — retry {attempt + 1}/{_RETRIES}")
         time.sleep(2 * (attempt + 1))
     return None
 
@@ -267,8 +302,11 @@ def fetch_all_records():
     Advances by however many records actually came back rather than by the
     requested limit, since a restricted key can cap a page well below it.
     """
-    if not DATA_GOV_API_KEY:
-        print("[CPCB] DATA_GOV_API_KEY is not set — cannot fetch live data")
+    if _use_relay():
+        if not CPCB_RELAY_TOKEN:
+            print("[CPCB] CPCB_RELAY_URL is set but CPCB_RELAY_TOKEN is not — the relay will refuse")
+    elif not DATA_GOV_API_KEY:
+        print("[CPCB] Neither CPCB_RELAY_URL nor DATA_GOV_API_KEY is set — cannot fetch live data")
         return [], False
 
     records, offset, total = [], 0, None
@@ -796,6 +834,8 @@ def cache_status():
         "aqi_standard":  AQI_STANDARD,
         "source":        SOURCE_LABEL,
         "key_present":   bool(DATA_GOV_API_KEY),
+        "via_relay":     _use_relay(),
+        "relay_token_present": bool(CPCB_RELAY_TOKEN),
         "excluded_from_aqi": sorted(_EXCLUDED_FROM_AQI),
         "feed_values_are":   "CPCB sub-indices (0-500), inverted to concentrations for display",
         "pollutant_units":   dict(UNITS),

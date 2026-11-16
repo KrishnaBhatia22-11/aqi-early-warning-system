@@ -6,6 +6,14 @@ load_dotenv()
 # Official CPCB live feed (data.gov.in). This is the app's ONLY live source.
 DATA_GOV_API_KEY      = os.getenv("DATA_GOV_API_KEY")
 
+# India relay for that feed. Since mid-October 2026 api.data.gov.in refuses
+# connections from servers outside India ("Connection refused" / "No route to
+# host" from Render), so the backend fetches through a small function pinned to
+# Vercel's Mumbai region (frontend/api/cpcb.js). When CPCB_RELAY_URL is set the
+# relay holds the data.gov.in key and DATA_GOV_API_KEY is not needed here.
+CPCB_RELAY_URL        = os.getenv("CPCB_RELAY_URL")
+CPCB_RELAY_TOKEN      = os.getenv("CPCB_RELAY_TOKEN")
+
 # Retired: WAQI's CPCB mirror froze on 2026-06-23 for every city but Delhi.
 # waqi_client.py is kept on disk for reference but nothing in the app imports it.
 WAQI_API_KEY          = os.getenv("WAQI_API_KEY")
